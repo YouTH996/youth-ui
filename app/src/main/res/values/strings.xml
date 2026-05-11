@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Youth桌面</string>
+    <string name="app_drawer">应用抽屉</string>
+    <string name="all_apps">所有应用</string>
+    <string name="search_apps">搜索应用</string>
+    <string name="settings">设置</string>
+    <string name="home">主页</string>
+    <string name="back">返回</string>
+    <string name="recent_apps">最近应用</string>
+    <string name="all_tasks">所有任务</string>
+    <string name="clear_all">清除全部</string>
+    <string name="app_info">应用信息</string>
+    <string name="uninstall">卸载</string>
+    <string name="open">打开</string>
+    <string name="add_to_desktop">添加到桌面</string>
+    <string name="remove_from_desktop">从桌面移除</string>
+
+    <string name="time_format">HH:mm</string>
+    <string name="date_format">MM月dd日 E</string>
+
+    <string name="no_apps">没有应用</string>
+    <string name="loading">加载中...</string>
+
+    <string name="wallpaper">壁纸</string>
+    <string name="themes">主题</string>
+    <string name="widgets">小部件</string>
+</resources>

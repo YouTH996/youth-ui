@@ -1,0 +1,138 @@
+[
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_frosted_glass_background.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\frosted_glass_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\mipmap-mdpi_ic_launcher.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\mipmap-mdpi\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\mipmap-xxhdpi_ic_launcher.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\mipmap-xxhdpi\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\anim_scale_in.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\anim\\scale_in.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\layout_item_app_drawer.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\layout\\item_app_drawer.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\layout_activity_app_drawer.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\layout\\activity_app_drawer.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\mipmap-hdpi_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\mipmap-hdpi\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_ic_recent.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\ic_recent.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\mipmap-xhdpi_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\mipmap-xhdpi\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_statusbar_background.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\statusbar_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\anim_scale_out.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\anim\\scale_out.xml"
+    },
+    {
+        "merged": "com.youth.desktop.app-merged_res-33:/layout_activity_main.xml.flat",
+        "source": "com.youth.desktop.app-main-35:/layout/activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\anim_slide_up.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\anim\\slide_up.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\anim_fade_out.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\anim\\fade_out.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_ic_minus.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\ic_minus.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_ic_back.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\ic_back.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\mipmap-xhdpi_ic_launcher.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\mipmap-xhdpi\\ic_launcher.xml"
+    },
+    {
+        "merged": "com.youth.desktop.app-merged_res-33:/drawable_ic_defrost_front.xml.flat",
+        "source": "com.youth.desktop.app-main-35:/drawable/ic_defrost_front.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\mipmap-hdpi_ic_launcher.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\mipmap-hdpi\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_ic_home.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\ic_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_icon_background.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\icon_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_icon_background_selector.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\icon_background_selector.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\mipmap-anydpi-v26\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\mipmap-xxhdpi_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\mipmap-xxhdpi\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.youth.desktop.app-merged_res-33:/drawable_ic_defrost_rear.xml.flat",
+        "source": "com.youth.desktop.app-main-35:/drawable/ic_defrost_rear.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_ic_settings.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\ic_settings.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_ic_power.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\ic_power.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_ic_plus.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\ic_plus.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_taskbar_background.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\taskbar_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\mipmap-mdpi_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\mipmap-mdpi\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-33:\\drawable_icon_shadow.xml.flat",
+        "source": "C:\\Users\\zhanx\\.gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-35:\\drawable\\icon_shadow.xml"
+    },
+    {
+        "merged": "com.youth.desktop.app-merged_res-33:/drawable_ic_air_direction.xml.flat",
+        "source": "com.youth.desktop.app-main-35:/drawable/ic_air_direction.xml"
+    }
+]
