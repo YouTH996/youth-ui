@@ -3,10 +3,16 @@ package com.youth.desktop;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.GestureDetector;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
@@ -14,6 +20,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,10 +51,32 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout statusBar;
     private LinearLayout taskbar;
     private GridLayout iconGrid;
-    private TextView timeText;
-    private TextView dateText;
     private LinearLayout homeButton;
     private TextView acTempText;
+    
+    // ImageView 组件声明
+    private ImageView imgBack;
+    private ImageView imgHome;
+    private ImageView imgRecent;
+    private ImageView imgAcPower;
+    private ImageView imgAcMinus;
+    private ImageView imgAcPlus;
+    private ImageView imgDefrostFront;
+    private ImageView imgDefrostRear;
+    private ImageView imgAirDirection;
+    private ImageView imgSettings;
+    
+    // 状态栏组件声明
+    private ImageView imgVoiceAssistant;
+    private ImageView imgWifi;
+    private ImageView imgBluetooth;
+    private ImageView img4gSignal;
+    private ImageView imgDrivingRecorder;
+    private TextView textGearP;
+    private TextView textGearN;
+    private TextView textGearD;
+    private TextView textTimeOnly;
+    private BatteryView batteryView;
 
     // ==================== 空调状态 ====================
     private boolean isAcOn = false;
@@ -58,6 +88,32 @@ public class MainActivity extends AppCompatActivity {
     private boolean isFrontDefrostOn = false;
     private boolean isRearDefrostOn = false;
     private int airDirection = 0; // 0:面部 1:胸部 2:脚部 3:全部
+    
+    // 档位状态 (0=P, 1=N, 2=D)
+    private int currentGear = 0;
+    
+    // 状态栏图标状态
+    private boolean isWifiOn = true;
+    private boolean isBluetoothOn = true;
+    private boolean is4gSignalOn = true;
+    private boolean isDrivingRecorderOn = true;
+    
+    // 壁纸相关
+    private String[] wallpaperPaths = {
+        "webui/wallpaper/1.jpg",
+        "webui/wallpaper/2.jpg",
+        "webui/wallpaper/3.jpg",
+        "webui/wallpaper/4.jpg",
+        "webui/wallpaper/5.jpg",
+        "webui/wallpaper/6.jpg",
+        "webui/wallpaper/7.jpg",
+        "webui/wallpaper/8.jpg",
+        "webui/wallpaper/9.jpg",
+        "webui/wallpaper/10.jpg"
+    };
+    private int currentWallpaperIndex = 0;
+    private ImageView wallpaperImageView;
+    private GestureDetector gestureDetector;
 
     // ==================== 数据和处理器 ====================
     private Handler handler;
@@ -91,13 +147,311 @@ public class MainActivity extends AppCompatActivity {
         taskbar = findViewById(R.id.taskbar);
         iconGrid = findViewById(R.id.icon_grid);
 
-        timeText = findViewById(R.id.time_text);
-        dateText = findViewById(R.id.date_text);
         homeButton = findViewById(R.id.btn_home);
         acTempText = findViewById(R.id.ac_temp_text);
 
         iconGrid.setColumnCount(DESKTOP_COLUMNS);
         iconGrid.setRowCount(DESKTOP_ROWS);
+        
+        // 初始化 ImageView 组件
+        imgBack = findViewById(R.id.img_back);
+        imgHome = findViewById(R.id.img_home);
+        imgRecent = findViewById(R.id.img_recent);
+        imgAcPower = findViewById(R.id.img_ac_power);
+        imgAcMinus = findViewById(R.id.img_ac_minus);
+        imgAcPlus = findViewById(R.id.img_ac_plus);
+        imgDefrostFront = findViewById(R.id.img_defrost_front);
+        imgDefrostRear = findViewById(R.id.img_defrost_rear);
+        imgAirDirection = findViewById(R.id.img_air_direction);
+        imgSettings = findViewById(R.id.img_settings);
+        
+        // 初始化状态栏组件
+        imgVoiceAssistant = findViewById(R.id.img_voice_assistant);
+        imgWifi = findViewById(R.id.img_wifi);
+        imgBluetooth = findViewById(R.id.img_bluetooth);
+        img4gSignal = findViewById(R.id.img_4g_signal);
+        imgDrivingRecorder = findViewById(R.id.img_driving_recorder);
+        textGearP = findViewById(R.id.text_gear_p);
+        textGearN = findViewById(R.id.text_gear_n);
+        textGearD = findViewById(R.id.text_gear_d);
+        textTimeOnly = findViewById(R.id.text_time_only);
+        batteryView = findViewById(R.id.battery_view);
+        
+        // 设置电池初始值
+        if (batteryView != null) {
+            batteryView.setBatteryLevel(85);
+            batteryView.setRange(120);
+        }
+        
+        // 从 assets 加载图片
+        loadIconsFromAssets();
+        loadStatusBarIcons();
+        updateGearDisplay();
+        updateTimeOnly();
+        
+        // 设置导航栏按钮文字为白色
+        setNavigationBarTextColorWhite();
+        
+        // 初始化壁纸
+        initWallpaper();
+    }
+    
+    /**
+     * 设置导航栏按钮文字颜色为白色
+     */
+    private void setNavigationBarTextColorWhite() {
+        int whiteColor = Color.WHITE;
+        
+        // 获取导航栏中的所有 TextView 并设置文字颜色
+        findTextViewsInLinearLayout(taskbar, whiteColor);
+        
+        // 获取 btn_home 中的文字
+        View btnHome = findViewById(R.id.btn_home);
+        if (btnHome != null && btnHome instanceof LinearLayout) {
+            LinearLayout btnHomeLayout = (LinearLayout) btnHome;
+            for (int i = 0; i < btnHomeLayout.getChildCount(); i++) {
+                View child = btnHomeLayout.getChildAt(i);
+                if (child instanceof TextView) {
+                    ((TextView) child).setTextColor(whiteColor);
+                }
+            }
+        }
+        
+        // 获取 btn_settings 中的文字
+        View btnSettings = findViewById(R.id.btn_desktop_settings);
+        if (btnSettings != null && btnSettings instanceof LinearLayout) {
+            LinearLayout btnSettingsLayout = (LinearLayout) btnSettings;
+            for (int i = 0; i < btnSettingsLayout.getChildCount(); i++) {
+                View child = btnSettingsLayout.getChildAt(i);
+                if (child instanceof TextView) {
+                    ((TextView) child).setTextColor(whiteColor);
+                }
+            }
+        }
+    }
+    
+    /**
+     * 递归查找 LinearLayout 中的所有 TextView
+     */
+    private void findTextViewsInLinearLayout(ViewGroup parent, int color) {
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            View child = parent.getChildAt(i);
+            if (child instanceof TextView) {
+                ((TextView) child).setTextColor(color);
+            } else if (child instanceof ViewGroup) {
+                findTextViewsInLinearLayout((ViewGroup) child, color);
+            }
+        }
+    }
+    
+    /**
+     * 初始化壁纸
+     */
+    private void initWallpaper() {
+        // 创建壁纸 ImageView
+        wallpaperImageView = new ImageView(this);
+        wallpaperImageView.setLayoutParams(new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+        wallpaperImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        
+        // 将壁纸添加到容器底部
+        desktopContainer.addView(wallpaperImageView, 0);
+        
+        // 设置初始壁纸
+        setWallpaper(currentWallpaperIndex);
+        
+        // 设置手势监听
+        setupWallpaperGestureListener();
+    }
+    
+    /**
+     * 设置壁纸
+     */
+    private void setWallpaper(int index) {
+        if (wallpaperImageView == null || index < 0 || index >= wallpaperPaths.length) {
+            return;
+        }
+        
+        try {
+            InputStream inputStream = getAssets().open(wallpaperPaths[index]);
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            wallpaperImageView.setImageBitmap(bitmap);
+            inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * 设置手势监听支持左右滑动切换壁纸
+     */
+    private void setupWallpaperGestureListener() {
+        gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                if (e1 == null || e2 == null) {
+                    return false;
+                }
+                
+                float diffX = e2.getX() - e1.getX();
+                float diffY = e2.getY() - e1.getY();
+                
+                // 判断是否为水平滑动
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 100) {
+                    if (diffX > 0) {
+                        // 向右滑动 - 显示上一个壁纸
+                        previousWallpaper();
+                    } else {
+                        // 向左滑动 - 显示下一个壁纸
+                        nextWallpaper();
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+        
+        desktopContainer.setOnTouchListener((v, event) -> {
+            return gestureDetector.onTouchEvent(event);
+        });
+    }
+    
+    /**
+     * 切换到下一个壁纸
+     */
+    private void nextWallpaper() {
+        currentWallpaperIndex = (currentWallpaperIndex + 1) % wallpaperPaths.length;
+        setWallpaper(currentWallpaperIndex);
+        Toast.makeText(this, "壁纸 " + (currentWallpaperIndex + 1) + "/" + wallpaperPaths.length, Toast.LENGTH_SHORT).show();
+    }
+    
+    /**
+     * 切换到上一个壁纸
+     */
+    private void previousWallpaper() {
+        currentWallpaperIndex = (currentWallpaperIndex - 1 + wallpaperPaths.length) % wallpaperPaths.length;
+        setWallpaper(currentWallpaperIndex);
+        Toast.makeText(this, "壁纸 " + (currentWallpaperIndex + 1) + "/" + wallpaperPaths.length, Toast.LENGTH_SHORT).show();
+    }
+    
+    /**
+     * 从 assets 目录加载图标图片并设置到对应的 ImageView
+     */
+    private void loadIconsFromAssets() {
+        // 导航按钮图标
+        loadImageFromAssets("webui/img/navbar/sys_nav_bar_back.png", imgBack);
+        loadImageFromAssets("webui/img/navbar/sys_nav_bar_home.png", imgHome);
+        loadImageFromAssets("webui/img/navbar/sys_nav_bar_recents.png", imgRecent);
+        
+        // 空调控制图标
+        loadImageFromAssets("webui/img/navbar/ac_bar_power0.png", imgAcPower);
+        loadImageFromAssets("webui/img/navbar/air_control_jian.png", imgAcMinus);
+        loadImageFromAssets("webui/img/navbar/air_control_jia.png", imgAcPlus);
+        loadImageFromAssets("webui/img/navbar/ac_bar_front_defrost0.png", imgDefrostFront);
+        
+        // 风向图标 - 初始化时设置默认状态
+        updateAirDirectionIcon();
+        
+        // 设置图标
+        loadImageFromAssets("webui/img/navbar/sys_nav_bar_apps.png", imgSettings);
+        
+        // 后除霜图标 - 使用前除霜图标作为备用
+        loadImageFromAssets("webui/img/navbar/ac_bar_front_defrost0.png", imgDefrostRear);
+    }
+    
+    /**
+     * 更新风向图标，根据当前风向状态显示对应的图片
+     * 风向状态: 0-7 对应 ac_bar_wind_mode_0 到 ac_bar_wind_mode_7
+     */
+    private void updateAirDirectionIcon() {
+        String assetPath = String.format("webui/img/navbar/ac_bar_wind_mode_%d.png", airDirection);
+        loadImageFromAssets(assetPath, imgAirDirection);
+    }
+    
+    /**
+     * 从 assets 目录加载状态栏图标
+     */
+    private void loadStatusBarIcons() {
+        // 加载语音助手图标
+        loadImageFromAssets("webui/img/statusbar/statusbar_intelligent_voice.png", imgVoiceAssistant);
+        
+        // 加载 WiFi 图标
+        loadImageFromAssets("webui/img/statusbar/statusbar_wifi_4.png", imgWifi);
+        
+        // 加载蓝牙图标
+        updateBluetoothIcon();
+        
+        // 加载 4G 信号图标
+        loadImageFromAssets("webui/img/statusbar/statusbar_data_signal_level_4.png", img4gSignal);
+        
+        // 加载行车记录仪图标
+        updateDrivingRecorderIcon();
+    }
+    
+    /**
+     * 更新蓝牙图标状态
+     */
+    private void updateBluetoothIcon() {
+        if (isBluetoothOn) {
+            loadImageFromAssets("webui/img/statusbar/statusbar_bluetooth1.png", imgBluetooth);
+        } else {
+            loadImageFromAssets("webui/img/statusbar/statusbar_bluetooth0.png", imgBluetooth);
+        }
+    }
+    
+    /**
+     * 更新行车记录仪图标状态
+     */
+    private void updateDrivingRecorderIcon() {
+        if (isDrivingRecorderOn) {
+            loadImageFromAssets("webui/img/statusbar/statusbar_driving_recorder_1.png", imgDrivingRecorder);
+        } else {
+            loadImageFromAssets("webui/img/statusbar/statusbar_driving_recorder_0.png", imgDrivingRecorder);
+        }
+    }
+    
+    /**
+     * 更新档位显示，当前档位显示绿色，其他档位显示灰色
+     */
+    private void updateGearDisplay() {
+        int greenColor = Color.parseColor("#00FF88"); // 亮绿色，更好的可见性
+        int semiTransparentWhite = Color.parseColor("#B0FFFFFF"); // 半透明白色
+        
+        textGearP.setTextColor(currentGear == 0 ? greenColor : semiTransparentWhite);
+        textGearN.setTextColor(currentGear == 1 ? greenColor : semiTransparentWhite);
+        textGearD.setTextColor(currentGear == 2 ? greenColor : semiTransparentWhite);
+    }
+    
+    /**
+     * 更新仅显示时间（时分格式）
+     */
+    private void updateTimeOnly() {
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        if (textTimeOnly != null) {
+            textTimeOnly.setText(timeFormat.format(new Date()));
+        }
+    }
+    
+    /**
+     * 从 assets 目录加载图片并设置到 ImageView
+     * @param assetPath assets 目录下的图片路径
+     * @param imageView 要设置图片的 ImageView
+     */
+    private void loadImageFromAssets(String assetPath, ImageView imageView) {
+        if (imageView == null) {
+            return;
+        }
+        
+        try {
+            InputStream inputStream = getAssets().open(assetPath);
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            imageView.setImageBitmap(bitmap);
+            inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void initDefaultPinnedApps() {
@@ -242,14 +596,74 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateTimeDisplay() {
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MM月dd日 E", Locale.CHINESE);
 
         Date currentDate = new Date();
-        timeText.setText(timeFormat.format(currentDate));
-        dateText.setText(dateFormat.format(currentDate));
+        if (textTimeOnly != null) {
+            textTimeOnly.setText(timeFormat.format(currentDate));
+        }
     }
 
     private void setupClickListeners() {
+        // 语音助手按钮
+        if (imgVoiceAssistant != null) {
+            imgVoiceAssistant.setOnClickListener(v -> {
+                Toast.makeText(this, "唤醒小迪语音", Toast.LENGTH_SHORT).show();
+            });
+        }
+        
+        // 档位显示区域 - 点击切换档位
+        View gearDisplay = findViewById(R.id.gear_display);
+        if (gearDisplay != null) {
+            gearDisplay.setOnClickListener(v -> {
+                currentGear = (currentGear + 1) % 3;
+                updateGearDisplay();
+                String[] gears = {"P档", "N档", "D档"};
+                Toast.makeText(this, gears[currentGear], Toast.LENGTH_SHORT).show();
+            });
+        }
+        
+        // WiFi 图标 - 点击切换状态
+        if (imgWifi != null) {
+            imgWifi.setOnClickListener(v -> {
+                isWifiOn = !isWifiOn;
+                if (isWifiOn) {
+                    loadImageFromAssets("webui/img/statusbar/statusbar_wifi_4.png", imgWifi);
+                    Toast.makeText(this, "WiFi 已开启", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "WiFi 已关闭", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        
+        // 蓝牙图标 - 点击切换状态
+        if (imgBluetooth != null) {
+            imgBluetooth.setOnClickListener(v -> {
+                isBluetoothOn = !isBluetoothOn;
+                updateBluetoothIcon();
+                String message = isBluetoothOn ? "蓝牙已开启" : "蓝牙已关闭";
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            });
+        }
+        
+        // 4G 信号图标 - 点击切换状态
+        if (img4gSignal != null) {
+            img4gSignal.setOnClickListener(v -> {
+                is4gSignalOn = !is4gSignalOn;
+                String message = is4gSignalOn ? "4G信号已开启" : "4G信号已关闭";
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            });
+        }
+        
+        // 行车记录仪图标 - 点击切换状态
+        if (imgDrivingRecorder != null) {
+            imgDrivingRecorder.setOnClickListener(v -> {
+                isDrivingRecorderOn = !isDrivingRecorderOn;
+                updateDrivingRecorderIcon();
+                String message = isDrivingRecorderOn ? "行车记录仪已开启" : "行车记录仪已关闭";
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            });
+        }
+        
         // 返回按钮
         View btnBack = findViewById(R.id.btn_back);
         if (btnBack != null) {
@@ -354,9 +768,10 @@ public class MainActivity extends AppCompatActivity {
         View btnAirDirection = findViewById(R.id.btn_air_direction);
         if (btnAirDirection != null) {
             btnAirDirection.setOnClickListener(v -> {
-                airDirection = (airDirection + 1) % 4;
-                String[] directions = {"面部吹风", "胸部吹风", "脚部吹风", "全部吹风"};
-                Toast.makeText(this, "当前模式: " + directions[airDirection], Toast.LENGTH_SHORT).show();
+                airDirection = (airDirection + 1) % 8;
+                updateAirDirectionIcon();
+                String[] directions = {"模式1", "模式2", "模式3", "模式4", "模式5", "模式6", "模式7", "模式8"};
+                Toast.makeText(this, "当前风向: " + directions[airDirection], Toast.LENGTH_SHORT).show();
             });
         }
 

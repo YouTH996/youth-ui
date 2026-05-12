@@ -1,0 +1,88 @@
+
+html{
+    font-size: 3px;
+} 
+.navibar-container{
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    transform: translateZ(0);
+}
+.navibar_bg_blur{
+    width: 100%;
+    height: 60px;
+    position:absolute;
+    z-index:-10;
+    top:0;
+    left:0;    
+    background-image: url(../img/navbar/sys_nav_bar_bg_liszt-2.png);
+    background-size: 100%;
+    opacity: 1;
+}
+.navibar-container .split{
+    margin: 5px 15px;
+}
+.navibar-container .ac_temp{
+    margin: 5px 10px;
+    margin-top: -10px;
+}
+.carac__info li {
+    margin: 5px 15px;
+}
+.carac__info .ac_wind .wind{
+    width: 60px;
+}
+.carac__info .ac_wind .wind img{
+    height: 27px;
+    margin: 20px 12px;
+}
+.sys_btn img{
+    width: 60px;
+    height: 60px;
+    margin-top: -5px;
+}
+.sys_btn img:active{
+    transform: scale(1.2);
+}
+
+.light .carac__info li {
+    color:rgb(70 70 70);
+}
+.light .carac__info .ac_wind .wind {
+    background-image: url(../img/navbar/ac_bar_wind_level_0_off.png);
+}
+.light .carac__info .ac_wind .wind img {
+    /* content: url(../img/navbar/ac_bar_wind_mode_0_dark.png); */
+}
+.light .sys_btn img{
+    filter: invert(91%) sepia(0%) saturate(1%) hue-rotate(320deg) brightness(91%) contrast(91%);
+}
+.light .navibar_bg_blur{
+    background-image: url(../img/navbar/sys_nav_bar_bg_land_ocean.png);
+}
+
+.portrait .navibar_bg_blur{
+    background-image: url(../img/navbar/sys_nav_bar_bg_liszt_port.png);
+    background-size: cover;
+    background-position: center;
+}
+.portrait.light .navibar_bg_blur{
+    background-image: url(../img/navbar/sys_nav_bar_bg_port_ocean.png);
+}
+.portrait #AC_POWER_STATE,.portrait #AC_DEFROST_FRONT_STATE,.portrait .ac_temp img{
+    display: none;
+}
+.portrait .ac_wind img{
+    display: block;
+}
+.portrait .sys_btn img{
+    margin-left: -8px;
+    margin-right: -8px;
+}
+.portrait .split{
+    margin: 0;
+}
+.portrait .ac_temp{
+    margin: 5px;
+    margin-top: -10px;
+}

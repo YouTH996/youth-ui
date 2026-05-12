@@ -1,0 +1,72 @@
+<html>
+  <meta charset="utf-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="js/jquery-1.9.0.js" type="text/javascript"></script>
+<style>
+* {margin:0;padding:0;}
+body{width:100%;}
+a {text-decoration:none;color:#666666;
+-webkit-tap-highlight-color:rgba(0,0,0,0);}
+  
+@keyframes island {
+	from {transform:scale(0,0)}
+	to {transform:scale(1,1)}
+}
+@keyframes island_close {
+	from {transform:scale(1,1)}
+	to {transform:scale(0,0)}
+}
+@keyframes gif {
+	0% {background-image: url('./img/island/Y1.png');}
+    20% {background-image: url('./img/island/Y11.png');}
+    40% {background-image: url('./img/island/Y12.png');}
+    60% {background-image: url('./img/island/Y13.png');}
+    80% {background-image: url('./img/island/Y14.png');}
+    100% {background-image: url('./img/island/Y15.png');}
+}
+
+#notification_island {margin:0 auto;width:max-content;height:50px;text-align:center;min-width:200px;max-width:80vw;padding:10px 15px 0;background:black;color:white;font-size:18px;border-radius: 50px;animation: island 0.5s ease-in-out;}
+#noti_container {display: flex;align-items:center;height: 40px;}
+#noti_logo {float: left;width: 30px;margin-right:20px;}
+#noti_logo img{ height: 40px;border-radius:50%}
+#noti_title  span {color:rgba(255,255,255,0.5)}
+#noti_title {font-size:13px}
+.img_music {width: 25px;height: 25px;margin-left:10px;background-repeat: no-repeat;background-size: 100% 100%;animation: gif 1s infinite;}
+</style>
+<body>
+    <div id="notification_island">
+        <div id="noti_container">
+            <div id="noti_logo"><img src="img/widget/music_cover.jpg" onerror="javascript:this.src='./img/widget/music_cover.jpg';"></div>
+            <div style="flex: 1;">
+                <div id="noti_title"><span></span></div>
+                <div id="noti_content">等待播放</div>
+            </div>
+            <div id="noti_img_box" class="img_music"></div>
+        </div>
+    </div>
+</body>
+<script>
+$(function(){
+    var exit_noti_land = function(){
+        $("#notification_island").css("animation","island_close 0.5s ease-in-out forwards");
+    }
+
+    setTimeout(function(){
+        exit_noti_land();
+    }, 20000)
+
+    updateMusicInfo(0);
+});
+
+function updateMusicInfo(time){
+    var mt_cover = window.carJsBridge.local("mt_cover");
+    if(mt_cover == "null") mt_cover = "http://localhost:8080/appicon/"+ window.carJsBridge.local("mt_app");
+    if(mt_cover.startsWith("/cache/")) mt_cover = "http://localhost:8080"+ mt_cover + "?t="+ Math.random();
+    if(mt_cover.startsWith("http://liszt/btcover/")) mt_cover = mt_cover.replace("http://liszt/btcover/","file:///sdcard/");
+    if(mt_cover.startsWith("http://liszt/mediacover")) mt_cover = window.carJsBridge.getMediaLocalCover();
+    $("#noti_title span").text(window.carJsBridge.local("mt_artist").replace("null",""));
+    $("#noti_content").text(window.carJsBridge.local("mt_title"));
+    $("#noti_logo img").attr("src",mt_cover);
+}
+</script>
+</html>

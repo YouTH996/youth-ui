@@ -2,7 +2,12 @@
 <resources>
     <color name="accent">#FF4081</color>
     <color name="background">#F5F5F5</color>
-    <color name="desktop_wallpaper_default">#E3F2FD</color>
+    <color name="dark_tech_accent">#00D4FF</color>
+    <color name="dark_tech_bg">#CC1A1A2E</color>
+    <color name="dark_tech_bg_light">#661A1A2E</color>
+    <color name="dark_tech_text">#FFFFFF</color>
+    <color name="dark_tech_text_secondary">#B0B0B0</color>
+    <color name="desktop_wallpaper_default">#00000000</color>
     <color name="drawer_background">#FAFAFA</color>
     <color name="drawer_card">#FFFFFF</color>
     <color name="error">#F44336</color>
@@ -26,6 +31,7 @@
     <color name="text_hint">#9E9E9E</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
+    <color name="white">#FFFFFF</color>
     <dimen name="card_corner_radius">12dp</dimen>
     <dimen name="desktop_grid_columns">6</dimen>
     <dimen name="desktop_grid_rows">4</dimen>
@@ -51,7 +57,7 @@
     <string name="all_tasks">所有任务</string>
     <string name="app_drawer">应用抽屉</string>
     <string name="app_info">应用信息</string>
-    <string name="app_name">Youth桌面</string>
+    <string name="app_name">轻语桌面</string>
     <string name="back">返回</string>
     <string name="clear_all">清除全部</string>
     <string name="date_format">MM月dd日 E</string>

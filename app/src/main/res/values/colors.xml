@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="white">#FFFFFF</color>
     <color name="primary">#2196F3</color>
     <color name="primary_dark">#1976D2</color>
     <color name="primary_light">#BBDEFB</color>
@@ -19,6 +20,13 @@
     <color name="text_secondary">#757575</color>
     <color name="text_hint">#9E9E9E</color>
 
+    <!-- 暗黑科技风格颜色 -->
+    <color name="dark_tech_bg">#CC1A1A2E</color>
+    <color name="dark_tech_bg_light">#661A1A2E</color>
+    <color name="dark_tech_accent">#00D4FF</color>
+    <color name="dark_tech_text">#FFFFFF</color>
+    <color name="dark_tech_text_secondary">#B0B0B0</color>
+    
     <color name="taskbar_background">#E3F2FD</color>
     <color name="taskbar_icon_tint">#1976D2</color>
     <color name="statusbar_background">#1565C0</color>
@@ -33,5 +41,5 @@
     <color name="frosted_glass">#CCFFFFFF</color>
     <color name="frosted_dark">#33000000</color>
 
-    <color name="desktop_wallpaper_default">#E3F2FD</color>
+    <color name="desktop_wallpaper_default">#00000000</color>
 </resources>

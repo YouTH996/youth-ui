@@ -9,7 +9,7 @@
         android:id="@+id/icon_grid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="44dp"
         android:layout_marginBottom="72dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp" />
@@ -17,35 +17,141 @@
     <LinearLayout
         android:id="@+id/status_bar"
         android:layout_width="match_parent"
-        android:layout_height="32dp"
-        android:background="@drawable/statusbar_background"
+        android:layout_height="28dp"
+        android:background="@drawable/statusbar_background_dark"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
 
-        <TextView
-            android:id="@+id/time_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="12:00"
-            android:textColor="@color/statusbar_text"
-            android:textSize="14sp"
-            android:fontFamily="sans-serif-medium" />
-
-        <View
+        <!-- 左侧：语音按钮、档位、电量 -->
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/date_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="05月07日 周四"
-            android:textColor="@color/statusbar_text"
-            android:textSize="14sp"
-            android:fontFamily="sans-serif-medium" />
+            <!-- 小迪语音按钮 -->
+            <ImageView
+                android:id="@+id/img_voice_assistant"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:scaleType="fitCenter" />
+
+            <View
+                android:layout_width="8dp"
+                android:layout_height="0dp" />
+
+            <!-- 档位显示 -->
+            <LinearLayout
+                android:id="@+id/gear_display"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/text_gear_p"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="P"
+                    android:textSize="16sp"
+                    android:textColor="@color/dark_tech_text"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/text_gear_n"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="N"
+                    android:textSize="16sp"
+                    android:textColor="@color/dark_tech_text"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/text_gear_d"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="D"
+                    android:textSize="16sp"
+                    android:textColor="@color/dark_tech_text"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="0dp" />
+
+            <!-- 电量及续航 - 使用自定义 BatteryView -->
+            <com.youth.desktop.BatteryView
+                android:id="@+id/battery_view"
+                android:layout_width="120dp"
+                android:layout_height="32dp" />
+        </LinearLayout>
+
+        <!-- 右侧：WiFi、蓝牙、4G、行车记录仪、时间 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="end|center_vertical">
+
+            <!-- WiFi -->
+            <ImageView
+                android:id="@+id/img_wifi"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:scaleType="fitCenter" />
+
+            <View
+                android:layout_width="6dp"
+                android:layout_height="0dp" />
+
+            <!-- 蓝牙 -->
+            <ImageView
+                android:id="@+id/img_bluetooth"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:scaleType="fitCenter" />
+
+            <View
+                android:layout_width="6dp"
+                android:layout_height="0dp" />
+
+            <!-- 4G信号 -->
+            <ImageView
+                android:id="@+id/img_4g_signal"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:scaleType="fitCenter" />
+
+            <View
+                android:layout_width="6dp"
+                android:layout_height="0dp" />
+
+            <!-- 行车记录仪 -->
+            <ImageView
+                android:id="@+id/img_driving_recorder"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:scaleType="fitCenter" />
+
+            <View
+                android:layout_width="12dp"
+                android:layout_height="0dp" />
+
+            <!-- 时间 -->
+            <TextView
+                android:id="@+id/text_time_only"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12:00"
+                android:textColor="@color/statusbar_text"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -54,7 +160,7 @@
         android:layout_width="match_parent"
         android:layout_height="72dp"
         android:layout_gravity="bottom"
-        android:background="@drawable/taskbar_background"
+        android:background="@drawable/taskbar_background_dark"
         android:gravity="center"
         android:orientation="horizontal"
         android:paddingStart="16dp"
@@ -79,9 +185,9 @@
                 android:padding="4dp">
 
                 <ImageView
+                    android:id="@+id/img_back"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@drawable/ic_back"
                     android:scaleType="fitCenter" />
 
                 <TextView
@@ -89,7 +195,7 @@
                     android:layout_height="wrap_content"
                     android:text="返回"
                     android:textSize="10sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="@color/white" />
             </LinearLayout>
 
             <View
@@ -106,9 +212,9 @@
                 android:padding="4dp">
 
                 <ImageView
+                    android:id="@+id/img_home"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@drawable/ic_home"
                     android:scaleType="fitCenter" />
 
                 <TextView
@@ -116,7 +222,7 @@
                     android:layout_height="wrap_content"
                     android:text="首页"
                     android:textSize="10sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="@color/white" />
             </LinearLayout>
 
             <View
@@ -133,9 +239,9 @@
                 android:padding="4dp">
 
                 <ImageView
+                    android:id="@+id/img_recent"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@drawable/ic_recent"
                     android:scaleType="fitCenter" />
 
                 <TextView
@@ -143,7 +249,7 @@
                     android:layout_height="wrap_content"
                     android:text="最近"
                     android:textSize="10sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="@color/white" />
             </LinearLayout>
         </LinearLayout>
 
@@ -175,9 +281,9 @@
                     android:background="@drawable/icon_background_selector">
 
                     <ImageView
+                        android:id="@+id/img_ac_power"
                         android:layout_width="26dp"
                         android:layout_height="26dp"
-                        android:src="@drawable/ic_power"
                         android:scaleType="fitCenter" />
 
                     <TextView
@@ -185,7 +291,7 @@
                         android:layout_height="wrap_content"
                         android:text="空调"
                         android:textSize="8sp"
-                        android:textColor="@color/text_secondary" />
+                        android:textColor="@color/white" />
                 </LinearLayout>
 
                 <View
@@ -202,9 +308,9 @@
                     android:background="@drawable/icon_background_selector">
 
                     <ImageView
+                        android:id="@+id/img_ac_minus"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/ic_minus"
                         android:scaleType="fitCenter" />
                 </LinearLayout>
 
@@ -246,9 +352,9 @@
                     android:background="@drawable/icon_background_selector">
 
                     <ImageView
+                        android:id="@+id/img_ac_plus"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/ic_plus"
                         android:scaleType="fitCenter" />
                 </LinearLayout>
             </LinearLayout>
@@ -285,9 +391,9 @@
                     android:background="@drawable/icon_background_selector">
 
                     <ImageView
+                        android:id="@+id/img_defrost_front"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_defrost_front"
                         android:scaleType="fitCenter" />
 
                     <TextView
@@ -295,7 +401,7 @@
                         android:layout_height="wrap_content"
                         android:text="前除霜"
                         android:textSize="8sp"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="@color/white"
                         android:gravity="center" />
                 </LinearLayout>
 
@@ -313,9 +419,9 @@
                     android:background="@drawable/icon_background_selector">
 
                     <ImageView
+                        android:id="@+id/img_defrost_rear"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_defrost_rear"
                         android:scaleType="fitCenter" />
 
                     <TextView
@@ -323,7 +429,7 @@
                         android:layout_height="wrap_content"
                         android:text="后除霜"
                         android:textSize="8sp"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="@color/white"
                         android:gravity="center" />
                 </LinearLayout>
 
@@ -341,9 +447,9 @@
                     android:background="@drawable/icon_background_selector">
 
                     <ImageView
+                        android:id="@+id/img_air_direction"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_air_direction"
                         android:scaleType="fitCenter" />
 
                     <TextView
@@ -351,7 +457,7 @@
                         android:layout_height="wrap_content"
                         android:text="风向"
                         android:textSize="8sp"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="@color/white"
                         android:gravity="center" />
                 </LinearLayout>
             </LinearLayout>
@@ -375,9 +481,9 @@
                 android:padding="4dp">
 
                 <ImageView
+                    android:id="@+id/img_settings"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@drawable/ic_settings"
                     android:scaleType="fitCenter" />
 
                 <TextView
@@ -385,7 +491,7 @@
                     android:layout_height="wrap_content"
                     android:text="设置"
                     android:textSize="10sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textColor="@color/white" />
             </LinearLayout>
         </LinearLayout>
 

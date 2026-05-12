@@ -1,29 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.youth.desktop.app-mergeDebugResources-31:/values-v23/values-v23.xml",
+            "outputFile": "com.youth.desktop.app-mergeDebugResources-2:/values-v23/values-v23.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\zhanx\\.gradle\\caches\\8.14.4\\transforms\\01a1d486672296fa7fb1ee8e66df59d4\\transformed\\cardview-1.0.0\\res\\values-v23\\values-v23.xml",
-                    "from": {
-                        "startLines": "2",
-                        "startColumns": "4",
-                        "startOffsets": "55",
-                        "endLines": "4",
-                        "endColumns": "12",
-                        "endOffsets": "200"
-                    },
-                    "to": {
-                        "startLines": "50",
-                        "startColumns": "4",
-                        "startOffsets": "3232",
-                        "endLines": "52",
-                        "endColumns": "12",
-                        "endOffsets": "3377"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\zhanx\\.gradle\\caches\\8.14.4\\transforms\\620b4edec463a771f66f3688632538ff\\transformed\\material-1.11.0\\res\\values-v23\\values-v23.xml",
+                    "source": "D:\\dev\\Android\\gradle\\caches\\8.14.4\\transforms\\620b4edec463a771f66f3688632538ff\\transformed\\material-1.11.0\\res\\values-v23\\values-v23.xml",
                     "from": {
                         "startLines": "2,5,9,13,16,19,22,25,28,32",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4",
@@ -42,7 +23,26 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\zhanx\\.gradle\\caches\\8.14.4\\transforms\\4b53a547f212f16e0ca849320baf8172\\transformed\\appcompat-1.6.1\\res\\values-v23\\values-v23.xml",
+                    "source": "D:\\dev\\Android\\gradle\\caches\\8.14.4\\transforms\\01a1d486672296fa7fb1ee8e66df59d4\\transformed\\cardview-1.0.0\\res\\values-v23\\values-v23.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "4",
+                        "endColumns": "12",
+                        "endOffsets": "200"
+                    },
+                    "to": {
+                        "startLines": "50",
+                        "startColumns": "4",
+                        "startOffsets": "3232",
+                        "endLines": "52",
+                        "endColumns": "12",
+                        "endOffsets": "3377"
+                    }
+                },
+                {
+                    "source": "D:\\dev\\Android\\gradle\\caches\\8.14.4\\transforms\\4b53a547f212f16e0ca849320baf8172\\transformed\\appcompat-1.6.1\\res\\values-v23\\values-v23.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,20,34,35,36,39,43,44,45,46",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4",

@@ -1,0 +1,170 @@
+<html>
+  <meta charset="utf-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0" />
+<script src="js/jquery-1.9.0.js" type="text/javascript"></script>
+<script src="js/Sortable.min.js"></script>
+<link id="theme" rel="stylesheet" href="css/dark_theme.css">
+<link rel="stylesheet" href="css/widget.css">
+<link rel="stylesheet" href="css/navibar.css?v=11111455">
+<link id="skin" rel="stylesheet" href="theme/default/theme.css">
+<body>
+    <div class="navibar-container">
+        <div class="navibar_bg_blur"></div>     
+        <div class="carac__info">
+            <li class="sys_btn" data-action="back">
+                <img src="img/navbar/sys_nav_bar_back.png">
+            </li>
+            <li class="sys_btn" data-action="home">
+                <img src="img/navbar/sys_nav_bar_home.png">
+            </li>
+            <li class="sys_btn" data-action="recents">
+                <img src="img/navbar/sys_nav_bar_recents.png">
+            </li>
+            <li class="split"></li>
+            <li class="sys_btn" id="AC_POWER_STATE" data-action="AC_POWER_STATE_SET|1024">
+                <img src="img/navbar/ac_bar_power0.png" onerror="javascript:this.src='./img/navbar/ac_bar_power0.png';">
+            </li>
+            <li class="ac_temp" id="AC_TEMP_MAIN" data-action="AC_TEMP_MAIN_SET">
+                <img src="img/navbar/air_control_jian.png">
+                <div class="unit">
+                    <span class="temp">--</span>
+                    <span class="sup">o</span>
+                </div>
+                <img src="img/navbar/air_control_jia.png">
+            </li>
+            <li class="ac_temp ac_wind" id="AC_WIND_LEVEL" data-action="AC_WIND_LEVEL_SET">
+                <img src="img/navbar/air_control_jian.png">
+                <div class="wind">
+                    <img src="img/navbar/ac_bar_wind_mode_0.png">
+                </div>
+                <img src="img/navbar/air_control_jia.png">
+            </li>
+            <li class="ac_temp" id="AC_TEMP_DEPUTY" data-action="AC_TEMP_DEPUTY_SET">
+                <img src="img/navbar/air_control_jian.png">
+                <div class="unit">
+                    <span class="temp">--</span>
+                    <span class="sup">o</span>
+                </div>
+                <img src="img/navbar/air_control_jia.png">
+            </li>
+            <li class="sys_btn" id="AC_DEFROST_FRONT_STATE" data-action="AC_DEFROST_FRONT_STATE_SET|1024">
+                <img src="img/navbar/ac_bar_front_defrost0.png" onerror="javascript:this.src='./img/navbar/ac_bar_front_defrost0.png';">
+            </li>
+            <li class="split"></li>
+            <li class="sys_btn" data-action="appcenter">
+                <img src="img/navbar/sys_nav_bar_apps.png">
+            </li>
+            <li class="sys_btn" data-action="carsettings">
+                <img src="img/navbar/sys_nav_bar_car.png">
+            </li>
+            <li class="sys_btn" data-action="splitscreen">
+                <img src="img/navbar/sys_nav_bar_split_screen.png">
+            </li>
+        </div>
+    </div>
+</body>
+<script>
+$(function(){
+    if(window.location.protocol == "http:"){
+        var winHeight = window.screen.height,
+            winWidth = window.screen.width;
+        if(winHeight > winWidth){
+            updateStyle("portrait");
+        }
+        //setUITheme(0);        
+        if(window.carJsBridge.config("UI_THEME") > -1){    
+            window.parent.car.setUITheme(window.carJsBridge.config("UI_THEME"));
+        }
+        //$(".navibar_bg_blur").css("opacity","0.7");
+        updateLayout(0);
+    }else{
+        setUITheme(0);
+    }
+    $("li img").on('click', function(e){
+        e.stopPropagation();
+        var action = $(this).parent().data("action"),
+            id = $(this).parent().attr("id"),
+            index = $(this).index();
+        if(action == "recents") return;
+        if(action){
+            if(action.startsWith("AC_")){
+                if(!action.endsWith("|1024")){
+                    var value = parseInt(window.carJsBridge.local(id));
+                    value = index == 0 ? value - 1 : value + 1;
+                    action = action +"|"+ value;
+                }
+                if(id == "AC_WIND_LEVEL" && value == 0) action = 'AC_POWER_STATE_SET|0';
+                window.carJsBridge.sendCommand('{"cmd":"carControl", "action":"'+ action +'"}');
+            }else{
+                window.carJsBridge.sysBtnEvent(action);
+            }
+        }else if($(this).parent().attr('class') == "wind"){        
+            window.carJsBridge.sysBtnEvent("bydAc");
+        }
+    });
+
+    var startTime,endTime,timer;
+    $("li[data-action=recents] img").on('touchstart',function(e){
+        startTime = +new Date();
+        timer= setTimeout(function() {
+            window.location.protocol != "http:" && window.carJsBridge.sysBtnEvent("projection");
+        }, 500);
+    }).on('touchend',function(e){
+        endTime = +new Date();
+        if (endTime - startTime < 500){
+            window.carJsBridge.sysBtnEvent("recents");
+            clearTimeout(timer);
+        }
+    });
+
+    updateACInfo(0);
+});
+function updateACInfo(time){
+    var ac_temp_main = window.carJsBridge.local("AC_TEMP_MAIN") || 23,
+        ac_temp_deputy = window.carJsBridge.local("AC_TEMP_DEPUTY") || 23,
+        ac_wind_level = window.carJsBridge.local("AC_WIND_LEVEL") || 0,
+        ac_wind_mode = window.carJsBridge.local("AC_WIND_MODE") || 0,
+        ac_status = window.carJsBridge.local("AC_POWER_STATE") == "1" ? "_on" : "_off",
+        isdark = parseInt(ac_wind_level) < 1 ? "_dark" : "",
+        filter = "invert(48%) sepia(87%) saturate(2173%) hue-rotate(165deg) brightness(99%) contrast(101%)";
+    $("#AC_TEMP_MAIN .temp").text(ac_temp_main);
+    $("#AC_TEMP_DEPUTY .temp").text(ac_temp_deputy);
+    $(".carac__info .wind").css("background-image",`url('./img/navbar/ac_bar_wind_level_${ac_wind_level}${ac_status}${isdark}.png')`);
+    //$(".carac__info .wind img").css("animation",`${parseInt(ac_wind_level) > 0 && 'rotation 1s linear infinite'}`);
+    $(".carac__info .wind img").attr("src",`./img/navbar/ac_bar_wind_mode_${ac_wind_mode}.png`);
+    $("#AC_POWER_STATE img").attr("src",`./img/navbar/ac_bar_power${window.carJsBridge.local("AC_POWER_STATE")}.png`);
+    $("#AC_POWER_STATE img").css("filter",`${window.carJsBridge.local("AC_POWER_STATE") == "1" ? filter : ""}`);
+    $("#AC_DEFROST_FRONT_STATE img").attr("src",`./img/navbar/ac_bar_front_defrost${window.carJsBridge.local("AC_DEFROST_FRONT_STATE")}.png`);
+    $("#AC_DEFROST_FRONT_STATE img").css("filter",`${window.carJsBridge.local("AC_DEFROST_FRONT_STATE") == "1" ? filter : ""}`);
+}
+function updateBgOpacity(value){
+    $(".navibar_bg_blur").css("opacity",value);
+}
+function updateLayout(time){
+    var navbar_style = localStorage.getItem("navbar_style");
+    var opacity = 0.7,
+        navbar_blur = "";
+    if(navbar_style){
+        var style = JSON.parse(navbar_style);
+        opacity = style.bg_opacity / 100;
+        navbar_blur = style.navbar_blur > 0 ? "blur("+ style.navbar_blur +"px)" : "";
+    }
+    $(".navibar_bg_blur").css("opacity",opacity);
+    $(".navibar-container").css("backdrop-filter",navbar_blur);
+}
+function setUITheme(time){
+    if(window.carJsBridge.config("UI_THEME") === 0){
+        $(".navibar-container").addClass("light");
+     }else{
+        $(".navibar-container").removeClass("light");
+     } 
+}
+function updateStyle(screen){
+    if(screen == "portrait"){
+        $(".navibar-container").addClass("portrait");
+    }else{
+        $(".navibar-container").removeClass("portrait");
+    }
+}
+</script>
+</html>

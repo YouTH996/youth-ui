@@ -1,0 +1,410 @@
+<html>
+  <meta charset="utf-8" >
+<head>
+<script src="js/jquery-1.9.0.js" type="text/javascript"></script>
+<script src="js/jquery.cookie.min.js"></script>
+<script src="js/jquery.md5.js"></script>
+<script src="js/msnWeather.js?v=1211"></script>
+<script src="js/Sortable.min.js"></script>
+<link id="theme" rel="stylesheet" href="css/dark_theme.css">
+<link rel="stylesheet" href="css/widget.css">
+<link id="skin" rel="stylesheet" href="theme/default/theme.css">
+</head>
+<body>
+    <!-- 播放器 -->
+    <div id="widget-container" class="widget-container">
+        <!--导航组件-->
+        <div data-id='0' draggable='true' class="automap widget">
+            <div class="widget_bg_blur"></div>
+            <div class="automap__image">
+                <img src="img/widget/automap_logo.png">
+            </div>
+            <div class="carinfo-lock__info automap__btn">
+                <li>
+                    <img src="img/widget/nav_btn_home.png">
+                    <p>回家</p>
+                </li>
+                <li>
+                    <img src="img/widget/nav_btn_gongsi.png">
+                    <p>去公司</p>
+                </li>
+            </div>
+        </div>
+        <!-- 播放器主体 -->
+        <div data-id='1' draggable='true' class="music-player__main widget player">
+            <!-- 模糊背景 -->
+            <div class="widget_bg_blur music-player__blur"></div>
+            <!-- 唱片 -->
+            <div class="music-player__disc">
+                <!-- 唱片图片 -->
+                <div class="music-player__image">
+                    <img width="100%" src="img/widget/music_cover.jpg" alt="" loading="lazy" onerror="javascript:this.src='./img/widget/music_cover.jpg';">
+                </div>
+                <!-- 指针 -->
+                <div class="music-player__pointer"><img width="100%" src="data:image/png;base64,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" alt=""></div>
+            </div>
+            <!-- 控件主体 -->
+            <div class="music-player__controls">
+                <!-- 歌曲信息 -->
+                <div class="music__info">
+                    <!-- 歌词信息 -->
+                    <div class="music__info--lyric"><ul></ul></div>
+                    <!-- 歌名信息 -->
+                    <h3 class="music__info--title">等待播放</h3>
+                </div>
+                <!-- 控件... -->
+                <div class="player-control">
+                    <div class="player-control__btns">
+                        <div class="player-control__btn player-control__btn--prev"></div>
+                        <div class="player-control__btn player-control__btn--play"></div>
+                        <div class="player-control__btn player-control__btn--next"></div>
+                        <div class="player-control__btn player-control__btn--logo"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--汽车锁信息-->
+        <div data-id='2' draggable='true' id="carinfo-lock" class="carinfo-lock widget">
+            <div class="widget_bg_blur"></div>
+            <div class="carinfo-lock__image car-thumb">
+                <img src="/assets/img/byd_song.png" onerror="javascript:this.src='./img/widget/byd_song.png';">
+            </div>
+            <div class="carinfo-lock__info carinfo_btn">
+                <ul></ul>
+            </div>
+        </div>
+        <!--天气信息-->
+        <div data-id='3' draggable='true' class="widget weather">
+            <div class="widget_bg_blur"></div>
+            <div class="weather__ico">
+                <img src="img/weather/SunnyDayV3.svg">
+            </div>
+            <div class="weather__summary">
+                <div class="temp">
+                    <o>--</o>
+                    <span>&lrm;°C<br><t></t></span>
+                </div>
+                <div class="capinfo">
+                    <p>--</p>
+                    <span><i class="aqi_level"></i><o>--</o></span>
+                </div>
+            </div>
+        </div>
+        <!--汽车胎压-->
+        <div data-id='4' draggable='true' class="carinfo-lock widget car-tire">
+            <div class="widget_bg_blur"></div>
+            <div class="carinfo-lock__info car-tire__info">
+                <li>
+                    <p><o>--</o><span>kPa</span></p>
+                    <p><o>--</o><span>kPa</span></p>
+                </li>
+            </div>
+            <div class="carinfo-lock__image car-tire__image">
+                <img src="/assets/img/car_ty.png" onerror="javascript:this.src='./img/widget/car_ty.png';">
+            </div>
+            <div class="carinfo-lock__info car-tire__info">
+                <li>
+                    <p><o>--</o><span>kPa</span></p>
+                    <p><o>--</o><span>kPa</span></p>
+                </li>
+            </div>
+        </div>
+        <!--常用APP-->
+        <div data-id='6' draggable='true' class="app-favorite widget">
+            <div class="widget_bg_blur"></div>
+            <p></p>
+            <!--<img class="app-add__btn ico_dock_app_add" src="./img/widget/dock_app_add.png">-->
+            <img class="app-add__btn ico_setting" src="img/thumb/ico_setting.png">
+        </div>
+    </div> 
+</body>
+<script>
+var parentWindow = window.parent;
+var map_pkg = parentWindow.car.local("system_widget_app_map");
+var music_pkg = parentWindow.car.local("system_widget_app_music");
+var img_pre = "/appicon/";
+var fx = function(o){return document.querySelector(o)};
+if(window.carJsBridge.config("UI_THEME") === 0){
+    var theme = "./css/light_theme.css";
+    $("#theme", parentWindow.document).attr("href", theme);
+    $("#theme").attr("href", theme);
+}
+updateWidgetLayout(Math.random());
+
+function updateMusic(time){
+    music_pkg = parentWindow.global("mt_app") || parentWindow.car.local("system_widget_app_music");
+    if(parentWindow.global("mt_app") != "null" && parentWindow.global("mt_title") != null){
+        let play_status = parentWindow.global("mt_isplaying") == "true" ? "play" : "pause";//播放状态 正在播放为play
+        let mt_cover = parentWindow.global("mt_cover") != "null" ? parentWindow.global("mt_cover") : img_pre + music_pkg;
+        if(mt_cover != null && mt_cover.startsWith("http")){
+            mt_cover = window.carJsBridge.config("system_music_online_access_mode") != 1 && !mt_cover.startsWith("http://liszt") ? img_pre + music_pkg : mt_cover;
+        }
+        if(mt_cover.startsWith("content://")) mt_cover = mt_cover.replace("content://","http://content/");
+        fx('.music__info--lyric ul').innerHTML = '';
+        fx('.music__info--title').innerHTML = parentWindow.global("mt_title")+ '<span>'+ parentWindow.global("mt_artist").replace("null","") +'</span>';
+        var txt_state = $(".music__info--title").width() > 210 ?  "play" : "pause";
+        var blur_image = parentWindow.global("player_blur_show") == 0 ? "" : "url('"+ mt_cover +"')";
+        $('.music-player__image').show();
+        fx('.music-player__image img').src = mt_cover;
+        fx('.music-player__blur').style.backgroundImage = blur_image;
+        if(parentWindow.global("player_widget_clone") == 1){
+            $('.music-player__image', parentWindow.document).show();
+            $('.music-player__image img', parentWindow.document).attr('src', mt_cover);
+            $('.music-player__blur', parentWindow.document).css('background', blur_image);
+        }
+        fx('.music-player__image').className = 'music-player__image '+ play_status;
+        fx('.music-player__pointer').className = 'music-player__pointer '+ play_status;
+        fx('.music__info--title').className = 'music__info--title '+ txt_state;
+        fx('.player-control__btn--play').style.backgroundImage = "url('./img/widget/music_btn_"+ play_status +".png')";
+        fx('.player-control__btn--logo').style.backgroundImage = "url('"+ img_pre + music_pkg +"')";
+        parentWindow.car.cloneWidget("player");
+        $(".player_widget .player-control__btn--logo", parentWindow.document).css("transform","none");
+    }
+}
+parentWindow.car.cloneWidget("player");
+function updateCarInfo(time){
+    var tire_values = [parentWindow.global("TYRE_PRESSURE_VALUE_RIGHT_FRONT"), parentWindow.global("TYRE_PRESSURE_VALUE_LEFT_FRONT"), parentWindow.global("TYRE_PRESSURE_VALUE_RIGHT_REAR") ,parentWindow.global("TYRE_PRESSURE_VALUE_LEFT_REAR")];
+    $(".car-tire__info li o").each(function(index,domEle){
+        $(domEle).text(tire_values[index]);
+    });
+}
+function updateACInfo(time){
+    var ac_cur_temp = parentWindow.global("AC_TEMP_MAIN") || 23,
+        ac_cur_wind = parentWindow.global("AC_WIND_LEVEL") || 0,
+        ac_status = parentWindow.global("AC_POWER_STATE") == "1" ? "_on" : "_off",
+        isdark = /dark/.test(parentWindow.global("THEME")) && parseInt(ac_cur_wind) < 1 ? "_dark" : "";
+        imgIsdark =  parentWindow.global("THEME") == null || /dark/.test(parentWindow.global("THEME")) ? "_dark" : "";
+    $(".carac__info .temp").text(ac_cur_temp);
+    $(".carac__info .wind").css("background-image",`url('./img/navbar/ac_bar_wind_level_${ac_cur_wind}${ac_status}${isdark}.png')`);
+    $(".carac__info .wind img").attr('src', `./img/navbar/air_control_wind_cc${imgIsdark}.png`);
+    $(".carac__info .wind img").css("animation",`${parseInt(ac_cur_wind) > 0 && 'rotation 1s linear infinite'}`);
+}
+function updateFavAppList(time){
+    var app_list = JSON.parse(window.carJsBridge.local("favAppData") || "{}"),
+        app_count = app_list ? Object.keys(app_list).length : 0,
+        widget_width = app_count*71+110;
+    $(".app-favorite p").html("");
+    for(let pkg in app_list){       
+        var pkglogo = pkg == "launcher3" ? "./img/thumb/ic_flat_launcher.png" : img_pre + pkg;
+        $(".app-favorite p").prepend('<img src="' + pkglogo +'">');
+    }
+    $(".app-favorite").css("width",`${widget_width}px`);
+}
+function updateWidgetAppList(time){
+    var widget_app_list = JSON.parse(window.carJsBridge.local("naviAppData") || "{}");
+    for(let pkg in widget_app_list){       
+        var pkglogo = pkg == "launcher3" ? "./img/thumb/ic_flat_launcher.png" : img_pre + pkg;
+        if(!document.getElementById(pkg)){
+            $(".app-favorite").before(`<div id="${pkg}" draggable='true' class="widget widget_app">
+                <img src="${pkglogo}">
+                <span>${widget_app_list[pkg]}</span>
+            </div>`);
+        }
+    }
+}
+function delAppData(key,pkg){
+    var appData = JSON.parse(window.carJsBridge.local(key));
+    delete appData[pkg];
+    window.carJsBridge.setLocal(key,JSON.stringify(appData));
+}
+function updateWidgetLayout(time){
+    var theme_style = parentWindow.global("theme_style");
+    if(theme_style){
+        var style = JSON.parse(theme_style);
+        $.each(style, function(key,val) {
+            if(key == "widget_bg_opacity") val = val/100;
+            if(key == "widget_border_radius") val = val+"px";
+            if(key == "widget_blur"){
+                val = val > 0 ? "blur("+ val +"px)" : "";
+                $(".widget-container .widget").css("backdrop-filter",val);
+            }else if(key == "widget_margin_right"){
+                $(".widget-container .widget").css("margin-right", val+"px");
+            }else{
+                document.documentElement.style.setProperty("--"+key, val);
+                parentWindow.document.documentElement.style.setProperty("--"+key, val);
+            }
+        });
+    }
+    parentWindow.global("player_mini_lyric_show") == 0 ? $(".music__info--lyric").hide() : $(".music__info--lyric").show();
+    parentWindow.global("car_tire_widget_show") == 0 ? $(".car-tire").hide() : $(".car-tire").show();
+    (parentWindow.global("weather_widget_show") == 0 || parentWindow.global("weather_widget_clone") == 1) ? $(".weather").hide() : $(".weather").show();
+}
+//updateMusic(0);
+//console.log("widget更新carinfo");
+//updateCarInfo(0);
+//parentWindow.car.cloneWidget("player");
+updateFavAppList(0);
+updateWidgetAppList(0);
+
+function weather(time) {
+    parentWindow.car.getCurLunar(new Date());
+    var weatherData = window.carJsBridge.local("WEATHER_DATA");
+    if(weatherData){
+        var data = weatherData.split("_");
+        if(data.length < 13) return;
+        var isNight = isSunriseSunset(new Date, new Date(formatTime(data[7])), new Date(formatTime(data[8])));
+        $('.weather__summary .temp o').text(data[2]);
+        $('.weather__summary .temp t').text(`${data[3]}℃ /${data[4]}℃`);
+        $('.weather__summary .capinfo p').text(data[1]);
+        $('.weather__summary .capinfo i').attr("class","aqi_level aqi_level_"+ data[11]);
+        $('.weather__summary .capinfo o').text(data[10] +" "+ data[12].replace("污染",""));
+        $(".weather__ico img").attr('src', getWeaIconByZmCode(data[5],isNight));
+        $(".digital-clock .weather-info", parentWindow.document).html(`${data[1]}&nbsp;&nbsp;${data[4]}℃~${data[3]}℃&nbsp;&nbsp;&nbsp;&nbsp;${data[0]}`);
+        parentWindow.car.cloneWidget("weather");
+    }
+}
+weather(0);
+
+
+$(".automap__image").click(function(e){
+    map_pkg = parentWindow.car.local("system_widget_app_map");
+    if(!map_pkg){
+        window.carJsBridge.showToast("未设置默认地图APP！");
+    }else{
+        parentWindow.car.loadApp(map_pkg);
+        //setTimeout(function(){parentWindow.car.refreshAmap(1);},1500);
+    }
+});
+$(".automap__btn li").click(function(){
+    map_pkg = parentWindow.car.local("system_widget_app_map");
+    var navi_status = $(this).index();
+    if(map_pkg){
+        parentWindow.car.autoNavi(map_pkg, navi_status);
+    }
+});
+$(".carinfo_btn").on("click", "li", function(){
+    /*var idx = $(this).index();
+    if(idx > 0){
+        var action = $(this).attr('action');
+        parentWindow.car.carControl(action);
+    }*/
+    parentWindow.car.serCardCtrl($(this));
+});
+var m_flag = true;
+$(".car-thumb").click(function(){
+    var car_model_show = parentWindow.global("car_model_show") || 0;
+    var time_cards_show_mode = parentWindow.global("time_cards_show_mode") || 1;
+    var car_ctrl_cards_show_mode = parentWindow.global("car_ctrl_cards_show_mode") || 1;
+    var words_day_show = parentWindow.global("words_day_show") || 0;
+    if(m_flag){
+        $("#carinfo-lock").animate({width:`${parentWindow.global("car_ctrl_widget_width") || 285}px`});
+        time_cards_show_mode == 1 && $(".digital-clock", parentWindow.document).hide();
+        words_day_show == 1 && $(".words-day", parentWindow.document).hide();
+        car_model_show == 1 && $("#box", parentWindow.document).fadeIn(1000);
+        car_ctrl_cards_show_mode == 1 && $("#card-container", parentWindow.document).fadeIn(1000);
+        car_model_show > 0 && parentWindow.car.initDoor();
+        m_flag = false;
+        parentWindow.car.refreshAmap(0);
+    }else{
+        time_cards_show_mode == 1 && $(".digital-clock", parentWindow.document).fadeIn(1000);
+        words_day_show == 1 && $(".words-day", parentWindow.document).fadeIn(1000);
+        $("#carinfo-lock").animate({width:"285px"});
+        car_model_show == 1 && $("#box", parentWindow.document).fadeOut(1000);
+        car_ctrl_cards_show_mode == 1 && $("#card-container", parentWindow.document).hide();
+        m_flag = true;
+        parentWindow.car.refreshAmap(1);
+    }
+});
+
+
+$(".music-player__main").click(function(e){
+    music_pkg = parentWindow.global("mt_app") || parentWindow.car.local("system_widget_app_music");
+    if(!music_pkg){
+        window.carJsBridge.showToast("未设置默认音乐APP！");
+    }else{
+        parentWindow.car.loadApp(music_pkg);
+    }
+});
+$(".player-control__btn").click(function(e){
+    e.stopPropagation();
+    var i = $(this).index();
+    var play_pause_key = parentWindow.global("mt_isplaying") == "true" ? "PAUSE" : "PLAY";
+    var action_list = ["PREVIOUS", play_pause_key, "NEXT"];
+    i == 3 ? parentWindow.car.toggleCloneWidget("player",1) : parentWindow.car.mediaControl(action_list[i]);
+});
+$(".weather").on('click', function(){  
+    parentWindow.car.loadApp("com.icoolme.android.weather.bydauto");
+});
+$(".ico_setting").click(function(){
+    parentWindow.car.showSettingPanel();//showAppList();
+    parentWindow.global("time_cards_position") && $(".time_cards_show", parentWindow.document).css("background", "rgba(0, 0, 0, 0.25)");
+    parentWindow.global("car_ctrl_cards_position") && $(".car_ctrl_cards_show", parentWindow.document).css("background", "rgba(0, 0, 0, 0.25)");
+    parentWindow.car.refreshAmap(0);
+});
+var clicktime = +new Date();
+var timer;
+$(".app-favorite p").on('click', 'img', function(event){  
+    clearTimeout(timer);
+    let index = $(this)[0].src.lastIndexOf("\/"); 
+    var pkg = $(this)[0].src.substring(index+1);  
+    timer = setTimeout(function () {
+        pkg == "ic_flat_launcher.png" ? window.carJsBridge.sysBtnEvent("bydhome") : parentWindow.car.loadApp(pkg);
+    }, 400);
+    if((+new Date()) - clicktime < 400 ){
+        if(pkg == "ic_flat_launcher.png") pkg = "launcher3";
+        delAppData("favAppData",pkg);
+        clearTimeout(timer);
+    }else{
+        clicktime = +new Date();
+    }
+});
+$(".widget-container").on('click', '.widget_app', function(event){
+    clearTimeout(timer);
+    var pkg = $(this).attr("id");
+    timer = setTimeout(function () {
+        pkg == "launcher3" ? window.carJsBridge.sysBtnEvent("bydhome") : parentWindow.car.loadApp(pkg);
+    }, 400);
+    if((+new Date()) - clicktime < 400 ){
+        delAppData("naviAppData",pkg);
+        $(this).remove();
+        clearTimeout(timer);
+    }else{
+        clicktime = +new Date();
+    }
+});
+
+$(".carac__info img").on('click', function(e){
+    e.stopPropagation();
+    var i = $(".carac__info img").index(this),
+        ac_cur_temp = parseInt(parentWindow.global("AC_TEMP_MAIN")) || 22,
+        ac_cur_wind = parseInt(parentWindow.global("AC_WIND_LEVEL")) || 0,
+        op = i < 2 ? "AC_TEMP_MAIN_SET" : "AC_WIND_LEVEL_SET",
+        value;
+    switch(i){
+        case 0:
+            value = ac_cur_temp - 1;
+            break;
+        case 1:
+            value = ac_cur_temp + 1;
+            break;
+        case 2:
+            value = ac_cur_wind - 1;
+            break;
+        case 4:
+            value = ac_cur_wind + 1;
+            break;
+    }
+    if(value>=0) parentWindow.car.acFastControl(op, value);
+});
+
+parentWindow.car.updateCardList("ctrl_cards_widget");
+new Sortable($('#widget-container')[0], {
+    animation: 150,
+    chosenClass: 'blue-background-class',
+    delayOnTouchOnly: true, //开启触摸延时
+    delay: 500, //延时时长
+    touchStartThreshold: 3,
+    store: {
+        get: function (sortable) {
+            var order = parentWindow.global("widget_order");
+            return order ? order.split('|') : [];
+        },
+        set: function (sortable) {
+            var order = sortable.toArray();
+            parentWindow.setGlobal("widget_order", order.join('|'));
+        }
+    }
+});
+</script>
+</body>
+</html>
