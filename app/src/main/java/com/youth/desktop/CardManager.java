@@ -168,6 +168,17 @@ public class CardManager {
     }
     
     private void setupTirePressureCard() {
+        ImageView imgCarTy = tirePressureCard.findViewById(R.id.img_car_ty);
+        
+        try {
+            InputStream is = activity.getAssets().open("webui/img/widget/car_ty.png");
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            imgCarTy.setImageBitmap(bitmap);
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
         TextView textTireFl = tirePressureCard.findViewById(R.id.text_tire_fl);
         TextView textTireFr = tirePressureCard.findViewById(R.id.text_tire_fr);
         TextView textTireRl = tirePressureCard.findViewById(R.id.text_tire_rl);
@@ -178,7 +189,7 @@ public class CardManager {
         textTireFr.setText("2.4");
         textTireRl.setText("2.3");
         textTireRr.setText("2.5");
-        textTireTemp.setText("45°C");
+        textTireTemp.setText("胎温: 45°C");
         
         updateTirePressureColor(textTireFl, 2.3f);
         updateTirePressureColor(textTireFr, 2.4f);
@@ -281,7 +292,7 @@ public class CardManager {
             textTireFr.setText(String.format("%.1f", fr));
             textTireRl.setText(String.format("%.1f", rl));
             textTireRr.setText(String.format("%.1f", rr));
-            textTireTemp.setText(String.format("%.0f°C", temp));
+            textTireTemp.setText(String.format("胎温: %.0f°C", temp));
             
             updateTirePressureColor(textTireFl, fl);
             updateTirePressureColor(textTireFr, fr);

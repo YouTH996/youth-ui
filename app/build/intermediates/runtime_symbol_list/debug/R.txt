@@ -3040,6 +3040,7 @@ int drawable btn_radio_off_mtrl 0x7f07007d
 int drawable btn_radio_off_to_on_mtrl_animation 0x7f07007e
 int drawable btn_radio_on_mtrl 0x7f07007f
 int drawable btn_radio_on_to_off_mtrl_animation 0x7f070080
+int drawable car_ty_placeholder 0x7f0700fd
 int drawable card_app_button_background 0x7f0700ef
 int drawable card_background 0x7f0700f0
 int drawable card_background_rounded 0x7f0700fc
@@ -3430,6 +3431,7 @@ int id img_app_3 0x7f08022e
 int id img_app_4 0x7f08022f
 int id img_back 0x7f0800f7
 int id img_bluetooth 0x7f0800f8
+int id img_car_ty 0x7f080248
 int id img_defrost_front 0x7f0800f9
 int id img_defrost_rear 0x7f0800fa
 int id img_driving_recorder 0x7f0800fb

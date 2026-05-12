@@ -40,8 +40,8 @@
         "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\drawable\\ic_unlock.xml"
     },
     {
-        "merged": "com.youth.desktop.app-merged_res-4:/layout_card_vehicle_control.xml.flat",
-        "source": "com.youth.desktop.app-main-6:/layout/card_vehicle_control.xml"
+        "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\drawable_card_background_rounded.xml.flat",
+        "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\drawable\\card_background_rounded.xml"
     },
     {
         "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\mipmap-xxhdpi_ic_launcher.xml.flat",
@@ -100,10 +100,6 @@
         "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\layout\\activity_main.xml"
     },
     {
-        "merged": "com.youth.desktop.app-merged_res-4:/layout_card_music.xml.flat",
-        "source": "com.youth.desktop.app-main-6:/layout/card_music.xml"
-    },
-    {
         "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\mipmap-mdpi_ic_launcher.xml.flat",
         "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\mipmap-mdpi\\ic_launcher.xml"
     },
@@ -114,10 +110,6 @@
     {
         "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\drawable_ic_air_direction.xml.flat",
         "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\drawable\\ic_air_direction.xml"
-    },
-    {
-        "merged": "com.youth.desktop.app-merged_res-4:/layout_card_navigation.xml.flat",
-        "source": "com.youth.desktop.app-main-6:/layout/card_navigation.xml"
     },
     {
         "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\drawable_icon_background_selector.xml.flat",
@@ -160,24 +152,16 @@
         "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\mipmap-anydpi-v26\\ic_launcher.xml"
     },
     {
-        "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\mipmap-hdpi_ic_launcher.xml.flat",
-        "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\mipmap-hdpi\\ic_launcher.xml"
-    },
-    {
         "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\drawable_ic_music_default.xml.flat",
         "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\drawable\\ic_music_default.xml"
     },
     {
-        "merged": "com.youth.desktop.app-merged_res-4:/layout_card_frequent_apps.xml.flat",
-        "source": "com.youth.desktop.app-main-6:/layout/card_frequent_apps.xml"
+        "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\mipmap-hdpi_ic_launcher.xml.flat",
+        "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\mipmap-hdpi\\ic_launcher.xml"
     },
     {
         "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\layout_card_vehicle_control.xml.flat",
         "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\layout\\card_vehicle_control.xml"
-    },
-    {
-        "merged": "com.youth.desktop.app-merged_res-4:/drawable_card_background_rounded.xml.flat",
-        "source": "com.youth.desktop.app-main-6:/drawable/card_background_rounded.xml"
     },
     {
         "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\drawable_album_cover_background.xml.flat",
@@ -210,6 +194,10 @@
     {
         "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\layout_card_music.xml.flat",
         "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\layout\\card_music.xml"
+    },
+    {
+        "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\drawable_car_ty_placeholder.xml.flat",
+        "source": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-main-6:\\drawable\\car_ty_placeholder.xml"
     },
     {
         "merged": "D:\\dev\\Android\\gradle\\daemon\\8.14.4\\com.youth.desktop.app-merged_res-4:\\layout_item_app_drawer.xml.flat",

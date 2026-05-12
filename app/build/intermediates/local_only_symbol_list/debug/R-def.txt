@@ -67,6 +67,7 @@ dimen taskbar_icon_size
 dimen window_control_size
 dimen window_corner_radius
 drawable album_cover_background
+drawable car_ty_placeholder
 drawable card_app_button_background
 drawable card_background
 drawable card_background_rounded
@@ -147,6 +148,7 @@ id img_app_3
 id img_app_4
 id img_back
 id img_bluetooth
+id img_car_ty
 id img_defrost_front
 id img_defrost_rear
 id img_driving_recorder
