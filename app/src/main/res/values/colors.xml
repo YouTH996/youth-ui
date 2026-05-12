@@ -42,4 +42,16 @@
     <color name="frosted_dark">#33000000</color>
 
     <color name="desktop_wallpaper_default">#00000000</color>
+
+    <!-- 卡片系统颜色 -->
+    <color name="card_background">#CC1A1A2E</color>
+    <color name="card_background_light">#E6332E4C</color>
+    <color name="card_button_normal">#1A33FF00</color>
+    <color name="card_button_pressed">#3333FF00</color>
+    <color name="card_button_selected">#4433FF00</color>
+    <color name="card_text_primary">#FFFFFF</color>
+    <color name="card_text_secondary">#B0B0B0</color>
+    <color name="card_accent">#00D4FF</color>
+    <color name="card_warning">#FF9800</color>
+    <color name="card_error">#F44336</color>
 </resources>

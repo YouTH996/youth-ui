@@ -5,24 +5,21 @@
     android:layout_height="match_parent"
     android:background="@color/desktop_wallpaper_default">
 
-    <GridLayout
-        android:id="@+id/icon_grid"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="44dp"
-        android:layout_marginBottom="56dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp" />
+        android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/status_bar"
-        android:layout_width="match_parent"
-        android:layout_height="28dp"
-        android:background="@drawable/statusbar_background_dark"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp">
+        <!-- 状态栏 -->
+        <LinearLayout
+            android:id="@+id/status_bar"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:background="@drawable/statusbar_background_dark"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
 
         <!-- 左侧：语音按钮、档位、电量 -->
         <LinearLayout
@@ -153,7 +150,40 @@
                 android:fontFamily="sans-serif-medium" />
         </LinearLayout>
 
+        </LinearLayout>
+
+        <!-- 图标网格 -->
+        <GridLayout
+            android:id="@+id/icon_grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="56dp" />
+
     </LinearLayout>
+
+    <!-- 卡片容器区域 - 显示在底部任务栏上方 -->
+    <HorizontalScrollView
+        android:id="@+id/card_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="56dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <LinearLayout
+            android:id="@+id/card_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical" />
+
+    </HorizontalScrollView>
 
     <LinearLayout
         android:id="@+id/taskbar"

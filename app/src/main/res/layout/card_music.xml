@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="280dp"
+    android:layout_height="100dp"
+    android:orientation="horizontal"
+    android:background="@drawable/card_background_rounded"
+    android:padding="12dp"
+    android:layout_marginEnd="12dp"
+    android:elevation="4dp"
+    android:gravity="center_vertical">
+
+    <!-- 专辑封面 -->
+    <ImageView
+        android:id="@+id/img_album_cover"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/ic_music_default"
+        android:scaleType="centerCrop"
+        android:background="@drawable/album_cover_background" />
+
+    <!-- 歌曲信息 -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="12dp">
+
+        <TextView
+            android:id="@+id/text_song_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="演员"
+            android:textSize="16sp"
+            android:textColor="@color/dark_tech_text"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/text_song_artist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="薛之谦"
+            android:textSize="13sp"
+            android:textColor="@color/dark_tech_text_secondary"
+            android:layout_marginTop="4dp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- 进度条 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/text_current_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1:23"
+                android:textSize="11sp"
+                android:textColor="@color/dark_tech_text_secondary" />
+
+            <SeekBar
+                android:id="@+id/seekbar_progress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:max="100"
+                android:progress="35"
+                android:progressTint="@color/dark_tech_accent"
+                android:thumbTint="@color/dark_tech_accent" />
+
+            <TextView
+                android:id="@+id/text_total_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3:45"
+                android:textSize="11sp"
+                android:textColor="@color/dark_tech_text_secondary" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 播放控制按钮 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginStart="8dp">
+
+        <ImageView
+            android:id="@+id/btn_previous"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_previous"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+        <ImageView
+            android:id="@+id/btn_play_pause"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_play"
+            android:scaleType="fitCenter"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+        <ImageView
+            android:id="@+id/btn_next"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_next"
+            android:scaleType="fitCenter"
+            android:padding="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+    </LinearLayout>
+
+</LinearLayout>

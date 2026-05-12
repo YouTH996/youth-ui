@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="280dp"
+    android:layout_height="100dp"
+    android:orientation="vertical"
+    android:background="@drawable/card_background_rounded"
+    android:padding="12dp"
+    android:layout_marginEnd="12dp"
+    android:elevation="4dp">
+
+    <!-- 卡片标题 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="胎压监测"
+        android:textSize="14sp"
+        android:textColor="@color/dark_tech_text"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 四个轮胎的压力显示 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <!-- 左前轮 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/text_tire_fl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2.3"
+                android:textSize="20sp"
+                android:textColor="@color/dark_tech_accent"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="bar"
+                android:textSize="11sp"
+                android:textColor="@color/dark_tech_text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="左前"
+                android:textSize="10sp"
+                android:textColor="@color/dark_tech_text_secondary"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- 右前轮 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/text_tire_fr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2.4"
+                android:textSize="20sp"
+                android:textColor="@color/dark_tech_accent"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="bar"
+                android:textSize="11sp"
+                android:textColor="@color/dark_tech_text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="右前"
+                android:textSize="10sp"
+                android:textColor="@color/dark_tech_text_secondary"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- 左后轮 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/text_tire_rl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2.3"
+                android:textSize="20sp"
+                android:textColor="@color/dark_tech_accent"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="bar"
+                android:textSize="11sp"
+                android:textColor="@color/dark_tech_text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="左后"
+                android:textSize="10sp"
+                android:textColor="@color/dark_tech_text_secondary"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- 右后轮 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/text_tire_rr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2.5"
+                android:textSize="20sp"
+                android:textColor="@color/dark_tech_accent"
+                android:fontFamily="sans-serif-medium" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="bar"
+                android:textSize="11sp"
+                android:textColor="@color/dark_tech_text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="右后"
+                android:textSize="10sp"
+                android:textColor="@color/dark_tech_text_secondary"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 温度信息 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="4dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="胎温: "
+            android:textSize="11sp"
+            android:textColor="@color/dark_tech_text_secondary" />
+
+        <TextView
+            android:id="@+id/text_tire_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="45°C"
+            android:textSize="11sp"
+            android:textColor="@color/dark_tech_text"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+</LinearLayout>

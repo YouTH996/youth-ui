@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="280dp"
+    android:layout_height="100dp"
+    android:orientation="vertical"
+    android:background="@drawable/card_background_rounded"
+    android:padding="12dp"
+    android:layout_marginEnd="12dp"
+    android:elevation="4dp">
+
+    <!-- 卡片标题 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="常用应用"
+        android:textSize="14sp"
+        android:textColor="@color/dark_tech_text"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 应用图标网格 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <!-- 应用1 -->
+        <LinearLayout
+            android:id="@+id/btn_app_1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/card_app_button_background"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/img_app_1"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="fitCenter" />
+
+            <TextView
+                android:id="@+id/text_app_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="导航"
+                android:textSize="10sp"
+                android:textColor="@color/dark_tech_text"
+                android:layout_marginTop="2dp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
+
+        <!-- 应用2 -->
+        <LinearLayout
+            android:id="@+id/btn_app_2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/card_app_button_background"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/img_app_2"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="fitCenter" />
+
+            <TextView
+                android:id="@+id/text_app_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="音乐"
+                android:textSize="10sp"
+                android:textColor="@color/dark_tech_text"
+                android:layout_marginTop="2dp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
+
+        <!-- 应用3 -->
+        <LinearLayout
+            android:id="@+id/btn_app_3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/card_app_button_background"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/img_app_3"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="fitCenter" />
+
+            <TextView
+                android:id="@+id/text_app_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="电话"
+                android:textSize="10sp"
+                android:textColor="@color/dark_tech_text"
+                android:layout_marginTop="2dp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
+
+        <!-- 应用4 -->
+        <LinearLayout
+            android:id="@+id/btn_app_4"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/card_app_button_background"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/img_app_4"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="fitCenter" />
+
+            <TextView
+                android:id="@+id/text_app_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="设置"
+                android:textSize="10sp"
+                android:textColor="@color/dark_tech_text"
+                android:layout_marginTop="2dp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

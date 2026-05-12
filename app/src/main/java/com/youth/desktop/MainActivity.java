@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -53,6 +54,9 @@ public class MainActivity extends AppCompatActivity {
     private GridLayout iconGrid;
     private LinearLayout homeButton;
     private TextView acTempText;
+    private LinearLayout cardContainer;
+    private HorizontalScrollView cardScrollView;
+    private CardManager cardManager;
     
     // ImageView 组件声明
     private ImageView imgBack;
@@ -139,6 +143,17 @@ public class MainActivity extends AppCompatActivity {
         setupTimeUpdater();
         setupClickListeners();
         updateAcTempDisplay();
+        initCardManager();
+    }
+    
+    private void initCardManager() {
+        cardContainer = findViewById(R.id.card_container);
+        cardScrollView = findViewById(R.id.card_scroll_view);
+        
+        if (cardContainer != null && cardScrollView != null) {
+            cardManager = new CardManager(this, cardContainer, cardScrollView);
+            cardManager.initializeCards();
+        }
     }
 
     private void initViews() {
