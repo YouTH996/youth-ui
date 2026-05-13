@@ -1,152 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="280dp"
-    android:layout_height="100dp"
-    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
     android:background="@drawable/card_background_rounded"
-    android:padding="12dp"
+    android:padding="16dp"
     android:layout_marginEnd="12dp"
-    android:elevation="4dp">
+    android:elevation="4dp"
+    android:gravity="center_vertical">
 
-    <!-- 导航状态图标和目的地 -->
+    <!-- 导航图标 -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:id="@+id/btn_nav_icon"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="?attr/selectableItemBackground"
+        android:padding="8dp">
 
         <ImageView
             android:id="@+id/img_nav_icon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_nav_default"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:scaleType="fitCenter" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginStart="8dp">
-
-            <TextView
-                android:id="@+id/text_nav_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="导航中"
-                android:textSize="14sp"
-                android:textColor="@color/dark_tech_accent"
-                android:fontFamily="sans-serif-medium" />
-
-            <TextView
-                android:id="@+id/text_nav_destination"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="公司"
-                android:textSize="16sp"
-                android:textColor="@color/dark_tech_text"
-                android:fontFamily="sans-serif-medium"
-                android:maxLines="1"
-                android:ellipsize="end" />
-        </LinearLayout>
     </LinearLayout>
 
-    <!-- 导航详细信息 -->
+    <!-- 分隔线 -->
+    <View
+        android:layout_width="1dp"
+        android:layout_height="48dp"
+        android:background="@color/dark_tech_text_secondary"
+        android:alpha="0.3"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <!-- 回家图标 -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp"
-        android:gravity="center_vertical">
+        android:id="@+id/btn_nav_home"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="?attr/selectableItemBackground"
+        android:padding="8dp">
 
-        <!-- 距离 -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
+        <ImageView
+            android:id="@+id/img_nav_home"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:scaleType="fitCenter" />
+    </LinearLayout>
 
-            <TextView
-                android:id="@+id/text_nav_distance"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="12.5"
-                android:textSize="18sp"
-                android:textColor="@color/dark_tech_text"
-                android:fontFamily="sans-serif-medium" />
+    <!-- 分隔线 -->
+    <View
+        android:layout_width="1dp"
+        android:layout_height="48dp"
+        android:background="@color/dark_tech_text_secondary"
+        android:alpha="0.3"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="公里"
-                android:textSize="11sp"
-                android:textColor="@color/dark_tech_text_secondary" />
-        </LinearLayout>
+    <!-- 去公司图标 -->
+    <LinearLayout
+        android:id="@+id/btn_nav_company"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="?attr/selectableItemBackground"
+        android:padding="8dp">
 
-        <!-- 分隔线 -->
-        <View
-            android:layout_width="1dp"
-            android:layout_height="28dp"
-            android:background="@color/dark_tech_text_secondary"
-            android:alpha="0.3" />
-
-        <!-- 预计时间 -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <TextView
-                android:id="@+id/text_nav_eta"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="25"
-                android:textSize="18sp"
-                android:textColor="@color/dark_tech_text"
-                android:fontFamily="sans-serif-medium" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="分钟"
-                android:textSize="11sp"
-                android:textColor="@color/dark_tech_text_secondary" />
-        </LinearLayout>
-
-        <!-- 分隔线 -->
-        <View
-            android:layout_width="1dp"
-            android:layout_height="28dp"
-            android:background="@color/dark_tech_text_secondary"
-            android:alpha="0.3" />
-
-        <!-- 剩余距离 -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <TextView
-                android:id="@+id/text_nav_remaining"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="8.2"
-                android:textSize="18sp"
-                android:textColor="@color/dark_tech_text"
-                android:fontFamily="sans-serif-medium" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="剩余公里"
-                android:textSize="11sp"
-                android:textColor="@color/dark_tech_text_secondary" />
-        </LinearLayout>
+        <ImageView
+            android:id="@+id/img_nav_company"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:scaleType="fitCenter" />
     </LinearLayout>
 
 </LinearLayout>

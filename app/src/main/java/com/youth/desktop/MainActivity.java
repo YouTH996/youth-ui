@@ -13,6 +13,8 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsetsController;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.HorizontalScrollView;
@@ -135,15 +137,53 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // 隐藏系统导航栏和状态栏
+        hideSystemUI();
+        
         setContentView(R.layout.activity_main);
 
         initViews();
+        initCardManager();
         initDefaultPinnedApps();
         loadInstalledApps();
         setupTimeUpdater();
         setupClickListeners();
         updateAcTempDisplay();
-        initCardManager();
+    }
+    
+    /**
+     * 隐藏系统导航栏和状态栏
+     */
+    private void hideSystemUI() {
+        View decorView = getWindow().getDecorView();
+        
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            // Android 11 (API 30) 及以上使用 WindowInsetsController
+            WindowInsetsController controller = decorView.getWindowInsetsController();
+            if (controller != null) {
+                controller.hide(android.view.WindowInsets.Type.navigationBars());
+                controller.setSystemBarsBehavior(
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                );
+            }
+        } else {
+            // Android 10 (API 29) 及以下使用 setSystemUiVisibility
+            decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            );
+        }
+        
+        // 设置窗口标志,确保内容延伸到系统栏区域
+        getWindow().setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        );
     }
     
     private void initCardManager() {
@@ -504,6 +544,10 @@ public class MainActivity extends AppCompatActivity {
 
         Collections.sort(desktopIcons, (a1, a2) -> a1.label.compareToIgnoreCase(a2.label));
         displayDesktopIcons();
+        
+        if (cardManager != null) {
+            cardManager.setInstalledApps(installedApps);
+        }
     }
 
     private void displayDesktopIcons() {
@@ -853,6 +897,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        hideSystemUI();
         updateTimeDisplay();
     }
 

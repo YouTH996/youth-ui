@@ -1,8 +1,12 @@
 package com.youth.desktop;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
@@ -17,7 +21,9 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CardManager {
 
@@ -38,6 +44,12 @@ public class CardManager {
     private Runnable progressRunnable;
     
     private List<AppInfo> frequentApps;
+    private List<AppInfo> installedApps;
+    private SharedPreferences prefs;
+    
+    private static final String PREFS_NAME = "frequent_apps_prefs";
+    private static final String KEY_FREQUENT_APPS = "frequent_apps";
+    private static final int MAX_FREQUENT_APPS = 3;
     
     public CardManager(Activity activity, LinearLayout cardContainer, HorizontalScrollView cardScrollView) {
         this.activity = activity;
@@ -46,6 +58,14 @@ public class CardManager {
         this.handler = new Handler(Looper.getMainLooper());
         this.progressHandler = new Handler(Looper.getMainLooper());
         this.frequentApps = new ArrayList<>();
+        this.installedApps = new ArrayList<>();
+        this.prefs = activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+    }
+    
+    public void setInstalledApps(List<AppInfo> apps) {
+        this.installedApps = apps;
+        loadFrequentApps();
+        updateFrequentAppsDisplay();
     }
     
     public void initializeCards() {
@@ -74,14 +94,14 @@ public class CardManager {
     
     private void setupNavigationCard() {
         ImageView imgNavIcon = navigationCard.findViewById(R.id.img_nav_icon);
-        TextView textNavStatus = navigationCard.findViewById(R.id.text_nav_status);
-        TextView textNavDestination = navigationCard.findViewById(R.id.text_nav_destination);
-        TextView textNavDistance = navigationCard.findViewById(R.id.text_nav_distance);
-        TextView textNavEta = navigationCard.findViewById(R.id.text_nav_eta);
-        TextView textNavRemaining = navigationCard.findViewById(R.id.text_nav_remaining);
+        ImageView imgNavHome = navigationCard.findViewById(R.id.img_nav_home);
+        ImageView imgNavCompany = navigationCard.findViewById(R.id.img_nav_company);
+        View btnNavIcon = navigationCard.findViewById(R.id.btn_nav_icon);
+        View btnNavHome = navigationCard.findViewById(R.id.btn_nav_home);
+        View btnNavCompany = navigationCard.findViewById(R.id.btn_nav_company);
         
         try {
-            InputStream is = activity.getAssets().open("webui/img/navbar/sys_nav_bar_home.png");
+            InputStream is = activity.getAssets().open("webui/img/widget/automap_logo.png");
             Bitmap bitmap = BitmapFactory.decodeStream(is);
             imgNavIcon.setImageBitmap(bitmap);
             is.close();
@@ -89,14 +109,37 @@ public class CardManager {
             e.printStackTrace();
         }
         
-        textNavStatus.setText("导航中");
-        textNavDestination.setText("公司");
-        textNavDistance.setText("12.5");
-        textNavEta.setText("25");
-        textNavRemaining.setText("8.2");
+        try {
+            InputStream is = activity.getAssets().open("webui/img/widget/nav_btn_home.png");
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            imgNavHome.setImageBitmap(bitmap);
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        try {
+            InputStream is = activity.getAssets().open("webui/img/widget/nav_btn_gongsi.png");
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            imgNavCompany.setImageBitmap(bitmap);
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        btnNavIcon.setOnClickListener(v -> {
+            Toast.makeText(activity, "打开导航应用", Toast.LENGTH_SHORT).show();
+        });
+        
+        btnNavHome.setOnClickListener(v -> {
+            Toast.makeText(activity, "开始导航回家", Toast.LENGTH_SHORT).show();
+        });
+        
+        btnNavCompany.setOnClickListener(v -> {
+            Toast.makeText(activity, "开始导航去公司", Toast.LENGTH_SHORT).show();
+        });
         
         navigationCard.setOnClickListener(v -> {
-            Toast.makeText(activity, "打开导航应用", Toast.LENGTH_SHORT).show();
         });
     }
     
@@ -145,26 +188,89 @@ public class CardManager {
     }
     
     private void setupVehicleControlCard() {
-        View btnUnlock = vehicleControlCard.findViewById(R.id.btn_unlock);
-        View btnWindow = vehicleControlCard.findViewById(R.id.btn_window);
+        ImageView imgCar = vehicleControlCard.findViewById(R.id.img_car);
+        ImageView imgLockUnlock = vehicleControlCard.findViewById(R.id.img_lock_unlock);
+        ImageView imgTrunk = vehicleControlCard.findViewById(R.id.img_trunk);
+        View btnLockUnlock = vehicleControlCard.findViewById(R.id.btn_lock_unlock);
         View btnTrunk = vehicleControlCard.findViewById(R.id.btn_trunk);
-        View btnFindCar = vehicleControlCard.findViewById(R.id.btn_find_car);
         
-        btnUnlock.setOnClickListener(v -> {
-            Toast.makeText(activity, "解锁车辆", Toast.LENGTH_SHORT).show();
-        });
+        try {
+            InputStream is = activity.getAssets().open("webui/img/widget/byd_song.png");
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            imgCar.setImageBitmap(bitmap);
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         
-        btnWindow.setOnClickListener(v -> {
-            Toast.makeText(activity, "车窗控制", Toast.LENGTH_SHORT).show();
+        try {
+            InputStream is = activity.getAssets().open("webui/img/widget/car_lock2.png");
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            imgLockUnlock.setImageBitmap(bitmap);
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        try {
+            InputStream is = activity.getAssets().open("webui/img/widget/control_trunck0.png");
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            imgTrunk.setImageBitmap(bitmap);
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        btnLockUnlock.setOnClickListener(v -> {
+            try {
+                boolean isLocked = imgLockUnlock.getTag() != null && (boolean) imgLockUnlock.getTag();
+                
+                if (isLocked) {
+                    InputStream is = activity.getAssets().open("webui/img/widget/car_lock2.png");
+                    Bitmap bitmap = BitmapFactory.decodeStream(is);
+                    imgLockUnlock.setImageBitmap(bitmap);
+                    is.close();
+                    Toast.makeText(activity, "车辆已解锁", Toast.LENGTH_SHORT).show();
+                } else {
+                    InputStream is = activity.getAssets().open("webui/img/widget/car_lock1.png");
+                    Bitmap bitmap = BitmapFactory.decodeStream(is);
+                    imgLockUnlock.setImageBitmap(bitmap);
+                    is.close();
+                    Toast.makeText(activity, "车辆已上锁", Toast.LENGTH_SHORT).show();
+                }
+                
+                imgLockUnlock.setTag(!isLocked);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
         
         btnTrunk.setOnClickListener(v -> {
-            Toast.makeText(activity, "打开后备箱", Toast.LENGTH_SHORT).show();
+            try {
+                boolean isTrunkOpen = imgTrunk.getTag() != null && (boolean) imgTrunk.getTag();
+                
+                if (isTrunkOpen) {
+                    InputStream is = activity.getAssets().open("webui/img/widget/control_trunck0.png");
+                    Bitmap bitmap = BitmapFactory.decodeStream(is);
+                    imgTrunk.setImageBitmap(bitmap);
+                    is.close();
+                    Toast.makeText(activity, "后备箱已关闭", Toast.LENGTH_SHORT).show();
+                } else {
+                    InputStream is = activity.getAssets().open("webui/img/widget/control_trunck1.png");
+                    Bitmap bitmap = BitmapFactory.decodeStream(is);
+                    imgTrunk.setImageBitmap(bitmap);
+                    is.close();
+                    Toast.makeText(activity, "后备箱已打开", Toast.LENGTH_SHORT).show();
+                }
+                
+                imgTrunk.setTag(!isTrunkOpen);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
         
-        btnFindCar.setOnClickListener(v -> {
-            Toast.makeText(activity, "寻车功能已启动", Toast.LENGTH_SHORT).show();
-        });
+        imgLockUnlock.setTag(false);
+        imgTrunk.setTag(false);
     }
     
     private void setupTirePressureCard() {
@@ -215,46 +321,172 @@ public class CardManager {
         LinearLayout btnApp1 = frequentAppsCard.findViewById(R.id.btn_app_1);
         LinearLayout btnApp2 = frequentAppsCard.findViewById(R.id.btn_app_2);
         LinearLayout btnApp3 = frequentAppsCard.findViewById(R.id.btn_app_3);
-        LinearLayout btnApp4 = frequentAppsCard.findViewById(R.id.btn_app_4);
+        LinearLayout btnManageApps = frequentAppsCard.findViewById(R.id.btn_manage_apps);
         
         TextView textApp1 = frequentAppsCard.findViewById(R.id.text_app_1);
         TextView textApp2 = frequentAppsCard.findViewById(R.id.text_app_2);
         TextView textApp3 = frequentAppsCard.findViewById(R.id.text_app_3);
-        TextView textApp4 = frequentAppsCard.findViewById(R.id.text_app_4);
-        
-        textApp1.setText("导航");
-        textApp2.setText("音乐");
-        textApp3.setText("电话");
-        textApp4.setText("设置");
         
         btnApp1.setOnClickListener(v -> {
-            Toast.makeText(activity, "打开导航", Toast.LENGTH_SHORT).show();
+            if (!frequentApps.isEmpty()) {
+                launchApp(frequentApps.get(0));
+            }
         });
         
         btnApp2.setOnClickListener(v -> {
-            Toast.makeText(activity, "打开音乐", Toast.LENGTH_SHORT).show();
+            if (frequentApps.size() > 1) {
+                launchApp(frequentApps.get(1));
+            }
         });
         
         btnApp3.setOnClickListener(v -> {
-            Toast.makeText(activity, "打开电话", Toast.LENGTH_SHORT).show();
+            if (frequentApps.size() > 2) {
+                launchApp(frequentApps.get(2));
+            }
         });
         
-        btnApp4.setOnClickListener(v -> {
-            Toast.makeText(activity, "打开设置", Toast.LENGTH_SHORT).show();
+        btnApp1.setOnLongClickListener(v -> {
+            if (!frequentApps.isEmpty()) {
+                removeFrequentApp(0);
+            }
+            return true;
+        });
+        
+        btnApp2.setOnLongClickListener(v -> {
+            if (frequentApps.size() > 1) {
+                removeFrequentApp(1);
+            }
+            return true;
+        });
+        
+        btnApp3.setOnLongClickListener(v -> {
+            if (frequentApps.size() > 2) {
+                removeFrequentApp(2);
+            }
+            return true;
+        });
+        
+        btnManageApps.setOnClickListener(v -> {
+            showAppSelectionDialog();
         });
     }
     
-    public void updateNavigationInfo(String destination, float distance, int eta, float remaining) {
-        if (navigationCard != null) {
-            TextView textNavDestination = navigationCard.findViewById(R.id.text_nav_destination);
-            TextView textNavDistance = navigationCard.findViewById(R.id.text_nav_distance);
-            TextView textNavEta = navigationCard.findViewById(R.id.text_nav_eta);
-            TextView textNavRemaining = navigationCard.findViewById(R.id.text_nav_remaining);
-            
-            textNavDestination.setText(destination);
-            textNavDistance.setText(String.format("%.1f", distance));
-            textNavEta.setText(String.valueOf(eta));
-            textNavRemaining.setText(String.format("%.1f", remaining));
+    private void loadFrequentApps() {
+        frequentApps.clear();
+        Set<String> savedPackages = prefs.getStringSet(KEY_FREQUENT_APPS, new HashSet<>());
+        
+        for (String packageName : savedPackages) {
+            for (AppInfo app : installedApps) {
+                if (app.packageName.equals(packageName)) {
+                    frequentApps.add(app);
+                    break;
+                }
+            }
+        }
+    }
+    
+    private void saveFrequentApps() {
+        Set<String> packageNames = new HashSet<>();
+        for (AppInfo app : frequentApps) {
+            packageNames.add(app.packageName);
+        }
+        prefs.edit().putStringSet(KEY_FREQUENT_APPS, packageNames).apply();
+    }
+    
+    private void updateFrequentAppsDisplay() {
+        ImageView imgApp1 = frequentAppsCard.findViewById(R.id.img_app_1);
+        ImageView imgApp2 = frequentAppsCard.findViewById(R.id.img_app_2);
+        ImageView imgApp3 = frequentAppsCard.findViewById(R.id.img_app_3);
+        TextView textApp1 = frequentAppsCard.findViewById(R.id.text_app_1);
+        TextView textApp2 = frequentAppsCard.findViewById(R.id.text_app_2);
+        TextView textApp3 = frequentAppsCard.findViewById(R.id.text_app_3);
+        
+        if (frequentApps.size() > 0) {
+            AppInfo app1 = frequentApps.get(0);
+            imgApp1.setImageDrawable(app1.icon);
+            textApp1.setText(app1.label);
+        } else {
+            imgApp1.setImageResource(android.R.drawable.ic_menu_help);
+            textApp1.setText("");
+        }
+        
+        if (frequentApps.size() > 1) {
+            AppInfo app2 = frequentApps.get(1);
+            imgApp2.setImageDrawable(app2.icon);
+            textApp2.setText(app2.label);
+        } else {
+            imgApp2.setImageResource(android.R.drawable.ic_menu_help);
+            textApp2.setText("");
+        }
+        
+        if (frequentApps.size() > 2) {
+            AppInfo app3 = frequentApps.get(2);
+            imgApp3.setImageDrawable(app3.icon);
+            textApp3.setText(app3.label);
+        } else {
+            imgApp3.setImageResource(android.R.drawable.ic_menu_help);
+            textApp3.setText("");
+        }
+    }
+    
+    private void showAppSelectionDialog() {
+        if (installedApps.isEmpty()) {
+            Toast.makeText(activity, "没有可用的应用", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        List<AppInfo> availableApps = new ArrayList<>();
+        for (AppInfo app : installedApps) {
+            if (!frequentApps.contains(app)) {
+                availableApps.add(app);
+            }
+        }
+        
+        if (availableApps.isEmpty()) {
+            Toast.makeText(activity, "所有应用都已添加", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        String[] appNames = new String[availableApps.size()];
+        for (int i = 0; i < availableApps.size(); i++) {
+            appNames[i] = availableApps.get(i).label;
+        }
+        
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setTitle("选择要添加的应用");
+        builder.setItems(appNames, (dialog, which) -> {
+            AppInfo selectedApp = availableApps.get(which);
+            addFrequentApp(selectedApp);
+        });
+        builder.setNegativeButton("取消", null);
+        builder.show();
+    }
+    
+    private void addFrequentApp(AppInfo app) {
+        if (frequentApps.size() >= MAX_FREQUENT_APPS) {
+            Toast.makeText(activity, "常用应用已满，请先移除一个", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        frequentApps.add(app);
+        saveFrequentApps();
+        updateFrequentAppsDisplay();
+        Toast.makeText(activity, "已添加 " + app.label + " 到常用应用", Toast.LENGTH_SHORT).show();
+    }
+    
+    private void launchApp(AppInfo app) {
+        if (app.intent != null) {
+            activity.startActivity(app.intent);
+        }
+    }
+    
+    private void removeFrequentApp(int index) {
+        if (index >= 0 && index < frequentApps.size()) {
+            AppInfo app = frequentApps.get(index);
+            frequentApps.remove(index);
+            saveFrequentApps();
+            updateFrequentAppsDisplay();
+            Toast.makeText(activity, "已从常用应用移除 " + app.label, Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -298,39 +530,6 @@ public class CardManager {
             updateTirePressureColor(textTireFr, fr);
             updateTirePressureColor(textTireRl, rl);
             updateTirePressureColor(textTireRr, rr);
-        }
-    }
-    
-    public void updateFrequentApps(List<AppInfo> apps) {
-        if (frequentAppsCard != null && apps != null && apps.size() >= 4) {
-            this.frequentApps = apps;
-            
-            ImageView imgApp1 = frequentAppsCard.findViewById(R.id.img_app_1);
-            ImageView imgApp2 = frequentAppsCard.findViewById(R.id.img_app_2);
-            ImageView imgApp3 = frequentAppsCard.findViewById(R.id.img_app_3);
-            ImageView imgApp4 = frequentAppsCard.findViewById(R.id.img_app_4);
-            
-            TextView textApp1 = frequentAppsCard.findViewById(R.id.text_app_1);
-            TextView textApp2 = frequentAppsCard.findViewById(R.id.text_app_2);
-            TextView textApp3 = frequentAppsCard.findViewById(R.id.text_app_3);
-            TextView textApp4 = frequentAppsCard.findViewById(R.id.text_app_4);
-            
-            try {
-                if (apps.get(0) != null && apps.get(0).label != null) {
-                    textApp1.setText(apps.get(0).label);
-                }
-                if (apps.get(1) != null && apps.get(1).label != null) {
-                    textApp2.setText(apps.get(1).label);
-                }
-                if (apps.get(2) != null && apps.get(2).label != null) {
-                    textApp3.setText(apps.get(2).label);
-                }
-                if (apps.get(3) != null && apps.get(3).label != null) {
-                    textApp4.setText(apps.get(3).label);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
     }
     
