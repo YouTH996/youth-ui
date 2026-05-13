@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView img4gSignal;
     private ImageView imgDrivingRecorder;
     private TextView textGearP;
+    private TextView textGearR;
     private TextView textGearN;
     private TextView textGearD;
     private TextView textTimeOnly;
@@ -200,13 +201,16 @@ public class MainActivity extends AppCompatActivity {
         desktopContainer = findViewById(R.id.desktop_container);
         statusBar = findViewById(R.id.status_bar);
         taskbar = findViewById(R.id.taskbar);
-        iconGrid = findViewById(R.id.icon_grid);
 
         homeButton = findViewById(R.id.btn_home);
         acTempText = findViewById(R.id.ac_temp_text);
 
-        iconGrid.setColumnCount(DESKTOP_COLUMNS);
-        iconGrid.setRowCount(DESKTOP_ROWS);
+        // 图标网格已移除
+        // iconGrid.setColumnCount(DESKTOP_COLUMNS);
+        // iconGrid.setRowCount(DESKTOP_ROWS);
+        
+        // 初始化中间区域组件
+        initCenterArea();
         
         // 初始化 ImageView 组件
         imgBack = findViewById(R.id.img_back);
@@ -227,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
         img4gSignal = findViewById(R.id.img_4g_signal);
         imgDrivingRecorder = findViewById(R.id.img_driving_recorder);
         textGearP = findViewById(R.id.text_gear_p);
+        textGearR = findViewById(R.id.text_gear_r);
         textGearN = findViewById(R.id.text_gear_n);
         textGearD = findViewById(R.id.text_gear_d);
         textTimeOnly = findViewById(R.id.text_time_only);
@@ -249,6 +254,69 @@ public class MainActivity extends AppCompatActivity {
         
         // 初始化壁纸
         initWallpaper();
+    }
+    
+    /**
+     * 初始化中间区域：导航预览和音乐播放卡片
+     */
+    private void initCenterArea() {
+        ImageView imgNavPreview = findViewById(R.id.img_nav_preview);
+        ImageView imgAlbumCoverCenter = findViewById(R.id.img_album_cover_center);
+        ImageView btnPreviousCenter = findViewById(R.id.btn_previous_center);
+        ImageView btnPlayPauseCenter = findViewById(R.id.btn_play_pause_center);
+        ImageView btnNextCenter = findViewById(R.id.btn_next_center);
+        View navPreviewContainer = findViewById(R.id.nav_preview_container);
+        View musicPlayerCard = findViewById(R.id.music_player_card);
+        TextView textSongLyrics = findViewById(R.id.text_song_lyrics);
+        
+        // 加载导航预览图标
+        try {
+            InputStream is = getAssets().open("webui/img/widget/automap_logo.png");
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            imgNavPreview.setImageBitmap(bitmap);
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        // 加载专辑封面
+        try {
+            InputStream is = getAssets().open("webui/img/widget/music_cover.jpg");
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            imgAlbumCoverCenter.setImageBitmap(bitmap);
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        // 启用歌词跑马灯效果
+        if (textSongLyrics != null) {
+            textSongLyrics.setSelected(true);
+            textSongLyrics.setFocusable(true);
+            textSongLyrics.setFocusableInTouchMode(true);
+        }
+        
+        // 导航预览点击事件
+        navPreviewContainer.setOnClickListener(v -> {
+            Toast.makeText(this, "打开导航应用", Toast.LENGTH_SHORT).show();
+        });
+        
+        // 音乐控制按钮点击事件
+        btnPreviousCenter.setOnClickListener(v -> {
+            Toast.makeText(this, "上一首", Toast.LENGTH_SHORT).show();
+        });
+        
+        btnPlayPauseCenter.setOnClickListener(v -> {
+            Toast.makeText(this, "播放/暂停", Toast.LENGTH_SHORT).show();
+        });
+        
+        btnNextCenter.setOnClickListener(v -> {
+            Toast.makeText(this, "下一首", Toast.LENGTH_SHORT).show();
+        });
+        
+        musicPlayerCard.setOnClickListener(v -> {
+            Toast.makeText(this, "打开音乐应用", Toast.LENGTH_SHORT).show();
+        });
     }
     
     /**
@@ -475,8 +543,9 @@ public class MainActivity extends AppCompatActivity {
         int semiTransparentWhite = Color.parseColor("#B0FFFFFF"); // 半透明白色
         
         textGearP.setTextColor(currentGear == 0 ? greenColor : semiTransparentWhite);
-        textGearN.setTextColor(currentGear == 1 ? greenColor : semiTransparentWhite);
-        textGearD.setTextColor(currentGear == 2 ? greenColor : semiTransparentWhite);
+        textGearR.setTextColor(currentGear == 1 ? greenColor : semiTransparentWhite);
+        textGearN.setTextColor(currentGear == 2 ? greenColor : semiTransparentWhite);
+        textGearD.setTextColor(currentGear == 3 ? greenColor : semiTransparentWhite);
     }
     
     /**
@@ -543,7 +612,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Collections.sort(desktopIcons, (a1, a2) -> a1.label.compareToIgnoreCase(a2.label));
-        displayDesktopIcons();
+        // displayDesktopIcons(); // 图标网格已移除
         
         if (cardManager != null) {
             cardManager.setInstalledApps(installedApps);
@@ -674,9 +743,9 @@ public class MainActivity extends AppCompatActivity {
         View gearDisplay = findViewById(R.id.gear_display);
         if (gearDisplay != null) {
             gearDisplay.setOnClickListener(v -> {
-                currentGear = (currentGear + 1) % 3;
+                currentGear = (currentGear + 1) % 4;
                 updateGearDisplay();
-                String[] gears = {"P档", "N档", "D档"};
+                String[] gears = {"P档", "R档", "N档", "D档"};
                 Toast.makeText(this, gears[currentGear], Toast.LENGTH_SHORT).show();
             });
         }

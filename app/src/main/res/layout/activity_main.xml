@@ -58,6 +58,15 @@
                     android:fontFamily="sans-serif-medium" />
 
                 <TextView
+                    android:id="@+id/text_gear_r"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R"
+                    android:textSize="16sp"
+                    android:textColor="@color/dark_tech_text"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
                     android:id="@+id/text_gear_n"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -152,15 +161,152 @@
 
         </LinearLayout>
 
-        <!-- 图标网格 -->
-        <GridLayout
-            android:id="@+id/icon_grid"
+        <!-- 中间区域：左侧导航 + 右侧音乐播放 -->
+        <LinearLayout
+            android:id="@+id/center_area"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
+            android:layout_height="320dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="56dp" />
+            android:layout_marginBottom="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <!-- 左侧：导航软件 -->
+            <LinearLayout
+                android:id="@+id/nav_preview_container"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/card_background_rounded"
+                android:padding="12dp"
+                android:layout_marginEnd="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:id="@+id/img_nav_preview"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:scaleType="fitCenter" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="导航"
+                        android:textSize="12sp"
+                        android:textColor="@color/dark_tech_text"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="sans-serif-medium" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 右侧：音乐播放卡片 -->
+            <LinearLayout
+                android:id="@+id/music_player_card"
+                android:layout_width="380dp"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:background="@drawable/card_background_rounded"
+                android:padding="12dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/img_album_cover_center"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/album_cover_background" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
+
+                    <TextView
+                        android:id="@+id/text_music_source"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="网易云音乐"
+                        android:textSize="12sp"
+                        android:textColor="@color/dark_tech_accent"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <TextView
+                        android:id="@+id/text_song_title_center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="演员"
+                        android:textSize="16sp"
+                        android:textColor="@color/dark_tech_text"
+                        android:fontFamily="sans-serif-medium"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:id="@+id/text_song_lyrics"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="该配合你演出的我演视而不见"
+                        android:textSize="12sp"
+                        android:textColor="@color/dark_tech_text_secondary"
+                        android:layout_marginTop="6dp"
+                        android:maxLines="1"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:singleLine="true" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginStart="12dp">
+
+                    <ImageView
+                        android:id="@+id/btn_previous_center"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:src="@drawable/ic_previous"
+                        android:scaleType="fitCenter"
+                        android:padding="6dp"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
+
+                    <ImageView
+                        android:id="@+id/btn_play_pause_center"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:src="@drawable/ic_play"
+                        android:scaleType="fitCenter"
+                        android:padding="8dp"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
+
+                    <ImageView
+                        android:id="@+id/btn_next_center"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:src="@drawable/ic_next"
+                        android:scaleType="fitCenter"
+                        android:padding="6dp"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 
