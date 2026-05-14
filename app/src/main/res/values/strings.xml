@@ -21,7 +21,40 @@
     <string name="no_apps">没有应用</string>
     <string name="loading">加载中...</string>
 
+    <!-- 无障碍服务 -->
+    <string name="accessibility_service_description">轻语桌面无障碍服务，用于实现应用快捷操作和自动化功能</string>
+
     <string name="wallpaper">壁纸</string>
     <string name="themes">主题</string>
     <string name="widgets">小部件</string>
+
+    <!-- 设置页面 -->
+    <string name="settings_basic">基本设置</string>
+    <string name="settings_theme">主题壁纸</string>
+    <string name="settings_cards">桌面卡片</string>
+    <string name="settings_system">系统设置</string>
+    <string name="settings_about">关于我们</string>
+
+    <!-- 设置选项 -->
+    <string-array name="icon_size_options">
+        <item>小</item>
+        <item>中</item>
+        <item>大</item>
+    </string-array>
+
+    <string-array name="grid_columns_options">
+        <item>4列</item>
+        <item>6列</item>
+        <item>8列</item>
+    </string-array>
+
+    <string-array name="desktop_layout_options">
+        <item>图标模式</item>
+        <item>列表模式</item>
+    </string-array>
+
+    <string-array name="time_format_options">
+        <item>12小时</item>
+        <item>24小时</item>
+    </string-array>
 </resources>

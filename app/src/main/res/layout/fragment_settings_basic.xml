@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dark_tech_bg"
+    android:padding="0dp">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- 桌面图标大小 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="桌面图标大小"
+                    android:textSize="14sp"
+                    android:textColor="@color/dark_tech_text" />
+
+                <Spinner
+                    android:id="@+id/spinner_icon_size"
+                    android:layout_width="100dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/spinner_background_dark"
+                    android:entries="@array/icon_size_options" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_tech_bg_light" />
+
+            <!-- 桌面网格列数 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="桌面列数"
+                    android:textSize="14sp"
+                    android:textColor="@color/dark_tech_text" />
+
+                <Spinner
+                    android:id="@+id/spinner_grid_columns"
+                    android:layout_width="100dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/spinner_background_dark"
+                    android:entries="@array/grid_columns_options" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_tech_bg_light" />
+
+            <!-- 显示应用名称 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="显示应用名称"
+                    android:textSize="14sp"
+                    android:textColor="@color/dark_tech_text" />
+
+                <Switch
+                    android:id="@+id/switch_show_app_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:thumbTint="@color/dark_tech_accent"
+                    android:trackTint="@color/dark_tech_bg_light" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_tech_bg_light" />
+
+            <!-- 显示应用角标 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="显示应用角标"
+                    android:textSize="14sp"
+                    android:textColor="@color/dark_tech_text" />
+
+                <Switch
+                    android:id="@+id/switch_show_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:thumbTint="@color/dark_tech_accent"
+                    android:trackTint="@color/dark_tech_bg_light" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_tech_bg_light" />
+
+            <!-- 桌面布局 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="桌面布局"
+                    android:textSize="14sp"
+                    android:textColor="@color/dark_tech_text" />
+
+                <Spinner
+                    android:id="@+id/spinner_desktop_layout"
+                    android:layout_width="100dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/spinner_background_dark"
+                    android:entries="@array/desktop_layout_options" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_tech_bg_light" />
+
+            <!-- 开机自启 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="开机自启"
+                    android:textSize="14sp"
+                    android:textColor="@color/dark_tech_text" />
+
+                <Switch
+                    android:id="@+id/switch_auto_start"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:thumbTint="@color/dark_tech_accent"
+                    android:trackTint="@color/dark_tech_bg_light" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_tech_bg_light" />
+
+            <!-- 状态栏时钟格式 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="状态栏时钟格式"
+                    android:textSize="14sp"
+                    android:textColor="@color/dark_tech_text" />
+
+                <Spinner
+                    android:id="@+id/spinner_time_format"
+                    android:layout_width="100dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/spinner_background_dark"
+                    android:entries="@array/time_format_options" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

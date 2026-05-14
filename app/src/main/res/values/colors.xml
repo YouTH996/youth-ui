@@ -54,4 +54,17 @@
     <color name="card_accent">#00D4FF</color>
     <color name="card_warning">#FF9800</color>
     <color name="card_error">#F44336</color>
+
+    <!-- 对话框和设置 -->
+    <color name="dialog_background">#F5F5F5</color>
+    <color name="divider">#E0E0E0</color>
+    <color name="ripple_color">#33000000</color>
+
+    <!-- 强调色选项 -->
+    <color name="accent_blue">#2196F3</color>
+    <color name="accent_green">#4CAF50</color>
+    <color name="accent_red">#F44336</color>
+    <color name="accent_purple">#9C27B0</color>
+    <color name="accent_orange">#FF9800</color>
+    <color name="accent_cyan">#00BCD4</color>
 </resources>

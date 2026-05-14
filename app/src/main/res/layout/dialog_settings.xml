@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="800dp"
+    android:layout_height="350dp"
+    android:orientation="horizontal"
+    android:background="@color/dark_tech_bg"
+    android:padding="0dp">
+
+    <!-- 左侧垂直 Tab 导航 -->
+    <LinearLayout
+        android:layout_width="200dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/dark_tech_bg_light"
+        android:padding="16dp">
+
+        <!-- 标题 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="设置"
+            android:textSize="20sp"
+            android:textColor="@color/dark_tech_text"
+            android:textStyle="bold"
+            android:paddingBottom="24dp" />
+
+        <!-- 垂直 Tab 列表 -->
+        <RadioGroup
+            android:id="@+id/radio_group_tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/radio_basic"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="基本设置"
+                android:textSize="14sp"
+                android:textColor="@color/dark_tech_text"
+                android:button="@null"
+                android:background="@drawable/tab_item_selector"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/radio_theme"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="主题壁纸"
+                android:textSize="14sp"
+                android:textColor="@color/dark_tech_text"
+                android:button="@null"
+                android:background="@drawable/tab_item_selector"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp" />
+
+            <RadioButton
+                android:id="@+id/radio_cards"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="桌面卡片"
+                android:textSize="14sp"
+                android:textColor="@color/dark_tech_text"
+                android:button="@null"
+                android:background="@drawable/tab_item_selector"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp" />
+
+            <RadioButton
+                android:id="@+id/radio_system"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="系统设置"
+                android:textSize="14sp"
+                android:textColor="@color/dark_tech_text"
+                android:button="@null"
+                android:background="@drawable/tab_item_selector"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp" />
+
+            <RadioButton
+                android:id="@+id/radio_about"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="关于我们"
+                android:textSize="14sp"
+                android:textColor="@color/dark_tech_text"
+                android:button="@null"
+                android:background="@drawable/tab_item_selector"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp" />
+        </RadioGroup>
+    </LinearLayout>
+
+    <!-- 右侧内容区域 -->
+    <FrameLayout
+        android:id="@+id/content_container"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+
+        <!-- 关闭按钮 -->
+        <ImageButton
+            android:id="@+id/btn_close"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_close"
+            android:contentDescription="关闭" />
+    </FrameLayout>
+
+</LinearLayout>

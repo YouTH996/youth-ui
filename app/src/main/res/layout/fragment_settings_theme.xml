@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dark_tech_bg"
+    android:padding="0dp">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- 当前壁纸预览 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="当前壁纸"
+                android:textSize="14sp"
+                android:textColor="@color/dark_tech_text"
+                android:textStyle="bold"
+                android:paddingBottom="12dp" />
+
+            <ImageView
+                android:id="@+id/img_current_wallpaper"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:scaleType="centerCrop"
+                android:background="@drawable/wallpaper_preview_background_dark"
+                android:padding="8dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_tech_bg_light"
+                android:layout_marginVertical="16dp" />
+
+            <!-- 选择壁纸 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="选择壁纸"
+                android:textSize="14sp"
+                android:textColor="@color/dark_tech_text"
+                android:textStyle="bold"
+                android:paddingBottom="12dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_wallpapers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_tech_bg_light"
+                android:layout_marginVertical="16dp" />
+
+            <!-- 主题模式 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="主题模式"
+                android:textSize="14sp"
+                android:textColor="@color/dark_tech_text"
+                android:textStyle="bold"
+                android:paddingBottom="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <RadioGroup
+                    android:id="@+id/radio_group_theme_mode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/radio_light"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="浅色模式"
+                        android:textSize="13sp"
+                        android:textColor="@color/dark_tech_text"
+                        android:button="@null"
+                        android:background="@drawable/radio_button_selector_dark"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:layout_marginEnd="8dp" />
+
+                    <RadioButton
+                        android:id="@+id/radio_dark"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="深色模式"
+                        android:textSize="13sp"
+                        android:textColor="@color/dark_tech_text"
+                        android:button="@null"
+                        android:background="@drawable/radio_button_selector_dark"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:layout_marginStart="8dp" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_tech_bg_light"
+                android:layout_marginVertical="16dp" />
+
+            <!-- 壁纸来源 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="壁纸来源"
+                android:textSize="14sp"
+                android:textColor="@color/dark_tech_text"
+                android:textStyle="bold"
+                android:paddingBottom="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btn_system_wallpapers"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="系统壁纸"
+                    android:textSize="13sp"
+                    android:textColor="@color/dark_tech_text"
+                    android:background="@drawable/button_background_dark"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/btn_gallery_wallpapers"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="相册壁纸"
+                    android:textSize="13sp"
+                    android:textColor="@color/dark_tech_text"
+                    android:background="@drawable/button_background_dark"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -923,33 +923,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showSettingsDialog() {
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle("桌面设置");
-        builder.setItems(new String[]{"更换壁纸", "主题设置", "桌面布局", "关于"}, (dialog, which) -> {
-            switch (which) {
-                case 0:
-                    Toast.makeText(this, "更换壁纸功能", Toast.LENGTH_SHORT).show();
-                    break;
-                case 1:
-                    Toast.makeText(this, "主题设置功能", Toast.LENGTH_SHORT).show();
-                    break;
-                case 2:
-                    Toast.makeText(this, "桌面布局功能", Toast.LENGTH_SHORT).show();
-                    break;
-                case 3:
-                    showAboutDialog();
-                    break;
-            }
-        });
-        builder.show();
-    }
-
-    private void showAboutDialog() {
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle("关于 Youth桌面");
-        builder.setMessage("Youth桌面 v1.0\n\n参考叁迪UI设计的现代化桌面系统\n\n功能特点:\n• 桌面图标管理\n• 应用抽屉\n• 空调控制面板\n• 主题定制\n• 车机风格界面");
-        builder.setPositiveButton("确定", null);
-        builder.show();
+        SettingsDialogFragment settingsDialog = new SettingsDialogFragment();
+        settingsDialog.show(getSupportFragmentManager(), "settings");
     }
 
     private void updateTaskbar() {
