@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout cardContainer;
     private HorizontalScrollView cardScrollView;
     private CardManager cardManager;
+    private MusicPlayerManager musicPlayerManager;
     
     // ImageView 组件声明
     private ImageView imgBack;
@@ -260,6 +262,8 @@ public class MainActivity extends AppCompatActivity {
      * 初始化中间区域：导航预览和音乐播放卡片
      */
     private void initCenterArea() {
+        Log.d("MainActivity", "=== INIT CENTER AREA ===");
+        
         ImageView imgNavPreview = findViewById(R.id.img_nav_preview);
         ImageView imgAlbumCoverCenter = findViewById(R.id.img_album_cover_center);
         ImageView btnPreviousCenter = findViewById(R.id.btn_previous_center);
@@ -269,7 +273,35 @@ public class MainActivity extends AppCompatActivity {
         View musicPlayerCard = findViewById(R.id.music_player_card);
         TextView textSongLyrics = findViewById(R.id.text_song_lyrics);
         
-        // 加载导航预览图标
+        ImageView imgMusicSource = findViewById(R.id.img_music_source_icon);
+        TextView textMusicSource = findViewById(R.id.text_music_source);
+        TextView textSongTitle = findViewById(R.id.text_song_title_center);
+        TextView textSongArtist = findViewById(R.id.text_song_artist_center);
+        
+        Log.d("MainActivity", "Creating MusicPlayerManager...");
+        musicPlayerManager = new MusicPlayerManager(this);
+        musicPlayerManager.bindViews(imgAlbumCoverCenter, imgMusicSource, textMusicSource,
+                                     textSongTitle, textSongArtist, textSongLyrics, btnPlayPauseCenter);
+        Log.d("MainActivity", "MusicPlayerManager created, setting listener...");
+        
+        musicPlayerManager.setOnMusicUpdateListener(new MusicPlayerManager.OnMusicUpdateListener() {
+            @Override
+            public void onMusicUpdate(String packageName, String title, String artist, Bitmap albumArt, boolean isPlaying) {
+                Log.d("MainActivity", "=== MUSIC UPDATE: " + title + " - " + artist);
+                updateMusicPlayerUI(title, artist, isPlaying);
+            }
+            
+            @Override
+            public void onPlaybackStateChanged(boolean isPlaying) {
+                Log.d("MainActivity", "Playback state changed: " + isPlaying);
+                btnPlayPauseCenter.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+            }
+        });
+        
+        Log.d("MainActivity", "Starting music listening...");
+        musicPlayerManager.startListening();
+        Log.d("MainActivity", "Music listening started");
+        
         try {
             InputStream is = getAssets().open("webui/img/widget/automap_logo.png");
             Bitmap bitmap = BitmapFactory.decodeStream(is);
@@ -279,7 +311,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         
-        // 加载专辑封面
         try {
             InputStream is = getAssets().open("webui/img/widget/music_cover.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(is);
@@ -289,34 +320,54 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         
-        // 启用歌词跑马灯效果
         if (textSongLyrics != null) {
             textSongLyrics.setSelected(true);
             textSongLyrics.setFocusable(true);
             textSongLyrics.setFocusableInTouchMode(true);
         }
         
-        // 导航预览点击事件
         navPreviewContainer.setOnClickListener(v -> {
             Toast.makeText(this, "打开导航应用", Toast.LENGTH_SHORT).show();
         });
         
-        // 音乐控制按钮点击事件
         btnPreviousCenter.setOnClickListener(v -> {
-            Toast.makeText(this, "上一首", Toast.LENGTH_SHORT).show();
+            if (musicPlayerManager.hasActiveMusic()) {
+                musicPlayerManager.previousTrack();
+            } else {
+                Toast.makeText(this, "上一首", Toast.LENGTH_SHORT).show();
+            }
         });
         
         btnPlayPauseCenter.setOnClickListener(v -> {
-            Toast.makeText(this, "播放/暂停", Toast.LENGTH_SHORT).show();
+            if (musicPlayerManager.hasActiveMusic()) {
+                musicPlayerManager.playPause();
+            } else {
+                Toast.makeText(this, "播放/暂停", Toast.LENGTH_SHORT).show();
+            }
         });
         
         btnNextCenter.setOnClickListener(v -> {
-            Toast.makeText(this, "下一首", Toast.LENGTH_SHORT).show();
+            if (musicPlayerManager.hasActiveMusic()) {
+                musicPlayerManager.nextTrack();
+            } else {
+                Toast.makeText(this, "下一首", Toast.LENGTH_SHORT).show();
+            }
         });
         
         musicPlayerCard.setOnClickListener(v -> {
-            Toast.makeText(this, "打开音乐应用", Toast.LENGTH_SHORT).show();
+            if (musicPlayerManager.hasActiveMusic()) {
+                musicPlayerManager.openMusicApp();
+            } else {
+                Toast.makeText(this, "打开音乐应用", Toast.LENGTH_SHORT).show();
+            }
         });
+    }
+    
+    private void updateMusicPlayerUI(String title, String artist, boolean isPlaying) {
+        TextView textSongLyrics = findViewById(R.id.text_song_lyrics);
+        if (textSongLyrics != null) {
+            textSongLyrics.setText("♪ " + artist + " - " + title);
+        }
     }
     
     /**
