@@ -2,10 +2,12 @@ package com.youth.desktop;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -13,10 +15,16 @@ import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
+import android.service.notification.NotificationListenerService;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
+
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,9 +59,70 @@ public class NotificationMonitor {
         this.listener = l;
     }
     
+    /**
+     * 检查NotificationListenerService权限是否已授权
+     * @return true如果已授权，false如果未授权
+     */
+    public boolean checkNotificationListenerPermission() {
+        try {
+            ComponentName componentName = new ComponentName(activity, MediaNotificationListenerService.class);
+            String enabledListeners = Settings.Secure.getString(
+                activity.getContentResolver(),
+                "enabled_notification_listeners"
+            );
+            
+            if (enabledListeners != null) {
+                boolean isEnabled = enabledListeners.contains(componentName.flattenToString());
+                Log.d(TAG, "NotificationListenerService permission check: " + isEnabled);
+                return isEnabled;
+            }
+            
+            Log.d(TAG, "NotificationListenerService permission check: false (enabledListeners is null)");
+            return false;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking notification listener permission: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * 打开系统设置页面让用户授权NotificationListenerService权限
+     */
+    public void requestNotificationListenerPermission() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            activity.startActivity(intent);
+            Toast.makeText(activity, "请在设置中开启'轻语桌面'的通知监听权限", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error opening notification listener settings: " + e.getMessage());
+            Toast.makeText(activity, "无法打开权限设置页面，请在系统设置中手动授权", Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    /**
+     * 检查并请求NotificationListenerService权限
+     * @return true如果已有权限，false如果需要请求权限
+     */
+    public boolean checkAndRequestNotificationPermission() {
+        if (!checkNotificationListenerPermission()) {
+            requestNotificationListenerPermission();
+            return false;
+        }
+        return true;
+    }
+    
     public void startMonitoring() {
         try {
             Log.d(TAG, "=== START MONITORING ===");
+            
+            if (!checkAndRequestNotificationPermission()) {
+                Log.d(TAG, "NotificationListenerService permission not granted, requesting permission...");
+                return;
+            }
+            
+            Log.d(TAG, "NotificationListenerService permission granted, starting monitoring...");
             registerBroadcastReceiver();
             
             Toast.makeText(activity, "正在监听音乐播放...", Toast.LENGTH_SHORT).show();
@@ -104,7 +173,7 @@ public class NotificationMonitor {
         filter.addAction("com.spotify.music.metadatachanged");
         
         try {
-            activity.registerReceiver(receiver, filter);
+            ContextCompat.registerReceiver(activity, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
             Log.d(TAG, "BroadcastReceiver registered successfully");
             isListeningForNotifications = true;
         } catch (Exception e) {
