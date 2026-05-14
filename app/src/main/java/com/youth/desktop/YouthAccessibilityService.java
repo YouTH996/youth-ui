@@ -7,7 +7,7 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-public class YouthAccessibilityService extends android.accessibilityservice.AccessibilityService {
+public class YouthAccessibilityService extends AccessibilityService {
     private static final String TAG = "YouthAccessibilityService";
     private static YouthAccessibilityService instance;
 
@@ -30,20 +30,22 @@ public class YouthAccessibilityService extends android.accessibilityservice.Acce
         super.onServiceConnected();
         Log.d(TAG, "无障碍服务已连接");
 
-        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-        info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED |
-                AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED |
-                AccessibilityEvent.TYPE_VIEW_CLICKED |
-                AccessibilityEvent.TYPE_VIEW_LONG_CLICKED |
-                AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
-        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
-        info.flags = AccessibilityServiceInfo.DEFAULT |
-                AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS |
-                AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
-                AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE;
-        info.notificationTimeout = 100;
+        AccessibilityServiceInfo info = getServiceInfo();
+        if (info != null) {
+            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED |
+                    AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED |
+                    AccessibilityEvent.TYPE_VIEW_CLICKED |
+                    AccessibilityEvent.TYPE_VIEW_LONG_CLICKED |
+                    AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
+            info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
+            info.flags = AccessibilityServiceInfo.DEFAULT |
+                    AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS |
+                    AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS |
+                    AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE;
+            info.notificationTimeout = 100;
 
-        setServiceInfo(info);
+            setServiceInfo(info);
+        }
     }
 
     @Override

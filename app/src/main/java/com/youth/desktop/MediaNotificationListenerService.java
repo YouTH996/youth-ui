@@ -1,5 +1,6 @@
 package com.youth.desktop;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -19,7 +20,11 @@ import android.os.Looper;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import kotlin.Suppress;
@@ -40,12 +45,30 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     private String currentArtist = "";
     private Bitmap currentAlbumArt = null;
     private boolean isPlaying = false;
+    private List<LyricLine> currentLyrics = new ArrayList<>();
+    private long currentPosition = 0;
     
     public interface OnMediaInfoListener {
         void onMediaInfoChanged(String packageName, String title, String artist, Bitmap albumArt, boolean isPlaying);
     }
     
+    public interface OnLyricsUpdateListener {
+        void onLyricsUpdate(String prevLyric, String currentLyric, String nextLyric, int index);
+    }
+    
     private static OnMediaInfoListener listener;
+    private static OnLyricsUpdateListener lyricsListener;
+    private int currentLyricIndex = 0;
+    
+    public static class LyricLine {
+        public long time;
+        public String text;
+        
+        public LyricLine(long time, String text) {
+            this.time = time;
+            this.text = text;
+        }
+    }
     
     public static void setListener(OnMediaInfoListener l) {
         listener = l;
@@ -53,6 +76,14 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     
     public static void clearListener() {
         listener = null;
+    }
+    
+    public static void setLyricsListener(OnLyricsUpdateListener l) {
+        lyricsListener = l;
+    }
+    
+    public static void clearLyricsListener() {
+        lyricsListener = null;
     }
     
     public static MediaNotificationListenerService getInstance() {
@@ -170,18 +201,18 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         
         try {
             ComponentName componentName = new ComponentName(this, MediaNotificationListenerService.class);
-            Log.d(TAG, "Requesting active sessions...");
+//            Log.d(TAG, "Requesting active sessions...");
             List<MediaController> controllers = mediaSessionManager.getActiveSessions(componentName);
             
-            Log.d(TAG, "Found " + controllers.size() + " active sessions");
+//            Log.d(TAG, "Found " + controllers.size() + " active sessions");
             
             MediaController newController = null;
             for (MediaController controller : controllers) {
                 String pkg = controller.getPackageName();
-                Log.d(TAG, "Checking session: " + pkg);
+//                Log.d(TAG, "Checking session: " + pkg);
                 if (isMusicApp(pkg)) {
                     newController = controller;
-                    Log.d(TAG, "Found music app: " + pkg);
+//                    Log.d(TAG, "Found music app: " + pkg);
                     break;
                 }
             }
@@ -196,7 +227,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                 
                 mediaController.registerCallback(mediaCallback);
                 
-                Log.d(TAG, "Attaching to music app: " + currentPackage);
+//                Log.d(TAG, "Attaching to music app: " + currentPackage);
                 updateFromMediaController();
             } else if (newController != null && mediaController != null) {
                 updateFromMediaController();
@@ -213,12 +244,37 @@ public class MediaNotificationListenerService extends NotificationListenerServic
             updateFromNotification();
         }
     }
-    
+
     private void updateFromMediaController() {
         if (mediaController == null) return;
         
         try {
+            Log.d(TAG, "=== MediaController Info ===");
+            Log.d(TAG, "Package: " + mediaController.getPackageName());
+//            Log.d(TAG, "Tag: " + mediaController.getTag());
+
+            Bundle extras = mediaController.getExtras();
+            if (extras != null) {
+                Log.d(TAG, "=== Controller Extras ===");
+                for (String key : extras.keySet()) {
+                    Object value = extras.get(key);
+                    Log.d(TAG, "Extra [" + key + "]: " + value);
+                }
+            }
+            
             MediaMetadata metadata = mediaController.getMetadata();
+            Bundle bundle =
+                    getMediaMetadataBundle(metadata);
+
+            if(bundle != null){
+
+                for(String key : bundle.keySet()){
+
+                    Object value = bundle.get(key);
+
+                    Log.d(TAG, key + " = " + value);
+                }
+            }
             if (metadata != null) {
                 updateFromMetadata(metadata);
             }
@@ -228,8 +284,10 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                 isPlaying = (state.getState() == PlaybackState.STATE_PLAYING);
                 notifyUpdate();
             }
+            
+            Log.d(TAG, "====================");
         } catch (Exception e) {
-            Log.e(TAG, "Error updating from media controller: " + e.getMessage());
+            Log.e(TAG, "Error updating from media controller: " + e.getMessage(), e);
         }
     }
     
@@ -238,7 +296,42 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         
         String title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
         String artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST);
+
+        Log.d(TAG, "=== MediaMetadata ===");
+        Log.d(TAG, "Title: " + title);
+        Log.d(TAG, "Artist: " + artist);
+        Log.d(TAG, "Album: " + metadata.getString(MediaMetadata.METADATA_KEY_ALBUM));
+        Log.d(TAG, "Album Artist: " + metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST));
+        Log.d(TAG, "Author: " + metadata.getString(MediaMetadata.METADATA_KEY_AUTHOR));
+        Log.d(TAG, "Writer: " + metadata.getString(MediaMetadata.METADATA_KEY_WRITER));
+        Log.d(TAG, "Composer: " + metadata.getString(MediaMetadata.METADATA_KEY_COMPOSER));
+        Log.d(TAG, "Display Subtitle: " + metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE));
+        Log.d(TAG, "Display Description: " + metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_DESCRIPTION));
         
+        try {
+            Bundle bundle = getMediaMetadataBundle(metadata);
+            if (bundle != null) {
+                String lyrics = null;
+                
+                if (bundle.containsKey("android.media.metadata.LYRIC")) {
+                    lyrics = bundle.getString("android.media.metadata.LYRIC");
+                } else if (bundle.containsKey("android.media.metadata.LYRICS")) {
+                    lyrics = bundle.getString("android.media.metadata.LYRICS");
+                }
+                
+                if (lyrics != null && !lyrics.isEmpty()) {
+                    Log.d(TAG, "LYRIC found! Length: " + lyrics.length());
+                    Log.d(TAG, "First 200 chars: " + lyrics.substring(0, Math.min(200, lyrics.length())));
+                    parseAndNotifyLyrics(lyrics);
+                } else {
+                    Log.d(TAG, "No LYRIC found in bundle");
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting LYRICS: " + e.getMessage(), e);
+        }
+        Log.d(TAG, "====================");
+
         if (title == null) title = "未知歌曲";
         if (artist == null) artist = "未知艺术家";
         
@@ -266,6 +359,91 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         notifyUpdate();
     }
     
+    private void parseAndNotifyLyrics(String lyrics) {
+        if (lyrics == null || lyrics.isEmpty()) {
+            return;
+        }
+        
+        currentLyrics.clear();
+        Pattern pattern = Pattern.compile("\\[(\\d+):(\\d+)\\.(\\d+)\\](.*)");
+        String[] lines = lyrics.split("\n");
+        
+        for (String line : lines) {
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.find()) {
+                long min = Long.parseLong(matcher.group(1));
+                long sec = Long.parseLong(matcher.group(2));
+                long ms = Long.parseLong(matcher.group(3));
+                String text = matcher.group(4).trim();
+                
+                long time = min * 60 * 1000 + sec * 1000 + ms * 10;
+                
+                if (!text.isEmpty()) {
+                    currentLyrics.add(new LyricLine(time, text));
+                }
+            }
+        }
+        
+        if (!currentLyrics.isEmpty()) {
+            Log.d(TAG, "Parsed " + currentLyrics.size() + " lyrics lines");
+            startLyricsSync();
+        }
+    }
+    
+    private void startLyricsSync() {
+        handler.removeCallbacks(lyricsSyncRunnable);
+        handler.post(lyricsSyncRunnable);
+    }
+    
+    private Runnable lyricsSyncRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateLyricsPosition();
+            handler.postDelayed(this, 300);
+        }
+    };
+    
+    private void updateLyricsPosition() {
+        if (mediaController == null || currentLyrics.isEmpty()) {
+            return;
+        }
+        
+        try {
+            PlaybackState state = mediaController.getPlaybackState();
+            if (state != null) {
+                long position = state.getPosition();
+                if (position != currentPosition) {
+                    currentPosition = position;
+                    
+                    int index = findCurrentLyricIndex(position);
+                    if (index >= 0 && lyricsListener != null) {
+                        String prevLyric = index > 0 ? currentLyrics.get(index - 1).text : "";
+                        String currentLyric = currentLyrics.get(index).text;
+                        String nextLyric = index < currentLyrics.size() - 1 ? currentLyrics.get(index + 1).text : "";
+                        
+                        lyricsListener.onLyricsUpdate(prevLyric, currentLyric, nextLyric, index);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting position: " + e.getMessage());
+        }
+    }
+    
+    private int findCurrentLyricIndex(long position) {
+        if (currentLyrics.isEmpty()) {
+            return -1;
+        }
+        
+        for (int i = currentLyrics.size() - 1; i >= 0; i--) {
+            if (position >= currentLyrics.get(i).time) {
+                return i;
+            }
+        }
+        
+        return 0;
+    }
+    
     private void updateFromNotification() {
         try {
             StatusBarNotification[] notifications = getActiveNotifications();
@@ -281,7 +459,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                     String title = extras.getString(Notification.EXTRA_TITLE);
                     String text = extras.getString(Notification.EXTRA_TEXT);
                     String subText = extras.getString(Notification.EXTRA_SUB_TEXT);
-                    
+
                     if (title == null || title.isEmpty()) {
                         title = extras.getString(Notification.EXTRA_TITLE_BIG);
                     }
@@ -420,5 +598,17 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     
     public MediaController getMediaController() {
         return mediaController;
+    }
+    
+    private Bundle getMediaMetadataBundle(MediaMetadata metadata) {
+        try {
+            @SuppressLint("SoonBlockedPrivateApi")
+            Field field = MediaMetadata.class.getDeclaredField("mBundle");
+            field.setAccessible(true);
+            return (Bundle) field.get(metadata);
+        } catch (Exception e) {
+            Log.e(TAG, "get bundle error", e);
+        }
+        return null;
     }
 }

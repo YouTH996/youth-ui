@@ -244,12 +244,12 @@
                 <!-- 中间：歌曲图标（圆角） -->
                 <ImageView
                     android:id="@+id/img_album_cover_center"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:src="@drawable/ic_music_default"
                     android:scaleType="centerCrop"
                     android:layout_below="@id/img_music_source_icon"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="4dp"
                     android:layout_centerHorizontal="true"
                     android:background="@drawable/album_cover_rounded" />
 
@@ -259,12 +259,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="演员"
-                    android:textSize="16sp"
+                    android:textSize="14sp"
                     android:textColor="@color/dark_tech_text"
                     android:fontFamily="sans-serif-medium"
                     android:gravity="center"
                     android:layout_below="@id/img_album_cover_center"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="4dp"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
@@ -274,7 +274,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="薛之谦"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textColor="@color/dark_tech_text_secondary"
                     android:gravity="center"
                     android:layout_below="@id/text_song_title_center"
@@ -290,12 +290,25 @@
                     android:orientation="vertical"
                     android:gravity="center"
                     android:layout_below="@id/text_song_artist_center"
-                    android:layout_marginTop="8dp"
-                    android:minHeight="48dp">
+                    android:layout_marginTop="4dp"
+                    android:minHeight="130dp">
 
-                    <!-- 上一句歌词 -->
+                    <!-- 第1句歌词 -->
                     <TextView
-                        android:id="@+id/text_lyric_prev_center"
+                        android:id="@+id/text_lyric_1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="11sp"
+                        android:textColor="@color/dark_tech_text_secondary"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:alpha="0.4" />
+
+                    <!-- 第2句歌词 -->
+                    <TextView
+                        android:id="@+id/text_lyric_2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text=""
@@ -312,18 +325,18 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="该配合你演出的我演视而不见"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         android:textColor="@color/dark_tech_accent"
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginBottom="2dp"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="4dp"
                         android:maxLines="1"
                         android:ellipsize="end" />
 
-                    <!-- 下一句歌词 -->
+                    <!-- 第4句歌词 -->
                     <TextView
-                        android:id="@+id/text_lyric_next_center"
+                        android:id="@+id/text_lyric_4"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text=""
@@ -333,6 +346,19 @@
                         android:maxLines="1"
                         android:ellipsize="end"
                         android:alpha="0.6" />
+
+                    <!-- 第5句歌词 -->
+                    <TextView
+                        android:id="@+id/text_lyric_5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="11sp"
+                        android:textColor="@color/dark_tech_text_secondary"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:alpha="0.4" />
                 </LinearLayout>
 
                 <!-- 控制按钮 -->
@@ -342,7 +368,7 @@
                     android:orientation="horizontal"
                     android:gravity="center"
                     android:layout_below="@id/layout_lyrics_center"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="2dp"
                     android:layout_centerHorizontal="true">
 
                     <ImageView

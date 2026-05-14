@@ -28,9 +28,11 @@ public class MusicPlayerManager {
     private TextView textMusicSource;
     private TextView textSongTitle;
     private TextView textSongArtist;
-    private TextView textLyricPrev;
+    private TextView textLyric1;
+    private TextView textLyric2;
     private TextView textLyricCurrent;
-    private TextView textLyricNext;
+    private TextView textLyric4;
+    private TextView textLyric5;
     private ImageView btnPlayPause;
     
     private String currentPackageName = "";
@@ -40,6 +42,8 @@ public class MusicPlayerManager {
     private boolean isPlaying = false;
     private int currentLyricIndex = 0;
     private String[] currentLyrics = {};
+    private long currentPosition = 0;
+    private Runnable lyricsUpdateRunnable;
     
     private OnMusicUpdateListener listener;
     
@@ -58,22 +62,22 @@ public class MusicPlayerManager {
     }
     
     public void bindViews(ImageView albumCover, ImageView musicSource, TextView sourceText, 
-                         TextView titleText, TextView artistText, TextView lyricsText,
+                         TextView titleText, TextView artistText,
                          ImageView playPauseBtn) {
         this.imgAlbumCover = albumCover;
         this.imgMusicSource = musicSource;
         this.textMusicSource = sourceText;
         this.textSongTitle = titleText;
         this.textSongArtist = artistText;
-        this.textLyricPrev = lyricsText;
         this.btnPlayPause = playPauseBtn;
     }
     
-    public void bindLyricsViews(TextView lyricPrev, TextView lyricCurrent, TextView lyricNext) {
-        this.textLyricPrev = lyricPrev;
+    public void bindLyricsViews(TextView lyric1, TextView lyric2, TextView lyricCurrent, TextView lyric4, TextView lyric5) {
+        this.textLyric1 = lyric1;
+        this.textLyric2 = lyric2;
         this.textLyricCurrent = lyricCurrent;
-        this.textLyricNext = lyricNext;
-        updateLyricsDisplay();
+        this.textLyric4 = lyric4;
+        this.textLyric5 = lyric5;
     }
     
     public void startListening() {
@@ -154,6 +158,12 @@ public class MusicPlayerManager {
             btnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
         }
         
+        if (isPlaying) {
+            startLyricsUpdateTimer();
+        } else {
+            stopLyricsUpdateTimer();
+        }
+        
         if (listener != null) {
             listener.onMusicUpdate(currentPackageName, currentTitle, currentArtist, 
                                    currentAlbumArt, isPlaying);
@@ -161,30 +171,60 @@ public class MusicPlayerManager {
         }
     }
     
+    private void stopLyricsUpdateTimer() {
+        if (lyricsUpdateRunnable != null) {
+            handler.removeCallbacks(lyricsUpdateRunnable);
+            lyricsUpdateRunnable = null;
+        }
+    }
+    
     private void updateLyricsDisplay() {
-        if (textLyricPrev != null) {
-            if (currentLyricIndex > 0 && currentLyrics.length > 0) {
-                textLyricPrev.setText(currentLyrics[Math.max(0, currentLyricIndex - 1)]);
+        if (currentLyrics.length == 0) return;
+        
+        if (textLyric1 != null) {
+            if (currentLyricIndex >= 2) {
+                textLyric1.setText(removeTimeTag(currentLyrics[currentLyricIndex - 2]));
             } else {
-                textLyricPrev.setText("");
+                textLyric1.setText("");
+            }
+        }
+        
+        if (textLyric2 != null) {
+            if (currentLyricIndex >= 1) {
+                textLyric2.setText(removeTimeTag(currentLyrics[currentLyricIndex - 1]));
+            } else {
+                textLyric2.setText("");
             }
         }
         
         if (textLyricCurrent != null) {
-            if (currentLyrics.length > 0 && currentLyricIndex < currentLyrics.length) {
-                textLyricCurrent.setText(currentLyrics[currentLyricIndex]);
+            if (currentLyricIndex < currentLyrics.length) {
+                textLyricCurrent.setText(removeTimeTag(currentLyrics[currentLyricIndex]));
             } else {
                 textLyricCurrent.setText("♪ " + currentArtist + " - " + currentTitle);
             }
         }
         
-        if (textLyricNext != null) {
-            if (currentLyricIndex < currentLyrics.length - 1 && currentLyrics.length > 0) {
-                textLyricNext.setText(currentLyrics[currentLyricIndex + 1]);
+        if (textLyric4 != null) {
+            if (currentLyricIndex < currentLyrics.length - 1) {
+                textLyric4.setText(removeTimeTag(currentLyrics[currentLyricIndex + 1]));
             } else {
-                textLyricNext.setText("");
+                textLyric4.setText("");
             }
         }
+        
+        if (textLyric5 != null) {
+            if (currentLyricIndex < currentLyrics.length - 2) {
+                textLyric5.setText(removeTimeTag(currentLyrics[currentLyricIndex + 2]));
+            } else {
+                textLyric5.setText("");
+            }
+        }
+    }
+    
+    private String removeTimeTag(String lyric) {
+        if (lyric == null) return "";
+        return lyric.replaceAll("\\[\\d{2}:\\d{2}\\.\\d{2,}\\]", "").trim();
     }
     
     public void updateLyrics(String[] lyrics) {
@@ -192,13 +232,117 @@ public class MusicPlayerManager {
             this.currentLyrics = lyrics;
             this.currentLyricIndex = 0;
             updateLyricsDisplay();
+            startLyricsUpdateTimer();
         }
+    }
+    
+    public void updateLyrics(String prevLyric, String currentLyric, String nextLyric) {
+        if (textLyric1 != null) textLyric1.setText(prevLyric);
+        if (textLyric2 != null) textLyric2.setText(currentLyric);
+        if (textLyricCurrent != null) textLyricCurrent.setText(currentLyric);
+        if (textLyric4 != null) textLyric4.setText(nextLyric);
+        if (textLyric5 != null) textLyric5.setText(nextLyric);
+    }
+    
+    private void startLyricsUpdateTimer() {
+        if (lyricsUpdateRunnable != null) {
+            handler.removeCallbacks(lyricsUpdateRunnable);
+        }
+        
+        lyricsUpdateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                updateCurrentLyricPosition();
+                handler.postDelayed(this, 500);
+            }
+        };
+        handler.post(lyricsUpdateRunnable);
+    }
+    
+    private void updateCurrentLyricPosition() {
+        if (notificationMonitor == null || !isPlaying || currentLyrics.length == 0) {
+            return;
+        }
+        
+        try {
+            MediaController controller = notificationMonitor.getMediaController();
+            if (controller != null) {
+                android.media.session.PlaybackState state = controller.getPlaybackState();
+                if (state != null) {
+                    long position = state.getPosition();
+                    if (position != currentPosition) {
+                        currentPosition = position;
+                        updateLyricIndexByPosition(position);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting position: " + e.getMessage());
+        }
+    }
+    
+    private void updateLyricIndexByPosition(long positionMs) {
+        if (currentLyrics.length == 0) return;
+        
+        int newIndex = 0;
+        for (int i = 0; i < currentLyrics.length; i++) {
+            if (getLyricTimeMs(currentLyrics[i]) <= positionMs) {
+                newIndex = i;
+            } else {
+                break;
+            }
+        }
+        
+        if (newIndex != currentLyricIndex) {
+            currentLyricIndex = newIndex;
+            updateLyricsDisplay();
+            Log.d(TAG, "Lyric updated to index: " + currentLyricIndex + " - " + removeTimeTag(currentLyrics[currentLyricIndex]));
+        }
+    }
+    
+    private long getLyricTimeMs(String lyric) {
+        try {
+            if (lyric == null || lyric.length() < 10) return 0;
+            
+            int bracketStart = lyric.indexOf('[');
+            int bracketEnd = lyric.indexOf(']');
+            
+            if (bracketStart >= 0 && bracketEnd > bracketStart) {
+                String timeStr = lyric.substring(bracketStart + 1, bracketEnd);
+                String[] parts = timeStr.split(":");
+                if (parts.length == 2) {
+                    int minutes = Integer.parseInt(parts[0]);
+                    String[] secParts = parts[1].split("\\.");
+                    int seconds = Integer.parseInt(secParts[0]);
+                    int millis = 0;
+                    if (secParts.length > 1) {
+                        millis = Integer.parseInt(secParts[1]);
+                        if (secParts[1].length() == 2) {
+                            millis *= 10;
+                        }
+                    }
+                    return (minutes * 60 + seconds) * 1000L + millis;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing lyric time: " + e.getMessage());
+        }
+        return 0;
     }
     
     public void highlightLyric(int index) {
         if (index >= 0 && index < currentLyrics.length) {
             this.currentLyricIndex = index;
             updateLyricsDisplay();
+        }
+    }
+    
+    public void updateCurrentLyrics(String lyrics) {
+        if (lyrics != null && !lyrics.isEmpty()) {
+            this.currentLyrics = new String[]{lyrics};
+            this.currentLyricIndex = 0;
+            updateLyricsDisplay();
+            Log.d(TAG, "Updated lyrics: " + lyrics);
         }
     }
     

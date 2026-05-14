@@ -245,7 +245,7 @@ public class NotificationMonitor {
                 isPlaying = playing;
                 
                 updateUI();
-                Log.d(TAG, "Refreshed from NotificationService: " + title + " - " + artist);
+//                Log.d(TAG, "Refreshed from NotificationService: " + title + " - " + artist);
             }
         }
     }

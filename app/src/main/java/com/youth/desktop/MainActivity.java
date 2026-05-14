@@ -277,27 +277,29 @@ public class MainActivity extends AppCompatActivity {
         TextView textSongTitle = findViewById(R.id.text_song_title_center);
         TextView textSongArtist = findViewById(R.id.text_song_artist_center);
         
-        TextView textLyricPrev = findViewById(R.id.text_lyric_prev_center);
+        TextView textLyric1 = findViewById(R.id.text_lyric_1);
+        TextView textLyric2 = findViewById(R.id.text_lyric_2);
         TextView textLyricCurrent = findViewById(R.id.text_lyric_current_center);
-        TextView textLyricNext = findViewById(R.id.text_lyric_next_center);
+        TextView textLyric4 = findViewById(R.id.text_lyric_4);
+        TextView textLyric5 = findViewById(R.id.text_lyric_5);
         
         Log.d("MainActivity", "Creating MusicPlayerManager...");
         musicPlayerManager = new MusicPlayerManager(this);
         musicPlayerManager.bindViews(imgAlbumCoverCenter, imgMusicSource, textMusicSource,
-                                     textSongTitle, textSongArtist, null, btnPlayPauseCenter);
-        musicPlayerManager.bindLyricsViews(textLyricPrev, textLyricCurrent, textLyricNext);
+                                     textSongTitle, null, btnPlayPauseCenter);
+        musicPlayerManager.bindLyricsViews(textLyric1, textLyric2, textLyricCurrent, textLyric4, textLyric5);
         Log.d("MainActivity", "MusicPlayerManager created, setting listener...");
         
         musicPlayerManager.setOnMusicUpdateListener(new MusicPlayerManager.OnMusicUpdateListener() {
             @Override
             public void onMusicUpdate(String packageName, String title, String artist, Bitmap albumArt, boolean isPlaying) {
-                Log.d("MainActivity", "=== MUSIC UPDATE: " + title + " - " + artist);
+//                Log.d("MainActivity", "=== MUSIC UPDATE: " + title + " - " + artist);
                 updateMusicPlayerUI(title, artist, isPlaying);
             }
             
             @Override
             public void onPlaybackStateChanged(boolean isPlaying) {
-                Log.d("MainActivity", "Playback state changed: " + isPlaying);
+//                Log.d("MainActivity", "Playback state changed: " + isPlaying);
                 btnPlayPauseCenter.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
             }
         });
@@ -305,6 +307,32 @@ public class MainActivity extends AppCompatActivity {
         Log.d("MainActivity", "Starting music listening...");
         musicPlayerManager.startListening();
         Log.d("MainActivity", "Music listening started");
+        
+//        initLyricsAccessibilityService();
+        setupMusicControls();
+        setupLyricsListener();
+    }
+    
+    private void setupLyricsListener() {
+        MediaNotificationListenerService.setLyricsListener(new MediaNotificationListenerService.OnLyricsUpdateListener() {
+            @Override
+            public void onLyricsUpdate(String prevLyric, String currentLyric, String nextLyric, int index) {
+                Log.d("MainActivity", "=== LYRICS UPDATE: index=" + index + ", current=" + currentLyric);
+                runOnUiThread(() -> {
+                    musicPlayerManager.updateLyrics(prevLyric, currentLyric, nextLyric);
+                });
+            }
+        });
+    }
+    
+    private void setupMusicControls() {
+        ImageView imgNavPreview = findViewById(R.id.img_nav_preview);
+        ImageView imgAlbumCoverCenter = findViewById(R.id.img_album_cover_center);
+        View navPreviewContainer = findViewById(R.id.nav_preview_container);
+        ImageView btnPreviousCenter = findViewById(R.id.btn_previous_center);
+        ImageView btnPlayPauseCenter = findViewById(R.id.btn_play_pause_center);
+        ImageView btnNextCenter = findViewById(R.id.btn_next_center);
+        View musicPlayerCard = findViewById(R.id.music_player_card);
         
         try {
             InputStream is = getAssets().open("webui/img/widget/automap_logo.png");
@@ -1004,6 +1032,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        super.onBackPressed();
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

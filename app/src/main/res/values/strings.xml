@@ -23,6 +23,7 @@
 
     <!-- 无障碍服务 -->
     <string name="accessibility_service_description">轻语桌面无障碍服务，用于实现应用快捷操作和自动化功能</string>
+    <string name="lyrics_accessibility_service_description">轻语桌面歌词服务，用于读取音乐应用的歌词并显示在桌面上</string>
 
     <string name="wallpaper">壁纸</string>
     <string name="themes">主题</string>

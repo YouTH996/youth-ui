@@ -47,7 +47,7 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-
+        
         <service
             android:name=".MediaNotificationListenerService"
             android:exported="true"
