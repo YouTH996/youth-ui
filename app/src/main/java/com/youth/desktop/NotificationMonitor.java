@@ -6,28 +6,17 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.media.MediaMetadata;
 import android.media.session.MediaController;
-import android.media.session.MediaSessionManager;
-import android.media.session.PlaybackState;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
-import android.service.notification.NotificationListenerService;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class NotificationMonitor {
     private static final String TAG = "NotificationMonitor";
@@ -209,9 +198,7 @@ public class NotificationMonitor {
             currentPackage = "music.broadcast";
             currentTitle = title;
             currentArtist = artist;
-            
-            Log.d(TAG, "Music from broadcast: " + title + " - " + artist);
-            
+
             updateUI();
             
         } catch (Exception e) {
@@ -245,26 +232,10 @@ public class NotificationMonitor {
                 isPlaying = playing;
                 
                 updateUI();
-//                Log.d(TAG, "Refreshed from NotificationService: " + title + " - " + artist);
             }
         }
     }
-    
-    public String getCurrentPackage() {
-        return currentPackage;
-    }
-    
-    public String getCurrentTitle() {
-        return currentTitle;
-    }
-    
-    public String getCurrentArtist() {
-        return currentArtist;
-    }
-    
-    public Bitmap getCurrentAlbumArt() {
-        return currentAlbumArt;
-    }
+
     
     public boolean isPlaying() {
         return isPlaying;

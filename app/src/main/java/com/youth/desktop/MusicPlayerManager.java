@@ -101,7 +101,7 @@ public class MusicPlayerManager {
                 
                 @Override
                 public void onNotificationServiceConnected() {
-                    Log.d(TAG, "NotificationListenerService is now connected!");
+
                     Toast.makeText(activity, "已连接到通知服务", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -294,7 +294,6 @@ public class MusicPlayerManager {
         if (newIndex != currentLyricIndex) {
             currentLyricIndex = newIndex;
             updateLyricsDisplay();
-            Log.d(TAG, "Lyric updated to index: " + currentLyricIndex + " - " + removeTimeTag(currentLyrics[currentLyricIndex]));
         }
     }
     

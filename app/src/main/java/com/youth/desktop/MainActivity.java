@@ -317,7 +317,6 @@ public class MainActivity extends AppCompatActivity {
         MediaNotificationListenerService.setLyricsListener(new MediaNotificationListenerService.OnLyricsUpdateListener() {
             @Override
             public void onLyricsUpdate(String lyric1, String lyric2, String currentLyric, String lyric4, String lyric5, int index) {
-                Log.d("MainActivity", "=== LYRICS UPDATE: index=" + index + ", current=" + currentLyric);
                 runOnUiThread(() -> {
                     musicPlayerManager.updateLyrics(lyric1, lyric2, currentLyric, lyric4, lyric5);
                 });

@@ -2,12 +2,8 @@ package com.youth.desktop;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
@@ -201,18 +197,14 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         
         try {
             ComponentName componentName = new ComponentName(this, MediaNotificationListenerService.class);
-//            Log.d(TAG, "Requesting active sessions...");
             List<MediaController> controllers = mediaSessionManager.getActiveSessions(componentName);
             
-//            Log.d(TAG, "Found " + controllers.size() + " active sessions");
-            
+
             MediaController newController = null;
             for (MediaController controller : controllers) {
                 String pkg = controller.getPackageName();
-//                Log.d(TAG, "Checking session: " + pkg);
                 if (isMusicApp(pkg)) {
                     newController = controller;
-//                    Log.d(TAG, "Found music app: " + pkg);
                     break;
                 }
             }
@@ -227,7 +219,6 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                 
                 mediaController.registerCallback(mediaCallback);
                 
-//                Log.d(TAG, "Attaching to music app: " + currentPackage);
                 updateFromMediaController();
             } else if (newController != null && mediaController != null) {
                 updateFromMediaController();
@@ -249,32 +240,8 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         if (mediaController == null) return;
         
         try {
-            Log.d(TAG, "=== MediaController Info ===");
-            Log.d(TAG, "Package: " + mediaController.getPackageName());
-//            Log.d(TAG, "Tag: " + mediaController.getTag());
 
-            Bundle extras = mediaController.getExtras();
-            if (extras != null) {
-                Log.d(TAG, "=== Controller Extras ===");
-                for (String key : extras.keySet()) {
-                    Object value = extras.get(key);
-                    Log.d(TAG, "Extra [" + key + "]: " + value);
-                }
-            }
-            
             MediaMetadata metadata = mediaController.getMetadata();
-            Bundle bundle =
-                    getMediaMetadataBundle(metadata);
-
-            if(bundle != null){
-
-                for(String key : bundle.keySet()){
-
-                    Object value = bundle.get(key);
-
-                    Log.d(TAG, key + " = " + value);
-                }
-            }
             if (metadata != null) {
                 updateFromMetadata(metadata);
             }
@@ -285,7 +252,6 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                 notifyUpdate();
             }
             
-            Log.d(TAG, "====================");
         } catch (Exception e) {
             Log.e(TAG, "Error updating from media controller: " + e.getMessage(), e);
         }
@@ -296,18 +262,6 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         
         String title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
         String artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST);
-
-        Log.d(TAG, "=== MediaMetadata ===");
-        Log.d(TAG, "Title: " + title);
-        Log.d(TAG, "Artist: " + artist);
-        Log.d(TAG, "Album: " + metadata.getString(MediaMetadata.METADATA_KEY_ALBUM));
-        Log.d(TAG, "Album Artist: " + metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST));
-        Log.d(TAG, "Author: " + metadata.getString(MediaMetadata.METADATA_KEY_AUTHOR));
-        Log.d(TAG, "Writer: " + metadata.getString(MediaMetadata.METADATA_KEY_WRITER));
-        Log.d(TAG, "Composer: " + metadata.getString(MediaMetadata.METADATA_KEY_COMPOSER));
-        Log.d(TAG, "Display Subtitle: " + metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE));
-        Log.d(TAG, "Display Description: " + metadata.getString(MediaMetadata.METADATA_KEY_DISPLAY_DESCRIPTION));
-        
         try {
             Bundle bundle = getMediaMetadataBundle(metadata);
             if (bundle != null) {
@@ -320,8 +274,6 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                 }
                 
                 if (lyrics != null && !lyrics.isEmpty()) {
-                    Log.d(TAG, "LYRIC found! Length: " + lyrics.length());
-                    Log.d(TAG, "First 200 chars: " + lyrics.substring(0, Math.min(200, lyrics.length())));
                     parseAndNotifyLyrics(lyrics);
                 } else {
                     Log.d(TAG, "No LYRIC found in bundle");
@@ -330,7 +282,6 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         } catch (Exception e) {
             Log.e(TAG, "Error getting LYRICS: " + e.getMessage(), e);
         }
-        Log.d(TAG, "====================");
 
         if (title == null) title = "未知歌曲";
         if (artist == null) artist = "未知艺术家";
@@ -385,7 +336,6 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         }
         
         if (!currentLyrics.isEmpty()) {
-            Log.d(TAG, "Parsed " + currentLyrics.size() + " lyrics lines");
             startLyricsSync();
         }
     }

@@ -211,7 +211,7 @@
             <!-- 右侧：音乐播放卡片 -->
             <RelativeLayout
                 android:id="@+id/music_player_card"
-                android:layout_width="380dp"
+                android:layout_width="300dp"
                 android:layout_height="match_parent"
                 android:background="@drawable/card_background_rounded"
                 android:padding="16dp"

@@ -51,10 +51,6 @@ public class YouthAccessibilityService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (event == null) return;
-
-        Log.d(TAG, "收到无障碍事件: " + event.getEventType() +
-                   " 包名: " + event.getPackageName());
-
         switch (event.getEventType()) {
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 handleWindowStateChanged(event);
@@ -86,13 +82,9 @@ public class YouthAccessibilityService extends AccessibilityService {
                           event.getClassName().toString() : "";
         String packageName = event.getPackageName() != null ?
                             event.getPackageName().toString() : "";
-
-        Log.d(TAG, "窗口状态变化 - 类名: " + className +
-                   " 包名: " + packageName);
     }
 
     private void handleWindowContentChanged(AccessibilityEvent event) {
-        Log.d(TAG, "窗口内容变化");
     }
 
     private void handleViewClicked(AccessibilityEvent event) {
@@ -100,7 +92,6 @@ public class YouthAccessibilityService extends AccessibilityService {
         if (source != null) {
             CharSequence text = source.getText();
             CharSequence contentDesc = source.getContentDescription();
-            Log.d(TAG, "点击视图 - 文本: " + text + " 描述: " + contentDesc);
             source.recycle();
         }
     }
@@ -110,7 +101,6 @@ public class YouthAccessibilityService extends AccessibilityService {
         if (source != null) {
             CharSequence text = source.getText();
             CharSequence contentDesc = source.getContentDescription();
-            Log.d(TAG, "长按视图 - 文本: " + text + " 描述: " + contentDesc);
             source.recycle();
         }
     }
