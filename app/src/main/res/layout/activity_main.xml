@@ -209,107 +209,141 @@
             </LinearLayout>
 
             <!-- 右侧：音乐播放卡片 -->
-            <LinearLayout
+            <RelativeLayout
                 android:id="@+id/music_player_card"
                 android:layout_width="380dp"
                 android:layout_height="match_parent"
-                android:orientation="horizontal"
                 android:background="@drawable/card_background_rounded"
-                android:padding="12dp"
-                android:layout_marginStart="8dp"
-                android:gravity="center_vertical">
+                android:padding="16dp"
+                android:layout_marginStart="8dp">
 
-                <LinearLayout
+                <!-- 左上角：软件图标 -->
+                <ImageView
+                    android:id="@+id/img_music_source_icon"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@mipmap/ic_launcher"
+                    android:scaleType="fitCenter"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true" />
+
+                <TextView
+                    android:id="@+id/text_music_source"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center_vertical">
+                    android:text="网易云音乐"
+                    android:textSize="11sp"
+                    android:textColor="@color/dark_tech_accent"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_toEndOf="@id/img_music_source_icon"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginTop="4dp" />
 
-                    <ImageView
-                        android:id="@+id/img_album_cover_center"
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:scaleType="centerCrop"
-                        android:background="@drawable/album_cover_background" />
+                <!-- 中间：歌曲图标（圆角） -->
+                <ImageView
+                    android:id="@+id/img_album_cover_center"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_music_default"
+                    android:scaleType="centerCrop"
+                    android:layout_below="@id/img_music_source_icon"
+                    android:layout_marginTop="8dp"
+                    android:layout_centerHorizontal="true"
+                    android:background="@drawable/album_cover_rounded" />
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:layout_marginTop="6dp">
-
-                        <ImageView
-                            android:id="@+id/img_music_source_icon"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:scaleType="fitCenter" />
-
-                        <TextView
-                            android:id="@+id/text_music_source"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="网易云音乐"
-                            android:textSize="10sp"
-                            android:textColor="@color/dark_tech_accent"
-                            android:maxLines="1"
-                            android:ellipsize="end"
-                            android:fontFamily="sans-serif-medium"
-                            android:layout_marginStart="4dp" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <!-- 歌曲名称 -->
+                <TextView
+                    android:id="@+id/text_song_title_center"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:text="演员"
+                    android:textSize="16sp"
+                    android:textColor="@color/dark_tech_text"
+                    android:fontFamily="sans-serif-medium"
+                    android:gravity="center"
+                    android:layout_below="@id/img_album_cover_center"
+                    android:layout_marginTop="8dp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <!-- 歌手名称 -->
+                <TextView
+                    android:id="@+id/text_song_artist_center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="薛之谦"
+                    android:textSize="12sp"
+                    android:textColor="@color/dark_tech_text_secondary"
+                    android:gravity="center"
+                    android:layout_below="@id/text_song_title_center"
+                    android:layout_marginTop="2dp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <!-- 歌词区域 -->
+                <LinearLayout
+                    android:id="@+id/layout_lyrics_center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginStart="12dp">
+                    android:gravity="center"
+                    android:layout_below="@id/text_song_artist_center"
+                    android:layout_marginTop="8dp"
+                    android:minHeight="48dp">
 
+                    <!-- 上一句歌词 -->
                     <TextView
-                        android:id="@+id/text_song_title_center"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/text_lyric_prev_center"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="演员"
-                        android:textSize="16sp"
-                        android:textColor="@color/dark_tech_text"
-                        android:fontFamily="sans-serif-medium"
-                        android:maxLines="1"
-                        android:ellipsize="end" />
-
-                    <TextView
-                        android:id="@+id/text_song_artist_center"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="薛之谦"
-                        android:textSize="13sp"
+                        android:text=""
+                        android:textSize="11sp"
                         android:textColor="@color/dark_tech_text_secondary"
+                        android:gravity="center"
                         android:maxLines="1"
                         android:ellipsize="end"
-                        android:layout_marginTop="2dp" />
+                        android:alpha="0.6" />
 
+                    <!-- 当前播放歌词（高亮） -->
                     <TextView
-                        android:id="@+id/text_song_lyrics"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/text_lyric_current_center"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="该配合你演出的我演视而不见"
                         android:textSize="12sp"
-                        android:textColor="@color/dark_tech_text_secondary"
-                        android:layout_marginTop="8dp"
+                        android:textColor="@color/dark_tech_accent"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="2dp"
                         android:maxLines="1"
-                        android:ellipsize="marquee"
-                        android:marqueeRepeatLimit="marquee_forever"
-                        android:singleLine="true"
-                        android:focusable="true"
-                        android:focusableInTouchMode="true" />
+                        android:ellipsize="end" />
+
+                    <!-- 下一句歌词 -->
+                    <TextView
+                        android:id="@+id/text_lyric_next_center"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="11sp"
+                        android:textColor="@color/dark_tech_text_secondary"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:alpha="0.6" />
                 </LinearLayout>
 
+                <!-- 控制按钮 -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginStart="12dp">
+                    android:gravity="center"
+                    android:layout_below="@id/layout_lyrics_center"
+                    android:layout_marginTop="8dp"
+                    android:layout_centerHorizontal="true">
 
                     <ImageView
                         android:id="@+id/btn_previous_center"
@@ -327,6 +361,8 @@
                         android:src="@drawable/ic_play"
                         android:scaleType="fitCenter"
                         android:padding="8dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
                         android:background="?attr/selectableItemBackgroundBorderless" />
 
                     <ImageView
@@ -338,7 +374,8 @@
                         android:padding="6dp"
                         android:background="?attr/selectableItemBackgroundBorderless" />
                 </LinearLayout>
-            </LinearLayout>
+
+            </RelativeLayout>
 
         </LinearLayout>
 

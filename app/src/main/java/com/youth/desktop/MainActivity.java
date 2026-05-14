@@ -271,17 +271,21 @@ public class MainActivity extends AppCompatActivity {
         ImageView btnNextCenter = findViewById(R.id.btn_next_center);
         View navPreviewContainer = findViewById(R.id.nav_preview_container);
         View musicPlayerCard = findViewById(R.id.music_player_card);
-        TextView textSongLyrics = findViewById(R.id.text_song_lyrics);
         
         ImageView imgMusicSource = findViewById(R.id.img_music_source_icon);
         TextView textMusicSource = findViewById(R.id.text_music_source);
         TextView textSongTitle = findViewById(R.id.text_song_title_center);
         TextView textSongArtist = findViewById(R.id.text_song_artist_center);
         
+        TextView textLyricPrev = findViewById(R.id.text_lyric_prev_center);
+        TextView textLyricCurrent = findViewById(R.id.text_lyric_current_center);
+        TextView textLyricNext = findViewById(R.id.text_lyric_next_center);
+        
         Log.d("MainActivity", "Creating MusicPlayerManager...");
         musicPlayerManager = new MusicPlayerManager(this);
         musicPlayerManager.bindViews(imgAlbumCoverCenter, imgMusicSource, textMusicSource,
-                                     textSongTitle, textSongArtist, textSongLyrics, btnPlayPauseCenter);
+                                     textSongTitle, textSongArtist, null, btnPlayPauseCenter);
+        musicPlayerManager.bindLyricsViews(textLyricPrev, textLyricCurrent, textLyricNext);
         Log.d("MainActivity", "MusicPlayerManager created, setting listener...");
         
         musicPlayerManager.setOnMusicUpdateListener(new MusicPlayerManager.OnMusicUpdateListener() {
@@ -318,12 +322,6 @@ public class MainActivity extends AppCompatActivity {
             is.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        
-        if (textSongLyrics != null) {
-            textSongLyrics.setSelected(true);
-            textSongLyrics.setFocusable(true);
-            textSongLyrics.setFocusableInTouchMode(true);
         }
         
         navPreviewContainer.setOnClickListener(v -> {
@@ -364,9 +362,9 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void updateMusicPlayerUI(String title, String artist, boolean isPlaying) {
-        TextView textSongLyrics = findViewById(R.id.text_song_lyrics);
-        if (textSongLyrics != null) {
-            textSongLyrics.setText("♪ " + artist + " - " + title);
+        TextView textLyricCurrent = findViewById(R.id.text_lyric_current_center);
+        if (textLyricCurrent != null) {
+            textLyricCurrent.setText("♪ " + artist + " - " + title);
         }
     }
     

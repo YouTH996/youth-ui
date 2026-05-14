@@ -28,7 +28,9 @@ public class MusicPlayerManager {
     private TextView textMusicSource;
     private TextView textSongTitle;
     private TextView textSongArtist;
-    private TextView textSongLyrics;
+    private TextView textLyricPrev;
+    private TextView textLyricCurrent;
+    private TextView textLyricNext;
     private ImageView btnPlayPause;
     
     private String currentPackageName = "";
@@ -36,6 +38,8 @@ public class MusicPlayerManager {
     private String currentArtist = "";
     private Bitmap currentAlbumArt = null;
     private boolean isPlaying = false;
+    private int currentLyricIndex = 0;
+    private String[] currentLyrics = {};
     
     private OnMusicUpdateListener listener;
     
@@ -61,8 +65,15 @@ public class MusicPlayerManager {
         this.textMusicSource = sourceText;
         this.textSongTitle = titleText;
         this.textSongArtist = artistText;
-        this.textSongLyrics = lyricsText;
+        this.textLyricPrev = lyricsText;
         this.btnPlayPause = playPauseBtn;
+    }
+    
+    public void bindLyricsViews(TextView lyricPrev, TextView lyricCurrent, TextView lyricNext) {
+        this.textLyricPrev = lyricPrev;
+        this.textLyricCurrent = lyricCurrent;
+        this.textLyricNext = lyricNext;
+        updateLyricsDisplay();
     }
     
     public void startListening() {
@@ -137,9 +148,7 @@ public class MusicPlayerManager {
             }
         }
         
-        if (textSongLyrics != null) {
-            textSongLyrics.setText("♪ " + currentArtist + " - " + currentTitle);
-        }
+        updateLyricsDisplay();
         
         if (btnPlayPause != null) {
             btnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
@@ -149,6 +158,47 @@ public class MusicPlayerManager {
             listener.onMusicUpdate(currentPackageName, currentTitle, currentArtist, 
                                    currentAlbumArt, isPlaying);
             listener.onPlaybackStateChanged(isPlaying);
+        }
+    }
+    
+    private void updateLyricsDisplay() {
+        if (textLyricPrev != null) {
+            if (currentLyricIndex > 0 && currentLyrics.length > 0) {
+                textLyricPrev.setText(currentLyrics[Math.max(0, currentLyricIndex - 1)]);
+            } else {
+                textLyricPrev.setText("");
+            }
+        }
+        
+        if (textLyricCurrent != null) {
+            if (currentLyrics.length > 0 && currentLyricIndex < currentLyrics.length) {
+                textLyricCurrent.setText(currentLyrics[currentLyricIndex]);
+            } else {
+                textLyricCurrent.setText("♪ " + currentArtist + " - " + currentTitle);
+            }
+        }
+        
+        if (textLyricNext != null) {
+            if (currentLyricIndex < currentLyrics.length - 1 && currentLyrics.length > 0) {
+                textLyricNext.setText(currentLyrics[currentLyricIndex + 1]);
+            } else {
+                textLyricNext.setText("");
+            }
+        }
+    }
+    
+    public void updateLyrics(String[] lyrics) {
+        if (lyrics != null && lyrics.length > 0) {
+            this.currentLyrics = lyrics;
+            this.currentLyricIndex = 0;
+            updateLyricsDisplay();
+        }
+    }
+    
+    public void highlightLyric(int index) {
+        if (index >= 0 && index < currentLyrics.length) {
+            this.currentLyricIndex = index;
+            updateLyricsDisplay();
         }
     }
     
