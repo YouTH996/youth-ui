@@ -53,7 +53,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     }
     
     public interface OnLyricsUpdateListener {
-        void onLyricsUpdate(String prevLyric, String currentLyric, String nextLyric, int index);
+        void onLyricsUpdate(String lyric1, String lyric2, String currentLyric, String lyric4, String lyric5, int index);
     }
     
     private static OnMediaInfoListener listener;
@@ -417,11 +417,13 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                     
                     int index = findCurrentLyricIndex(position);
                     if (index >= 0 && lyricsListener != null) {
-                        String prevLyric = index > 0 ? currentLyrics.get(index - 1).text : "";
+                        String lyric1 = index >= 2 ? currentLyrics.get(index - 2).text : "";
+                        String lyric2 = index >= 1 ? currentLyrics.get(index - 1).text : "";
                         String currentLyric = currentLyrics.get(index).text;
-                        String nextLyric = index < currentLyrics.size() - 1 ? currentLyrics.get(index + 1).text : "";
+                        String lyric4 = index < currentLyrics.size() - 1 ? currentLyrics.get(index + 1).text : "";
+                        String lyric5 = index < currentLyrics.size() - 2 ? currentLyrics.get(index + 2).text : "";
                         
-                        lyricsListener.onLyricsUpdate(prevLyric, currentLyric, nextLyric, index);
+                        lyricsListener.onLyricsUpdate(lyric1, lyric2, currentLyric, lyric4, lyric5, index);
                     }
                 }
             }

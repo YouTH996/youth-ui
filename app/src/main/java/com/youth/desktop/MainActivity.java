@@ -286,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("MainActivity", "Creating MusicPlayerManager...");
         musicPlayerManager = new MusicPlayerManager(this);
         musicPlayerManager.bindViews(imgAlbumCoverCenter, imgMusicSource, textMusicSource,
-                                     textSongTitle, null, btnPlayPauseCenter);
+                                     textSongTitle, textSongArtist, btnPlayPauseCenter);
         musicPlayerManager.bindLyricsViews(textLyric1, textLyric2, textLyricCurrent, textLyric4, textLyric5);
         Log.d("MainActivity", "MusicPlayerManager created, setting listener...");
         
@@ -316,10 +316,10 @@ public class MainActivity extends AppCompatActivity {
     private void setupLyricsListener() {
         MediaNotificationListenerService.setLyricsListener(new MediaNotificationListenerService.OnLyricsUpdateListener() {
             @Override
-            public void onLyricsUpdate(String prevLyric, String currentLyric, String nextLyric, int index) {
+            public void onLyricsUpdate(String lyric1, String lyric2, String currentLyric, String lyric4, String lyric5, int index) {
                 Log.d("MainActivity", "=== LYRICS UPDATE: index=" + index + ", current=" + currentLyric);
                 runOnUiThread(() -> {
-                    musicPlayerManager.updateLyrics(prevLyric, currentLyric, nextLyric);
+                    musicPlayerManager.updateLyrics(lyric1, lyric2, currentLyric, lyric4, lyric5);
                 });
             }
         });
@@ -390,10 +390,7 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void updateMusicPlayerUI(String title, String artist, boolean isPlaying) {
-        TextView textLyricCurrent = findViewById(R.id.text_lyric_current_center);
-        if (textLyricCurrent != null) {
-            textLyricCurrent.setText("♪ " + artist + " - " + title);
-        }
+        // 不再替换歌词显示
     }
     
     /**

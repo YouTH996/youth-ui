@@ -152,8 +152,6 @@ public class MusicPlayerManager {
             }
         }
         
-        updateLyricsDisplay();
-        
         if (btnPlayPause != null) {
             btnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
         }
@@ -181,6 +179,10 @@ public class MusicPlayerManager {
     private void updateLyricsDisplay() {
         if (currentLyrics.length == 0) return;
         
+        if (currentLyricIndex < 0 || currentLyricIndex >= currentLyrics.length) {
+            return;
+        }
+        
         if (textLyric1 != null) {
             if (currentLyricIndex >= 2) {
                 textLyric1.setText(removeTimeTag(currentLyrics[currentLyricIndex - 2]));
@@ -198,11 +200,7 @@ public class MusicPlayerManager {
         }
         
         if (textLyricCurrent != null) {
-            if (currentLyricIndex < currentLyrics.length) {
-                textLyricCurrent.setText(removeTimeTag(currentLyrics[currentLyricIndex]));
-            } else {
-                textLyricCurrent.setText("♪ " + currentArtist + " - " + currentTitle);
-            }
+            textLyricCurrent.setText(removeTimeTag(currentLyrics[currentLyricIndex]));
         }
         
         if (textLyric4 != null) {
@@ -236,12 +234,12 @@ public class MusicPlayerManager {
         }
     }
     
-    public void updateLyrics(String prevLyric, String currentLyric, String nextLyric) {
-        if (textLyric1 != null) textLyric1.setText(prevLyric);
-        if (textLyric2 != null) textLyric2.setText(currentLyric);
+    public void updateLyrics(String lyric1, String lyric2, String currentLyric, String lyric4, String lyric5) {
+        if (textLyric1 != null) textLyric1.setText(lyric1);
+        if (textLyric2 != null) textLyric2.setText(lyric2);
         if (textLyricCurrent != null) textLyricCurrent.setText(currentLyric);
-        if (textLyric4 != null) textLyric4.setText(nextLyric);
-        if (textLyric5 != null) textLyric5.setText(nextLyric);
+        if (textLyric4 != null) textLyric4.setText(lyric4);
+        if (textLyric5 != null) textLyric5.setText(lyric5);
     }
     
     private void startLyricsUpdateTimer() {
