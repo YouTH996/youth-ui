@@ -90,7 +90,7 @@
                 android:layout_height="0dp" />
 
             <!-- 电量及续航 - 使用自定义 BatteryView -->
-            <com.youth.desktop.BatteryView
+            <cn.youth996.ui.BatteryView
                 android:id="@+id/battery_view"
                 android:layout_width="120dp"
                 android:layout_height="32dp" />

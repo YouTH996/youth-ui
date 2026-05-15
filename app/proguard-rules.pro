@@ -3,13 +3,13 @@
 # proguardFiles setting in build.gradle.
 
 # Keep application classes
--keep class com.youth.desktop.** { *; }
+-keep class cn.youth996.ui.** { *; }
 
 # Keep model classes
--keep class com.youth.desktop.model.** { *; }
+-keep class cn.youth996.ui.model.** { *; }
 
 # Keep adapter classes
--keep class com.youth.desktop.adapter.** { *; }
+-keep class cn.youth996.ui.adapter.** { *; }
 
 # Preserve line numbers for debugging
 -keepattributes SourceFile,LineNumberTable

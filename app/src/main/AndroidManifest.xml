@@ -14,15 +14,15 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.YouthDesktop"
+        android:theme="@style/Theme.YouthUI"
         tools:targetApi="31">
 
         <activity
-            android:name=".MainActivity"
+            android:name="cn.youth996.ui.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.YouthDesktop">
+            android:theme="@style/Theme.YouthUI">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
@@ -32,12 +32,12 @@
         </activity>
 
         <activity
-            android:name=".AppDrawerActivity"
+            android:name="cn.youth996.ui.AppDrawerActivity"
             android:exported="false"
-            android:theme="@style/Theme.YouthDesktop.Transparent" />
+            android:theme="@style/Theme.YouthUI.Transparent" />
 
         <service
-            android:name=".YouthAccessibilityService"
+            android:name="cn.youth996.ui.YouthAccessibilityService"
             android:exported="false"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
@@ -49,7 +49,7 @@
         </service>
         
         <service
-            android:name=".MediaNotificationListenerService"
+            android:name="cn.youth996.ui.MediaNotificationListenerService"
             android:exported="true"
             android:label="轻语桌面"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">

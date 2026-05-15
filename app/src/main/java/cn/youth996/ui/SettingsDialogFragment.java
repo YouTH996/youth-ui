@@ -1,4 +1,4 @@
-package com.youth.desktop;
+package cn.youth996.ui;
 
 import android.app.Dialog;
 import android.graphics.Color;
@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 

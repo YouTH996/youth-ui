@@ -1,4 +1,4 @@
-package com.youth.desktop;
+package cn.youth996.ui;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -23,7 +23,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;

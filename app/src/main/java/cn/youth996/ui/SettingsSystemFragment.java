@@ -1,6 +1,5 @@
-package com.youth.desktop;
+package cn.youth996.ui;
 
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;

@@ -1,10 +1,9 @@
-package com.youth.desktop;
+package cn.youth996.ui;
 
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -12,7 +11,7 @@ import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.LruCache;
-import java.io.ByteArrayOutputStream;
+
 import java.util.ArrayList;
 import java.util.List;
 

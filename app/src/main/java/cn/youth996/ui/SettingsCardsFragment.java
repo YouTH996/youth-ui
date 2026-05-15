@@ -1,4 +1,4 @@
-package com.youth.desktop;
+package cn.youth996.ui;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;

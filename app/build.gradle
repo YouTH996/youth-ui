@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.youth.desktop'
+    namespace 'cn.youth996.ui'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.youth.desktop"
+        applicationId "cn.youth996.ui"
         minSdk 25
         targetSdk 34
         versionCode 1

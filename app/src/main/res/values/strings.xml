@@ -6,7 +6,6 @@
     <string name="settings">设置</string>
     <string name="home">主页</string>
     <string name="back">返回</string>
-    <string name="recent_apps">最近应用</string>
     <string name="all_tasks">所有任务</string>
     <string name="clear_all">清除全部</string>
     <string name="app_info">应用信息</string>
@@ -14,17 +13,12 @@
     <string name="open">打开</string>
     <string name="add_to_desktop">添加到桌面</string>
     <string name="remove_from_desktop">从桌面移除</string>
-
     <string name="time_format">HH:mm</string>
     <string name="date_format">MM月dd日 E</string>
-
     <string name="no_apps">没有应用</string>
     <string name="loading">加载中...</string>
-
-    <!-- 无障碍服务 -->
     <string name="accessibility_service_description">轻语桌面无障碍服务，用于实现应用快捷操作和自动化功能</string>
     <string name="lyrics_accessibility_service_description">轻语桌面歌词服务，用于读取音乐应用的歌词并显示在桌面上</string>
-
     <string name="wallpaper">壁纸</string>
     <string name="themes">主题</string>
     <string name="widgets">小部件</string>
