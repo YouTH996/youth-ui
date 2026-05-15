@@ -1,13 +1,19 @@
 package cn.youth996.ui;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.media.session.MediaController;
+import android.media.session.MediaSession;
+import android.media.session.MediaSessionManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Gravity;
@@ -51,6 +57,8 @@ import java.util.Set;
  * @author Youth Desktop Team
  */
 public class MainActivity extends AppCompatActivity {
+    
+    private static final String TAG = "MainActivity";
 
     // ==================== 视图组件声明 ====================
     private FrameLayout desktopContainer;
@@ -88,6 +96,31 @@ public class MainActivity extends AppCompatActivity {
     private TextView textGearD;
     private TextView textTimeOnly;
     private BatteryView batteryView;
+    
+    // 导航预览组件声明
+    private View navModeContainer;
+    private View drivingModeContainer;
+    private View pipModeContainer;
+    private ImageView imgCarIcon;
+    private TextView textSpeed;
+    private TextView textDrivingStatus;
+    private ImageView imgPipIcon;
+    private TextView textPipStatus;
+    private FrameLayout pipPreviewFrame;
+    
+    // 高德地图悬浮窗检测
+    private static final String AMAP_PACKAGE = "com.autonavi.amapauto.chenmo";
+    private static final String AMAP_STANDALONE_PACKAGE = "com.autonavi.map";
+    private static final String AMAP_FLOAT_WINDOW_ACTIVITY = "com.autonavi.auto.ui.SplashActivity";
+    private boolean isAutoNaviFloating = false;
+    private boolean isAutoNaviPipMode = false;
+    private Runnable navMonitorRunnable;
+    
+    // 画中画模式常量
+    private static final int MODE_DRIVING = 0;
+    private static final int MODE_NAVIGATION = 1;
+    private static final int MODE_PIP = 2;
+    private int currentNavMode = MODE_DRIVING;
 
     // ==================== 空调状态 ====================
     private boolean isAcOn = false;
@@ -155,6 +188,9 @@ public class MainActivity extends AppCompatActivity {
         setupTimeUpdater();
         setupClickListeners();
         updateAcTempDisplay();
+        
+        initNavigationMonitor();
+        checkAndRequestPermissions();
     }
     
     /**
@@ -212,6 +248,17 @@ public class MainActivity extends AppCompatActivity {
         // 图标网格已移除
         // iconGrid.setColumnCount(DESKTOP_COLUMNS);
         // iconGrid.setRowCount(DESKTOP_ROWS);
+        
+        // 初始化导航预览组件（需要在initCenterArea之前）
+        navModeContainer = findViewById(R.id.nav_mode_container);
+        drivingModeContainer = findViewById(R.id.driving_mode_container);
+        pipModeContainer = findViewById(R.id.pip_mode_container);
+        imgCarIcon = findViewById(R.id.img_car_icon);
+        textSpeed = findViewById(R.id.text_speed);
+        textDrivingStatus = findViewById(R.id.text_driving_status);
+        imgPipIcon = findViewById(R.id.img_pip_icon);
+        textPipStatus = findViewById(R.id.text_pip_status);
+        pipPreviewFrame = findViewById(R.id.pip_preview_frame);
         
         // 初始化中间区域组件
         initCenterArea();
@@ -354,8 +401,30 @@ public class MainActivity extends AppCompatActivity {
         }
         
         navPreviewContainer.setOnClickListener(v -> {
-            Toast.makeText(this, "打开导航应用", Toast.LENGTH_SHORT).show();
+            switch (currentNavMode) {
+                case MODE_DRIVING:
+                    Toast.makeText(this, "打开导航应用", Toast.LENGTH_SHORT).show();
+                    launchAmapNavigation();
+                    break;
+                case MODE_NAVIGATION:
+                    Toast.makeText(this, "打开高德地图", Toast.LENGTH_SHORT).show();
+                    launchAmapNavigation();
+                    break;
+                case MODE_PIP:
+                    Toast.makeText(this, "切换到高德地图", Toast.LENGTH_SHORT).show();
+                    bringAmapToFront();
+                    break;
+            }
         });
+        
+        if (pipPreviewFrame != null) {
+            pipPreviewFrame.setOnClickListener(v -> {
+                if (currentNavMode == MODE_PIP) {
+                    Toast.makeText(this, "切换到高德地图", Toast.LENGTH_SHORT).show();
+                    bringAmapToFront();
+                }
+            });
+        }
         
         btnPreviousCenter.setOnClickListener(v -> {
             if (musicPlayerManager.hasActiveMusic()) {
@@ -439,6 +508,556 @@ public class MainActivity extends AppCompatActivity {
             } else if (child instanceof ViewGroup) {
                 findTextViewsInLinearLayout((ViewGroup) child, color);
             }
+        }
+    }
+    
+    /**
+     * 检查并请求必要的权限
+     */
+    private void checkAndRequestPermissions() {
+        if (!hasUsageStatsPermission()) {
+            Log.w(TAG, "需要使用统计权限");
+            requestUsageStatsPermission();
+        }
+        
+        if (!isNotificationListenerEnabled()) {
+            Log.w(TAG, "需要通知监听器权限");
+            requestNotificationListenerPermission();
+        }
+    }
+    
+    /**
+     * 检查使用统计权限
+     */
+    private boolean hasUsageStatsPermission() {
+        try {
+            android.app.AppOpsManager appOps = (android.app.AppOpsManager) 
+                getSystemService(Context.APP_OPS_SERVICE);
+            
+            if (appOps != null) {
+                int mode = appOps.checkOpNoThrow(
+                    android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(),
+                    getPackageName()
+                );
+                
+                return mode == android.app.AppOpsManager.MODE_ALLOWED;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "检查使用统计权限时出错: " + e.getMessage());
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 请求使用统计权限
+     */
+    private void requestUsageStatsPermission() {
+        Toast.makeText(this, "需要授权使用统计权限以检测导航应用", Toast.LENGTH_LONG).show();
+        
+        new android.os.Handler().postDelayed(() -> {
+            try {
+                Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "无法打开使用统计设置: " + e.getMessage());
+                try {
+                    Intent intent = new Intent(Settings.ACTION_SETTINGS);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    Toast.makeText(this, "请在设置中开启'使用与应用访问权限'", Toast.LENGTH_LONG).show();
+                } catch (Exception e2) {
+                    Toast.makeText(this, "请手动在设置中授权使用统计权限", Toast.LENGTH_LONG).show();
+                }
+            }
+        }, 1000);
+    }
+    
+    /**
+     * 检查通知监听器是否已启用
+     */
+    private boolean isNotificationListenerEnabled() {
+        try {
+            String flat = Settings.Secure.getString(
+                getContentResolver(),
+                "enabled_notification_listeners"
+            );
+            
+            if (flat != null && flat.contains(getPackageName())) {
+                return true;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "检查通知监听器状态失败: " + e.getMessage());
+        }
+        return false;
+    }
+    
+    /**
+     * 请求通知监听器权限
+     */
+    private void requestNotificationListenerPermission() {
+        Toast.makeText(this, "需要授权通知监听权限以读取通知信息", Toast.LENGTH_LONG).show();
+        
+        new android.os.Handler().postDelayed(() -> {
+            try {
+                Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "无法打开通知监听器设置: " + e.getMessage());
+                Toast.makeText(this, "请手动在设置中开启'通知访问权限'", Toast.LENGTH_LONG).show();
+            }
+        }, 1000);
+    }
+    
+    /**
+     * 初始化导航监测
+     */
+    private void initNavigationMonitor() {
+        registerAccessibilityListener();
+        
+        navMonitorRunnable = new Runnable() {
+            @Override
+            public void run() {
+                checkAutoNaviFloating();
+                if (handler != null) {
+                    handler.postDelayed(this, 2000);
+                }
+            }
+        };
+        
+        startNavMonitor();
+    }
+    
+    /**
+     * 注册无障碍服务监听器
+     */
+    private void registerAccessibilityListener() {
+        if (YouthAccessibilityService.isServiceEnabled()) {
+            YouthAccessibilityService accessibilityService = YouthAccessibilityService.getInstance();
+            if (accessibilityService != null) {
+                accessibilityService.setOnAppChangeListener(new YouthAccessibilityService.OnAppChangeListener() {
+                    @Override
+                    public void onAppChanged(String packageName, String className) {
+                        Log.d(TAG, "检测到应用切换: " + packageName);
+                        
+                        if (packageName.equals(AMAP_PACKAGE) || packageName.equals(AMAP_STANDALONE_PACKAGE)) {
+                            Log.d(TAG, "高德地图已切换到前台");
+                            isAutoNaviFloating = true;
+                            checkAmapPipMode(className);
+                        } else {
+                            if (isAutoNaviFloating) {
+                                Log.d(TAG, "高德地图已切换到后台");
+                                isAutoNaviFloating = false;
+                                isAutoNaviPipMode = false;
+                                runOnUiThread(() -> switchToDrivingMode());
+                            }
+                        }
+                    }
+                });
+                Log.d(TAG, "无障碍服务监听器已注册");
+            }
+        } else {
+            Log.w(TAG, "无障碍服务未启用");
+        }
+    }
+    
+    /**
+     * 启动导航监测
+     */
+    private void startNavMonitor() {
+        if (handler != null && navMonitorRunnable != null) {
+            handler.post(navMonitorRunnable);
+        }
+    }
+    
+    /**
+     * 停止导航监测
+     */
+    private void stopNavMonitor() {
+        if (handler != null && navMonitorRunnable != null) {
+            handler.removeCallbacks(navMonitorRunnable);
+        }
+    }
+    
+    /**
+     * 检测高德地图是否以悬浮窗模式运行
+     */
+    private void checkAutoNaviFloating() {
+        String topPackage = getTopPackageName();
+        
+        boolean isAmapRunning = topPackage != null && 
+            (topPackage.equals(AMAP_PACKAGE) || topPackage.equals(AMAP_STANDALONE_PACKAGE));
+        
+        if (isAmapRunning != isAutoNaviFloating || isAmapRunning) {
+            isAutoNaviFloating = isAmapRunning;
+            
+            runOnUiThread(() -> {
+                if (isAmapRunning) {
+                    checkAmapPipMode();
+                } else {
+                    switchToDrivingMode();
+                }
+            });
+        }
+    }
+    
+    /**
+     * 检测高德地图是否为画中画模式
+     */
+    private void checkAmapPipMode() {
+        try {
+            android.app.ActivityManager activityManager = 
+                (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            
+            if (activityManager != null) {
+                List<android.app.ActivityManager.RunningTaskInfo> runningTasks = 
+                    activityManager.getRunningTasks(10);
+                
+                boolean foundAmap = false;
+                boolean isPipMode = false;
+                
+                for (android.app.ActivityManager.RunningTaskInfo taskInfo : runningTasks) {
+                    if (taskInfo.topActivity != null) {
+                        String packageName = taskInfo.topActivity.getPackageName();
+                        String activityName = taskInfo.topActivity.getClassName();
+                        
+                        if (packageName.equals(AMAP_PACKAGE) || 
+                            packageName.equals(AMAP_STANDALONE_PACKAGE)) {
+                            
+                            foundAmap = true;
+                            
+                            if (activityName.contains("pip") || 
+                                activityName.contains("Pip") ||
+                                activityName.contains("PIP") ||
+                                activityName.contains("picture_in_picture") ||
+                                activityName.contains("float") ||
+                                activityName.contains("Float") ||
+                                activityName.contains("小窗") ||
+                                activityName.contains("悬浮")) {
+                                
+                                isPipMode = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (foundAmap) {
+                    if (isPipMode && !isAutoNaviPipMode) {
+                        isAutoNaviPipMode = true;
+                        switchToPipMode();
+                        Log.d(TAG, "检测到高德地图画中画模式");
+                    } else if (!isPipMode) {
+                        if (isAutoNaviPipMode) {
+                            isAutoNaviPipMode = false;
+                            switchToNavigationMode();
+                            Log.d(TAG, "检测到高德地图普通模式");
+                        }
+                    }
+                } else {
+                    if (isAutoNaviPipMode) {
+                        isAutoNaviPipMode = false;
+                        switchToNavigationMode();
+                        Log.d(TAG, "高德地图未运行");
+                    }
+                }
+            }
+        } catch (SecurityException e) {
+            Log.w(TAG, "无法检测画中画模式: " + e.getMessage());
+            switchToNavigationMode();
+        } catch (Exception e) {
+            Log.e(TAG, "检测画中画模式时出错: " + e.getMessage());
+            switchToNavigationMode();
+        }
+    }
+    
+    /**
+     * 根据Activity类名检测高德地图是否为画中画模式（无障碍服务版本）
+     */
+    private void checkAmapPipMode(String className) {
+        if (className == null || className.isEmpty()) {
+            Log.d(TAG, "Activity类名为空");
+            return;
+        }
+        
+        Log.d(TAG, "检测画中画模式: " + className);
+        
+        if (className.contains("pip") || 
+            className.contains("Pip") ||
+            className.contains("PIP") ||
+            className.contains("picture_in_picture") ||
+            className.contains("float") ||
+            className.contains("Float") ||
+            className.contains("小窗") ||
+            className.contains("悬浮")) {
+            
+            if (!isAutoNaviPipMode) {
+                isAutoNaviPipMode = true;
+                runOnUiThread(() -> switchToPipMode());
+                Log.d(TAG, "检测到高德地图画中画模式（无障碍）");
+            }
+        } else {
+            if (isAutoNaviPipMode) {
+                isAutoNaviPipMode = false;
+                runOnUiThread(() -> switchToNavigationMode());
+                Log.d(TAG, "高德地图切换到普通模式（无障碍）");
+            } else {
+                runOnUiThread(() -> switchToNavigationMode());
+                Log.d(TAG, "高德地图已启动（无障碍）");
+            }
+        }
+    }
+    
+    /**
+     * 获取前台应用的包名
+     */
+    private String getTopPackageName() {
+        // 直接检查高德地图包名是否在运行
+        if (isPackageRunning(AMAP_PACKAGE)) {
+            Log.d(TAG, "高德地图车机版正在运行: " + AMAP_PACKAGE);
+            return AMAP_PACKAGE;
+        }
+        
+        if (isPackageRunning(AMAP_STANDALONE_PACKAGE)) {
+            Log.d(TAG, "高德地图独立版正在运行: " + AMAP_STANDALONE_PACKAGE);
+            return AMAP_STANDALONE_PACKAGE;
+        }
+        
+        // 如果高德地图不在运行，返回null
+        return null;
+    }
+    
+    /**
+     * 检查指定包名的应用是否正在运行
+     */
+    private boolean isPackageRunning(String packageName) {
+        try {
+            ActivityManager activityManager = 
+                (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            
+            if (activityManager == null) {
+                Log.w(TAG, "ActivityManager服务不可用");
+                return false;
+            }
+            
+            // 方法1: 获取所有运行中的进程
+            List<ActivityManager.RunningAppProcessInfo> runningProcesses = 
+                activityManager.getRunningAppProcesses();
+            
+            if (runningProcesses != null) {
+                for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
+                    if (processInfo.processName != null && 
+                        processInfo.processName.equals(packageName)) {
+                        Log.d(TAG, "从进程列表找到应用: " + packageName);
+                        return true;
+                    }
+                }
+            }
+            
+            // 方法2: 获取运行中的任务（前台任务）
+            try {
+                List<ActivityManager.RunningTaskInfo> runningTasks = 
+                    activityManager.getRunningTasks(100);
+                
+                if (runningTasks != null) {
+                    for (ActivityManager.RunningTaskInfo taskInfo : runningTasks) {
+                        if (taskInfo.topActivity != null && 
+                            taskInfo.topActivity.getPackageName() != null &&
+                            taskInfo.topActivity.getPackageName().equals(packageName)) {
+                            Log.d(TAG, "从前台任务找到应用: " + packageName);
+                            return true;
+                        }
+                        
+                        if (taskInfo.baseActivity != null && 
+                            taskInfo.baseActivity.getPackageName() != null &&
+                            taskInfo.baseActivity.getPackageName().equals(packageName)) {
+                            Log.d(TAG, "从基础Activity找到应用: " + packageName);
+                            return true;
+                        }
+                    }
+                }
+            } catch (SecurityException e) {
+                Log.w(TAG, "无法获取任务列表: " + e.getMessage());
+            }
+            
+            // 方法3: 使用PackageManager检查应用是否已安装（不能检测运行状态，但可以确认应用存在）
+            try {
+                PackageManager pm = getPackageManager();
+                pm.getPackageInfo(packageName, 0);
+                Log.d(TAG, "应用已安装: " + packageName);
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.d(TAG, "应用未安装: " + packageName);
+                return false;
+            }
+            
+            Log.d(TAG, "应用未运行: " + packageName);
+            return false;
+            
+        } catch (SecurityException e) {
+            Log.w(TAG, "权限不足: " + e.getMessage());
+            return false;
+        } catch (Exception e) {
+            Log.e(TAG, "检测应用状态失败: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * 切换到驾驶模式（默认模式）
+     */
+    private void switchToDrivingMode() {
+        if (currentNavMode == MODE_DRIVING) {
+            return;
+        }
+        
+        if (navModeContainer != null && drivingModeContainer != null && pipModeContainer != null) {
+            navModeContainer.setVisibility(View.GONE);
+            drivingModeContainer.setVisibility(View.VISIBLE);
+            pipModeContainer.setVisibility(View.GONE);
+            
+            if (textDrivingStatus != null) {
+                textDrivingStatus.setText("驾驶模式");
+            }
+            
+            currentNavMode = MODE_DRIVING;
+            updateSimulatedSpeed();
+        }
+    }
+    
+    /**
+     * 切换到导航模式（高德地图悬浮窗模式）
+     */
+    private void switchToNavigationMode() {
+        if (currentNavMode == MODE_NAVIGATION) {
+            return;
+        }
+        
+        if (navModeContainer != null && drivingModeContainer != null && pipModeContainer != null) {
+            navModeContainer.setVisibility(View.VISIBLE);
+            drivingModeContainer.setVisibility(View.GONE);
+            pipModeContainer.setVisibility(View.GONE);
+            
+            currentNavMode = MODE_NAVIGATION;
+        }
+    }
+    
+    /**
+     * 切换到画中画模式（高德地图画中画模式）
+     */
+    private void switchToPipMode() {
+        if (currentNavMode == MODE_PIP) {
+            return;
+        }
+        
+        if (navModeContainer != null && drivingModeContainer != null && pipModeContainer != null) {
+            navModeContainer.setVisibility(View.GONE);
+            drivingModeContainer.setVisibility(View.GONE);
+            pipModeContainer.setVisibility(View.VISIBLE);
+            
+            if (textPipStatus != null) {
+                textPipStatus.setText("高德地图画中画");
+            }
+            
+            currentNavMode = MODE_PIP;
+            
+            Log.d(TAG, "已切换到画中画模式");
+        }
+    }
+    
+    /**
+     * 更新模拟的车速（实际应用中应该从车辆CAN总线或OBD读取）
+     */
+    private void updateSimulatedSpeed() {
+        if (textSpeed == null || currentGear != 3) {
+            return;
+        }
+        
+        int speed = 0;
+        switch (currentGear) {
+            case 0:
+                speed = 0;
+                break;
+            case 1:
+                speed = 15 + (int)(Math.random() * 10);
+                break;
+            case 2:
+                speed = 0;
+                break;
+            case 3:
+                speed = 60 + (int)(Math.random() * 40);
+                break;
+        }
+        
+        textSpeed.setText(String.valueOf(speed));
+    }
+    
+    /**
+     * 启动高德地图导航
+     */
+    private void launchAmapNavigation() {
+        try {
+            PackageManager pm = getPackageManager();
+            
+            Intent intent = pm.getLaunchIntentForPackage(AMAP_PACKAGE);
+            
+            if (intent == null) {
+                intent = pm.getLaunchIntentForPackage(AMAP_STANDALONE_PACKAGE);
+            }
+            
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                Log.d(TAG, "已启动高德地图");
+            } else {
+                Toast.makeText(this, "未找到高德地图应用", Toast.LENGTH_SHORT).show();
+                Log.w(TAG, "未找到高德地图应用");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "启动高德地图失败: " + e.getMessage());
+            Toast.makeText(this, "启动高德地图失败", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * 将高德地图切换到前台
+     */
+    private void bringAmapToFront() {
+        try {
+            android.app.ActivityManager activityManager = 
+                (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            
+            if (activityManager != null) {
+                List<android.app.ActivityManager.RunningTaskInfo> runningTasks = 
+                    activityManager.getRunningTasks(1);
+                
+                for (android.app.ActivityManager.RunningTaskInfo taskInfo : runningTasks) {
+                    if (taskInfo.topActivity != null) {
+                        String packageName = taskInfo.topActivity.getPackageName();
+                        
+                        if (packageName.equals(AMAP_PACKAGE) || 
+                            packageName.equals(AMAP_STANDALONE_PACKAGE)) {
+                            
+                            activityManager.moveTaskToFront(
+                                taskInfo.id, 
+                                android.app.ActivityManager.MOVE_TASK_WITH_HOME
+                            );
+                            Log.d(TAG, "已将高德地图切换到前台");
+                            return;
+                        }
+                    }
+                }
+                
+                launchAmapNavigation();
+            }
+        } catch (SecurityException e) {
+            Log.w(TAG, "无法切换高德地图到前台: " + e.getMessage());
+            launchAmapNavigation();
+        } catch (Exception e) {
+            Log.e(TAG, "切换高德地图到前台失败: " + e.getMessage());
+            launchAmapNavigation();
         }
     }
     
@@ -822,6 +1441,7 @@ public class MainActivity extends AppCompatActivity {
                 updateGearDisplay();
                 String[] gears = {"P档", "R档", "N档", "D档"};
                 Toast.makeText(this, gears[currentGear], Toast.LENGTH_SHORT).show();
+                updateSimulatedSpeed();
             });
         }
         
@@ -1018,6 +1638,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         hideSystemUI();
         updateTimeDisplay();
+        startNavMonitor();
     }
 
     @Override
@@ -1026,6 +1647,7 @@ public class MainActivity extends AppCompatActivity {
         if (handler != null && timeUpdateRunnable != null) {
             handler.removeCallbacks(timeUpdateRunnable);
         }
+        stopNavMonitor();
     }
 
     @Override

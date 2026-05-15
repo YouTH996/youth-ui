@@ -10,6 +10,12 @@ import android.view.accessibility.AccessibilityNodeInfo;
 public class YouthAccessibilityService extends AccessibilityService {
     private static final String TAG = "YouthAccessibilityService";
     private static YouthAccessibilityService instance;
+    
+    public interface OnAppChangeListener {
+        void onAppChanged(String packageName, String className);
+    }
+    
+    private OnAppChangeListener appChangeListener;
 
     @Override
     public void onCreate() {
@@ -82,6 +88,12 @@ public class YouthAccessibilityService extends AccessibilityService {
                           event.getClassName().toString() : "";
         String packageName = event.getPackageName() != null ?
                             event.getPackageName().toString() : "";
+        
+        Log.d(TAG, "窗口状态变化: " + packageName + "/" + className);
+        
+        if (appChangeListener != null) {
+            appChangeListener.onAppChanged(packageName, className);
+        }
     }
 
     private void handleWindowContentChanged(AccessibilityEvent event) {
@@ -103,6 +115,16 @@ public class YouthAccessibilityService extends AccessibilityService {
             CharSequence contentDesc = source.getContentDescription();
             source.recycle();
         }
+    }
+    
+    public void setOnAppChangeListener(OnAppChangeListener listener) {
+        this.appChangeListener = listener;
+        Log.d(TAG, "已注册应用切换监听器");
+    }
+    
+    public void removeOnAppChangeListener() {
+        this.appChangeListener = null;
+        Log.d(TAG, "已移除应用切换监听器");
     }
 
     public static boolean isServiceEnabled() {

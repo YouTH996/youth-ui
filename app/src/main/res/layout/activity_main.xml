@@ -174,22 +174,126 @@
             android:paddingEnd="16dp">
 
             <!-- 左侧：导航软件 -->
-            <LinearLayout
+            <FrameLayout
                 android:id="@+id/nav_preview_container"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:orientation="horizontal"
-                android:gravity="center"
                 android:background="@drawable/card_background_rounded"
-                android:padding="12dp"
                 android:layout_marginEnd="8dp">
 
+                <!-- 驾驶模式：显示车辆图标和车速 -->
                 <LinearLayout
+                    android:id="@+id/driving_mode_container"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:visibility="visible">
+
+                    <!-- 车辆图标 -->
+                    <ImageView
+                        android:id="@+id/img_car_icon"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:src="@drawable/car_ty_placeholder"
+                        android:scaleType="fitCenter" />
+
+                    <!-- 车速显示 -->
+                    <TextView
+                        android:id="@+id/text_speed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="36sp"
+                        android:textColor="@color/dark_tech_accent"
+                        android:fontFamily="sans-serif-black"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="km/h"
+                        android:textSize="14sp"
+                        android:textColor="@color/dark_tech_text"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <!-- 状态标签 -->
+                    <TextView
+                        android:id="@+id/text_driving_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="驾驶模式"
+                        android:textSize="11sp"
+                        android:textColor="@color/dark_tech_text"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginTop="4dp"
+                        android:alpha="0.7" />
+                </LinearLayout>
+
+                <!-- 画中画模式：显示高德地图 -->
+                <LinearLayout
+                    android:id="@+id/pip_mode_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:visibility="gone">
+
+                    <!-- 画中画预览容器 -->
+                    <FrameLayout
+                        android:id="@+id/pip_preview_frame"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/card_background_rounded"
+                        android:padding="4dp">
+
+                        <!-- 画中画占位图标 -->
+                        <ImageView
+                            android:id="@+id/img_pip_icon"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_nav_default"
+                            android:scaleType="fitCenter" />
+
+                        <!-- 画中画状态文字 -->
+                        <TextView
+                            android:id="@+id/text_pip_status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|center_horizontal"
+                            android:text="高德地图画中画"
+                            android:textSize="10sp"
+                            android:textColor="@color/dark_tech_accent"
+                            android:fontFamily="sans-serif-medium"
+                            android:layout_marginBottom="8dp" />
+                    </FrameLayout>
+
+                    <!-- 画中画模式标签 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="画中画模式"
+                        android:textSize="11sp"
+                        android:textColor="@color/dark_tech_text"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginTop="8dp"
+                        android:alpha="0.7" />
+                </LinearLayout>
+
+                <!-- 导航模式：显示导航预览 -->
+                <LinearLayout
+                    android:id="@+id/nav_mode_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:visibility="gone">
 
                     <ImageView
                         android:id="@+id/img_nav_preview"
@@ -198,6 +302,7 @@
                         android:scaleType="fitCenter" />
 
                     <TextView
+                        android:id="@+id/text_nav_mode"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="导航"
@@ -206,7 +311,7 @@
                         android:layout_marginTop="8dp"
                         android:fontFamily="sans-serif-medium" />
                 </LinearLayout>
-            </LinearLayout>
+            </FrameLayout>
 
             <!-- 右侧：音乐播放卡片 -->
             <RelativeLayout
