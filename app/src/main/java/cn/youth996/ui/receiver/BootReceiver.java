@@ -346,11 +346,21 @@ public class BootReceiver extends BroadcastReceiver {
                     if (MediaNotificationListenerService.getInstance() != null) {
                         Log.i(TAG, "【通知监听器】✓ MediaNotificationListenerService 正在运行，权限应该已授予");
                     } else {
-                        Log.w(TAG, "【通知监听器】⚠️ ADB权限已设置（可通过ADB验证）");
-                        Log.w(TAG, "【通知监听器】⚠️ 但Java API无法读取，这可能是比亚迪系统限制");
-                        Log.w(TAG, "【通知监听器】⚠️ 请重启应用或重启设备后再试");
-                        Log.w(TAG, "【通知监听器】提示：某些Android系统需要用户手动授权");
-                        Log.w(TAG, "【通知监听器】提示：可在设置 > 应用 > 轻语桌面中手动开启通知访问权限");
+                        Log.w(TAG, "【通知监听器】⚠️ ADB权限已设置，但服务未启动");
+                        Log.w(TAG, "【通知监听器】⚠️ 这可能是比亚迪系统限制，需要用户手动授权");
+                        
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            try {
+                                Log.i(TAG, "【通知监听器】正在打开通知访问权限设置页面...");
+                                Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                context.startActivity(intent);
+                                Log.i(TAG, "【通知监听器】✓ 已打开设置页面，请在列表中启用\"轻语桌面\"");
+                            } catch (Exception e) {
+                                Log.e(TAG, "【通知监听器】无法打开设置页面: " + e.getMessage());
+                                Log.e(TAG, "【通知监听器】请手动打开: 设置 > 应用 > 轻语桌面 > 通知访问权限");
+                            }
+                        }, 2000);
                     }
                 }
 

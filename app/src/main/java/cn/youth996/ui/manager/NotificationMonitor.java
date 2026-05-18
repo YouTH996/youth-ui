@@ -10,7 +10,6 @@ import android.graphics.Bitmap;
 import android.media.session.MediaController;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -81,6 +80,22 @@ public class NotificationMonitor {
     }
     
     /**
+     * 打开通知监听器设置页面
+     */
+    public void openNotificationListenerSettings() {
+        try {
+            android.util.Log.i(TAG, "【通知权限】正在打开通知访问权限设置页面...");
+            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            activity.startActivity(intent);
+            android.util.Log.i(TAG, "【通知权限】已打开设置页面，请在列表中启用轻语桌面");
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "【通知权限】无法打开设置页面: " + e.getMessage());
+            android.util.Log.e(TAG, "【通知权限】请手动打开: 设置 > 应用 > 轻语桌面 > 通知访问权限");
+        }
+    }
+    
+    /**
      * 检查并请求NotificationListenerService权限
      * @return true如果已有权限，false如果需要请求权限
      */
@@ -92,7 +107,8 @@ public class NotificationMonitor {
         
         if (!hasPermission) {
             Log.d(TAG, "【通知权限检查】需要用户授权才能监听音乐播放");
-            Log.d(TAG, "【通知权限检查】将打开系统设置页面...");
+            Log.d(TAG, "【通知权限检查】正在打开系统设置页面...");
+            openNotificationListenerSettings();
         } else {
             Log.d(TAG, "【通知权限检查】✓ 通知监听器权限已授予");
         }
