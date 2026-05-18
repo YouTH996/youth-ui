@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.manager;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import cn.youth996.ui.R;
+import cn.youth996.ui.core.AppInfo;
 
 public class CardManager {
 

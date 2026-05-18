@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.settings;
 
 import android.app.Dialog;
 import android.graphics.Color;
@@ -18,6 +18,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+
+import cn.youth996.ui.R;
 
 public class SettingsDialogFragment extends DialogFragment {
 

@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.service;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -90,20 +90,24 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     public void onCreate() {
         super.onCreate();
         instance = this;
-        Log.d(TAG, "MediaNotificationListenerService created");
+        Log.i(TAG, "═══════════════════════════════════════════════════════════");
+        Log.i(TAG, "【MediaNotificationListenerService】服务已创建");
         
         try {
             mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
             if (mediaSessionManager != null) {
-                Log.d(TAG, "MediaSessionManager initialized");
+                Log.i(TAG, "【MediaNotificationListenerService】MediaSessionManager 初始化成功");
                 setupMediaCallback();
                 startPolling();
+                Log.i(TAG, "【MediaNotificationListenerService】开始轮询音乐应用");
             } else {
-                Log.e(TAG, "MediaSessionManager is null");
+                Log.e(TAG, "【MediaNotificationListenerService】MediaSessionManager 为空");
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error initializing: " + e.getMessage());
+            Log.e(TAG, "【MediaNotificationListenerService】初始化错误: " + e.getMessage());
         }
+        
+        Log.i(TAG, "═══════════════════════════════════════════════════════════");
     }
     
     @Override
@@ -190,7 +194,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     
     private void refreshMediaSessions() {
         if (mediaSessionManager == null) {
-            Log.w(TAG, "MediaSessionManager is null, skipping refresh");
+            Log.w(TAG, "【媒体会话】MediaSessionManager 为空，使用通知方式");
             updateFromNotification();
             return;
         }
@@ -199,10 +203,12 @@ public class MediaNotificationListenerService extends NotificationListenerServic
             ComponentName componentName = new ComponentName(this, MediaNotificationListenerService.class);
             List<MediaController> controllers = mediaSessionManager.getActiveSessions(componentName);
             
-
+            Log.d(TAG, "【媒体会话】检测到 " + controllers.size() + " 个活跃的媒体会话");
+            
             MediaController newController = null;
             for (MediaController controller : controllers) {
                 String pkg = controller.getPackageName();
+                Log.d(TAG, "【媒体会话】检测到应用: " + pkg + " (音乐应用: " + isMusicApp(pkg) + ")");
                 if (isMusicApp(pkg)) {
                     newController = controller;
                     break;
@@ -216,6 +222,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                 
                 mediaController = newController;
                 currentPackage = mediaController.getPackageName();
+                Log.i(TAG, "【媒体会话】✓ 连接到音乐应用: " + currentPackage);
                 
                 mediaController.registerCallback(mediaCallback);
                 
@@ -223,15 +230,15 @@ public class MediaNotificationListenerService extends NotificationListenerServic
             } else if (newController != null && mediaController != null) {
                 updateFromMediaController();
             } else if (newController == null) {
-                Log.d(TAG, "No music app found, trying notifications");
+                Log.d(TAG, "【媒体会话】未检测到音乐应用，尝试从通知获取");
                 updateFromNotification();
             }
             
         } catch (SecurityException e) {
-            Log.e(TAG, "Security exception - permission not granted: " + e.getMessage());
+            Log.e(TAG, "【媒体会话】安全异常 - 权限未授予: " + e.getMessage());
             updateFromNotification();
         } catch (Exception e) {
-            Log.e(TAG, "Error refreshing media sessions: " + e.getMessage());
+            Log.e(TAG, "【媒体会话】刷新媒体会话错误: " + e.getMessage());
             updateFromNotification();
         }
     }

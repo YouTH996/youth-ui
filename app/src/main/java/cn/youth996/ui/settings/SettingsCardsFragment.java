@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.settings;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,6 +12,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import cn.youth996.ui.R;
 
 public class SettingsCardsFragment extends Fragment {
 

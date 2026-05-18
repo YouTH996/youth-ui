@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.settings;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,6 +17,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import cn.youth996.ui.R;
+import cn.youth996.ui.adb.AdbProtocolClient;
+import cn.youth996.ui.receiver.BootReceiver;
 
 public class SettingsSystemFragment extends Fragment {
 
@@ -276,7 +280,24 @@ public class SettingsSystemFragment extends Fragment {
                                 .setPositiveButton("确定", null)
                                 .show();
                         });
-                        adbClient.shutdown();
+                    }
+                    
+                    @Override
+                    public void onPermissionGranted() {
+                        requireActivity().runOnUiThread(() -> {
+                            try {
+                                android.widget.Toast.makeText(requireContext(), 
+                                    "✓ 权限已授予，正在重新启动音乐监听...", 
+                                    android.widget.Toast.LENGTH_SHORT).show();
+                            } catch (Exception e) {
+                                android.util.Log.w("SettingsSystemFragment", "Toast显示失败: " + e.getMessage());
+                            }
+                            
+                            android.os.Handler mainHandler = new android.os.Handler(requireContext().getMainLooper());
+                            mainHandler.postDelayed(() -> {
+                                restartMusicListening();
+                            }, 1000);
+                        });
                     }
                 });
             })
@@ -318,6 +339,39 @@ public class SettingsSystemFragment extends Fragment {
             e.printStackTrace();
         }
         return "192.168.1.100";
+    }
+    
+    /**
+     * 重新启动音乐监听
+     * ADB 权限授予后调用
+     */
+    private void restartMusicListening() {
+        try {
+            android.util.Log.i("SettingsSystemFragment", "═══════════════════════════════════════════════════════════");
+            android.util.Log.i("SettingsSystemFragment", "【音乐监听重启】正在重新启动音乐监听...");
+            android.util.Log.i("SettingsSystemFragment", "═══════════════════════════════════════════════════════════");
+            
+            BootReceiver.requestNotificationListenerSetup(requireContext());
+            
+            android.os.Handler mainHandler = new android.os.Handler(requireContext().getMainLooper());
+            mainHandler.postDelayed(() -> {
+                try {
+                    android.app.Activity activity = requireActivity();
+                    if (activity instanceof cn.youth996.ui.core.MainActivity) {
+                        cn.youth996.ui.core.MainActivity mainActivity = (cn.youth996.ui.core.MainActivity) activity;
+                        mainActivity.restartMusicMonitoring();
+                        android.util.Log.i("SettingsSystemFragment", "【音乐监听重启】✓ 音乐监听已重新启动");
+                    } else {
+                        android.util.Log.w("SettingsSystemFragment", "【音乐监听重启】当前不是 MainActivity，无法重启音乐监听");
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("SettingsSystemFragment", "【音乐监听重启】重启失败: " + e.getMessage());
+                }
+            }, 2000);
+            
+        } catch (Exception e) {
+            android.util.Log.e("SettingsSystemFragment", "【音乐监听重启】失败: " + e.getMessage());
+        }
     }
 
     private void setAsHomeLauncher() {

@@ -1,5 +1,9 @@
-package cn.youth996.ui;
+package cn.youth996.ui.ui;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -13,16 +17,14 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
-import android.animation.AnimatorSet;
-
-import cn.youth996.ui.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import cn.youth996.ui.R;
+import cn.youth996.ui.adapter.AppDrawerAdapter;
+import cn.youth996.ui.core.AppInfo;
 
 /**
  * 应用抽屉Activity - 显示所有已安装应用的界面

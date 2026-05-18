@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -12,6 +12,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+
+import cn.youth996.ui.R;
+import cn.youth996.ui.core.AppInfo;
 
 /**
  * 应用抽屉列表适配器

@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.manager;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -17,6 +17,8 @@ import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 
 import java.util.concurrent.ExecutorService;
+
+import cn.youth996.ui.service.MediaNotificationListenerService;
 
 public class NotificationMonitor {
     private static final String TAG = "NotificationMonitor";
@@ -50,43 +52,31 @@ public class NotificationMonitor {
     
     /**
      * 检查NotificationListenerService权限是否已授权
+     * 由于比亚迪系统限制，我们通过服务实例来判断权限是否已授予
      * @return true如果已授权，false如果未授权
      */
     public boolean checkNotificationListenerPermission() {
         try {
             ComponentName componentName = new ComponentName(activity, MediaNotificationListenerService.class);
-            String enabledListeners = Settings.Secure.getString(
-                activity.getContentResolver(),
-                "enabled_notification_listeners"
-            );
+            String serviceString = componentName.flattenToString();
             
-            if (enabledListeners != null) {
-                boolean isEnabled = enabledListeners.contains(componentName.flattenToString());
-                Log.d(TAG, "NotificationListenerService permission check: " + isEnabled);
-                return isEnabled;
+            android.util.Log.i(TAG, "═══════════════════════════════════════════════════════════");
+            android.util.Log.i(TAG, "【通知权限检查】服务名称: " + serviceString);
+            
+            if (MediaNotificationListenerService.getInstance() != null) {
+                android.util.Log.i(TAG, "【通知权限检查】✓ MediaNotificationListenerService 正在运行，权限已授予");
+                android.util.Log.i(TAG, "═══════════════════════════════════════════════════════════");
+                return true;
             }
             
-            Log.d(TAG, "NotificationListenerService permission check: false (enabledListeners is null)");
+            android.util.Log.w(TAG, "【通知权限检查】✗ MediaNotificationListenerService 未运行");
+            android.util.Log.w(TAG, "【通知权限检查】提示: 请在设置 > 应用 > 轻语桌面中手动开启通知访问权限");
+            android.util.Log.i(TAG, "═══════════════════════════════════════════════════════════");
             return false;
             
         } catch (Exception e) {
-            Log.e(TAG, "Error checking notification listener permission: " + e.getMessage());
+            android.util.Log.e(TAG, "【通知权限检查】检查失败: " + e.getMessage());
             return false;
-        }
-    }
-    
-    /**
-     * 打开系统设置页面让用户授权NotificationListenerService权限
-     */
-    public void requestNotificationListenerPermission() {
-        try {
-            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            activity.startActivity(intent);
-            Toast.makeText(activity, "请在设置中开启'轻语桌面'的通知监听权限", Toast.LENGTH_LONG).show();
-        } catch (Exception e) {
-            Log.e(TAG, "Error opening notification listener settings: " + e.getMessage());
-            Toast.makeText(activity, "无法打开权限设置页面，请在系统设置中手动授权", Toast.LENGTH_LONG).show();
         }
     }
     
@@ -95,11 +85,78 @@ public class NotificationMonitor {
      * @return true如果已有权限，false如果需要请求权限
      */
     public boolean checkAndRequestNotificationPermission() {
-        if (!checkNotificationListenerPermission()) {
-            requestNotificationListenerPermission();
+        boolean hasPermission = checkNotificationListenerPermission();
+        
+        Log.d(TAG, "═══════════════════════════════════════════════════════════");
+        Log.d(TAG, "【通知权限检查】权限状态: " + (hasPermission ? "✓ 已授权" : "✗ 未授权"));
+        
+        if (!hasPermission) {
+            Log.d(TAG, "【通知权限检查】需要用户授权才能监听音乐播放");
+            Log.d(TAG, "【通知权限检查】将打开系统设置页面...");
+        } else {
+            Log.d(TAG, "【通知权限检查】✓ 通知监听器权限已授予");
+        }
+        
+        Log.d(TAG, "═══════════════════════════════════════════════════════════");
+        return hasPermission;
+    }
+    
+    /**
+     * 重新启动监听（ADB设置权限后调用）
+     * 重新检查权限并启动监听
+     */
+    public void restartMonitoring() {
+        Log.i(TAG, "═══════════════════════════════════════════════════════════");
+        Log.i(TAG, "【重启监听】正在重新检查权限并启动监听...");
+        
+        stopMonitoring();
+        
+        android.os.Handler mainHandler = new android.os.Handler(activity.getMainLooper());
+        mainHandler.postDelayed(() -> {
+            boolean hasPermission = checkNotificationListenerPermission();
+            
+            if (hasPermission) {
+                Log.i(TAG, "【重启监听】✓ 权限已授予，正在启动监听...");
+                startMonitoring();
+            } else {
+                Log.w(TAG, "【重启监听】✗ 权限仍未授予，请通过 ADB 授权");
+            }
+            
+            Log.i(TAG, "═══════════════════════════════════════════════════════════");
+        }, 500);
+    }
+    
+    /**
+     * 检查权限并立即启动监听（不弹出设置）
+     * 用于 ADB 设置权限后的检查
+     */
+    public boolean checkPermissionAndStart() {
+        boolean hasPermission = checkNotificationListenerPermission();
+        
+        Log.d(TAG, "【权限检查】当前权限状态: " + (hasPermission ? "✓ 已授权" : "✗ 未授权"));
+        
+        if (hasPermission) {
+            if (!isListeningForNotifications) {
+                Log.d(TAG, "【权限检查】权限已授予，正在启动监听...");
+                registerBroadcastReceiver();
+                
+                android.os.Handler mainHandler = new android.os.Handler(activity.getMainLooper());
+                mainHandler.postDelayed(() -> {
+                    if (MediaNotificationListenerService.getInstance() != null) {
+                        Log.d(TAG, "【权限检查】✓ MediaNotificationListenerService 已连接");
+                        if (listener != null) {
+                            listener.onNotificationServiceConnected();
+                        }
+                    } else {
+                        Log.d(TAG, "【权限检查】MediaNotificationListenerService 尚未就绪，等待中...");
+                    }
+                }, 3000);
+            }
+            return true;
+        } else {
+            Log.w(TAG, "【权限检查】✗ 权限未授予，无法监听");
             return false;
         }
-        return true;
     }
     
     public void startMonitoring() {

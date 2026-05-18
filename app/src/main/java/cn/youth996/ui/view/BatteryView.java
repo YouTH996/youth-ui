@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.view;
 
 import android.content.Context;
 import android.graphics.Canvas;

@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.core;
 
 import android.app.ActivityManager;
 import android.content.Context;
@@ -8,9 +8,6 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.media.session.MediaController;
-import android.media.session.MediaSession;
-import android.media.session.MediaSessionManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
@@ -43,6 +40,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import cn.youth996.ui.R;
+import cn.youth996.ui.manager.CardManager;
+import cn.youth996.ui.manager.MusicPlayerManager;
+import cn.youth996.ui.manager.NotificationMonitor;
+import cn.youth996.ui.service.MediaNotificationListenerService;
+import cn.youth996.ui.settings.SettingsDialogFragment;
+import cn.youth996.ui.view.BatteryView;
+
 /**
  * 主桌面Activity - Youth桌面系统的主入口
  *
@@ -59,6 +64,7 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
     
     private static final String TAG = "MainActivity";
+    private static MainActivity instance;
 
     // ==================== 视图组件声明 ====================
     private FrameLayout desktopContainer;
@@ -175,6 +181,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        instance = this;
         
         // 隐藏系统导航栏和状态栏
         hideSystemUI();
@@ -188,9 +196,61 @@ public class MainActivity extends AppCompatActivity {
         setupTimeUpdater();
         setupClickListeners();
         updateAcTempDisplay();
-        
-        initNavigationMonitor();
-        checkAndRequestPermissions();
+
+        // 启动悬浮窗权限检查（参考BYD Launcher）
+        checkOverlayPermission();
+
+        // 初始化导航监控
+//        initNavigationMonitor();
+        // 检查并请求权限
+//        checkAndRequestPermissions();
+    }
+
+    /**
+     * 检查悬浮窗权限（参考BYD Launcher启动流程）
+     */
+    private void checkOverlayPermission() {
+        if (!android.provider.Settings.canDrawOverlays(this)) {
+            android.util.Log.w(TAG, "【悬浮窗权限】需要悬浮窗权限，正在打开设置页面");
+            try {
+                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                intent.setData(android.net.Uri.parse("package:" + getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION);
+                android.util.Log.i(TAG, "【悬浮窗权限】已打开悬浮窗权限设置页面");
+            } catch (Exception e) {
+                android.util.Log.e(TAG, "【悬浮窗权限】无法打开设置页面: " + e.getMessage());
+            }
+        } else {
+            android.util.Log.i(TAG, "【悬浮窗权限】✓ 悬浮窗权限已授予");
+            onOverlayPermissionGranted();
+        }
+    }
+
+    private static final int REQUEST_OVERLAY_PERMISSION = 1001;
+
+    /**
+     * 悬浮窗权限授予结果处理
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_OVERLAY_PERMISSION) {
+            if (resultCode == RESULT_OK) {
+                android.util.Log.i(TAG, "【悬浮窗权限】用户已授权");
+                onOverlayPermissionGranted();
+            } else {
+                android.util.Log.w(TAG, "【悬浮窗权限】用户未授权");
+            }
+        }
+    }
+
+    /**
+     * 悬浮窗权限授予后的回调
+     */
+    private void onOverlayPermissionGranted() {
+        android.util.Log.i(TAG, "【悬浮窗权限】权限授予完成");
+        // 可以继续其他初始化流程
     }
     
     /**
@@ -1639,6 +1699,60 @@ public class MainActivity extends AppCompatActivity {
         hideSystemUI();
         updateTimeDisplay();
         startNavMonitor();
+        
+        handler.postDelayed(() -> {
+            checkNotificationPermissionOnResume();
+        }, 1000);
+    }
+    
+    /**
+     * 在 onResume 时检查通知监听器权限
+     * 当从设置页面返回或 ADB 授权后自动重新监听
+     */
+    private void checkNotificationPermissionOnResume() {
+        if (musicPlayerManager != null) {
+            android.util.Log.i(TAG, "【权限恢复检查】正在检查通知监听器权限状态...");
+            
+            NotificationMonitor monitor = getNotificationMonitor();
+            if (monitor != null) {
+                boolean hasPermission = monitor.checkNotificationListenerPermission();
+                
+                if (hasPermission) {
+                    android.util.Log.i(TAG, "【权限恢复检查】✓ 权限已授予");
+                    if (!monitor.isListeningForNotifications()) {
+                        android.util.Log.i(TAG, "【权限恢复检查】正在重新启动监听...");
+                        monitor.restartMonitoring();
+                    }
+                } else {
+                    android.util.Log.w(TAG, "【权限恢复检查】✗ 权限未授予，需要通过 ADB 授权");
+                }
+            }
+        }
+    }
+    
+    /**
+     * 获取 NotificationMonitor 实例
+     */
+    private NotificationMonitor getNotificationMonitor() {
+        if (musicPlayerManager != null) {
+            return musicPlayerManager.getNotificationMonitor();
+        }
+        return null;
+    }
+    
+    /**
+     * 重新启动音乐监听
+     * ADB 权限授予后由 SettingsSystemFragment 调用
+     */
+    public void restartMusicMonitoring() {
+        android.util.Log.i(TAG, "【音乐监听重启】开始重启音乐监听...");
+        
+        if (musicPlayerManager != null) {
+            musicPlayerManager.restartListening();
+            android.util.Log.i(TAG, "【音乐监听重启】✓ 音乐监听已重新启动");
+        } else {
+            android.util.Log.w(TAG, "【音乐监听重启】✗ MusicPlayerManager 未初始化");
+        }
     }
 
     @Override
@@ -1648,6 +1762,7 @@ public class MainActivity extends AppCompatActivity {
             handler.removeCallbacks(timeUpdateRunnable);
         }
         stopNavMonitor();
+        instance = null;
     }
 
     @Override
@@ -1657,5 +1772,9 @@ public class MainActivity extends AppCompatActivity {
         intent.addCategory(Intent.CATEGORY_HOME);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+    }
+
+    public static MainActivity getInstance() {
+        return instance;
     }
 }

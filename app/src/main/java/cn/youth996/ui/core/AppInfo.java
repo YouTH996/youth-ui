@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.core;
 
 import android.graphics.drawable.Drawable;
 import android.content.Intent;

@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.manager;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -13,6 +13,8 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import cn.youth996.ui.R;
 
 public class MusicPlayerManager {
     private static final String TAG = "MusicPlayerManager";
@@ -447,5 +449,48 @@ public class MusicPlayerManager {
         if (notificationMonitor != null) {
             notificationMonitor.stopMonitoring();
         }
+    }
+    
+    /**
+     * 获取 NotificationMonitor 实例
+     * 用于外部检查权限状态
+     */
+    public NotificationMonitor getNotificationMonitor() {
+        return notificationMonitor;
+    }
+    
+    /**
+     * 重新启动音乐监听（ADB 设置权限后调用）
+     */
+    public void restartListening() {
+        stopListening();
+        
+        handler.postDelayed(() -> {
+            notificationMonitor = new NotificationMonitor(activity);
+            notificationMonitor.setOnMediaInfoListener(new NotificationMonitor.OnMediaInfoListener() {
+                @Override
+                public void onMediaInfoChanged(String packageName, String title, String artist, Bitmap albumArt, boolean playing) {
+                    handler.post(() -> {
+                        if (!packageName.isEmpty()) {
+                            currentPackageName = packageName;
+                            currentTitle = title;
+                            currentArtist = artist;
+                            currentAlbumArt = albumArt;
+                            isPlaying = playing;
+                            
+                            updateMusicUI();
+                        }
+                    });
+                }
+                
+                @Override
+                public void onNotificationServiceConnected() {
+                    android.widget.Toast.makeText(activity, "已重新连接到通知服务", android.widget.Toast.LENGTH_SHORT).show();
+                }
+            });
+            
+            notificationMonitor.checkPermissionAndStart();
+            startPeriodicRefresh();
+        }, 500);
     }
 }

@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.settings;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -13,6 +13,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import cn.youth996.ui.R;
 
 public class SettingsAboutFragment extends Fragment {
 

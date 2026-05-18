@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.core;
 
 import android.app.ActivityManager;
 import android.content.Context;

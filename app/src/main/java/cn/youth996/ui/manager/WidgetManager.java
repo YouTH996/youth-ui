@@ -1,4 +1,4 @@
-package cn.youth996.ui;
+package cn.youth996.ui.manager;
 
 import android.content.Context;
 import android.content.Intent;
