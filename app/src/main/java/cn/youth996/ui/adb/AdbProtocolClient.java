@@ -225,6 +225,58 @@ public class AdbProtocolClient {
             Log.e(TAG, "【桌面重启】命令执行失败: " + command + " - " + e.getMessage());
         }
     }
+    
+    /**
+     * 执行命令并返回结果（同步方法）
+     */
+    private String executeCommandWithResult(String command) {
+        try {
+            if (adbConnection != null) {
+                AdbStream stream = adbConnection.open("shell:" + command);
+                Thread.sleep(200);
+                
+                StringBuilder resultBuilder = new StringBuilder();
+                long startTime = System.currentTimeMillis();
+                long timeout = 5000;
+                
+                while (System.currentTimeMillis() - startTime < timeout) {
+                    try {
+                        byte[] data = stream.read();
+                        if (data == null) {
+                            Thread.sleep(100);
+                            continue;
+                        }
+                        if (data.length > 0) {
+                            resultBuilder.append(new String(data));
+                        }
+                        if (resultBuilder.length() > 0 && 
+                            (resultBuilder.toString().contains("\n") || 
+                             resultBuilder.toString().contains("\r"))) {
+                            break;
+                        }
+                    } catch (IOException e) {
+                        if (e.getMessage() != null && 
+                            (e.getMessage().contains("closed") || 
+                             e.getMessage().contains("EOF"))) {
+                            break;
+                        }
+                    }
+                }
+                
+                try {
+                    stream.close();
+                } catch (IOException e) {
+                }
+                
+                String result = resultBuilder.toString().trim();
+                Log.d(TAG, "【命令结果】" + command + " = " + result);
+                return result;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "【命令执行】" + command + " 失败: " + e.getMessage());
+        }
+        return "";
+    }
 
     private void grantPermission(String packageName, AdbCallback callback) {
         StringBuilder output = new StringBuilder();
@@ -303,6 +355,8 @@ public class AdbProtocolClient {
 
             // 通知监听器
             output.append("\n【通知监听器】\n");
+            
+            // POST_NOTIFICATION 权限（Android 13+ 需要）
             executeCommandAndReport(
                 "appops set " + packageName + " POST_NOTIFICATION allow",
                 "通知权限",
@@ -310,17 +364,69 @@ public class AdbProtocolClient {
             );
 
             String listenerService = packageName + "/" + packageName + ".service.MediaNotificationListenerService";
+            output.append("【通知监听器】目标服务: " + listenerService + "\n");
             
-            output.append("【通知监听器】设置服务: " + listenerService + "\n");
-            
+            // 方法1：使用 cmd notification allow_listener（Android 9+，比亚迪车机可能支持）
+            output.append("\n【方法1】使用 cmd notification 命令...\n");
             executeCommandAndReport(
-                "settings put secure enabled_notification_listeners '" + listenerService + "'",
-                "通知监听器",
+                "cmd notification allow_listener " + listenerService,
+                "允许通知监听器",
                 output
             );
             
+            // 方法2：设置 enabled_notification_listeners
+            output.append("\n【方法2】设置 enabled_notification_listeners...\n");
+            
+            // 获取当前已注册的监听器列表
+            String existingListeners = executeCommandWithResult(
+                "settings get secure enabled_notification_listeners"
+            );
+            
+            if (existingListeners != null && !existingListeners.isEmpty()) {
+                output.append("【通知监听器】当前列表: " + existingListeners + "\n");
+                
+                // 如果服务已在列表中，不重复添加
+                if (existingListeners.contains(listenerService)) {
+                    output.append("【通知监听器】服务已在列表中\n");
+                } else {
+                    // 添加到现有列表
+                    String newList = existingListeners + ":" + listenerService;
+                    executeCommandAndReport(
+                        "settings put secure enabled_notification_listeners '" + newList + "'",
+                        "添加监听器到列表",
+                        output
+                    );
+                }
+            } else {
+                // 直接设置新的监听器列表
+                executeCommandAndReport(
+                    "settings put secure enabled_notification_listeners '" + listenerService + "'",
+                    "设置监听器列表",
+                    output
+                );
+            }
+            
+            // 方法3：尝试禁用再启用（强制刷新）
+            output.append("\n【方法3】强制刷新通知监听器状态...\n");
             executeCommandAndReport(
-                "settings get secure enabled_notification_listeners",
+                "cmd notification disable_listener " + listenerService,
+                "禁用监听器",
+                output
+            );
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            executeCommandAndReport(
+                "cmd notification allow_listener " + listenerService,
+                "重新启用监听器",
+                output
+            );
+            
+            // 验证设置
+            executeCommandAndReport(
+                "cmd notification list listeners",
                 "验证监听器列表",
                 output
             );
@@ -345,22 +451,36 @@ public class AdbProtocolClient {
             output.append("\n\n=== 权限授予完成 ===");
             callback.onCommandExecuted(true, output.toString());
             
-            output.append("\n\n=== 正在重启通知监听器服务 ===\n");
+            // 注意：NotificationListenerService 不需要也不能通过 am startservice 启动
+            // 系统会在应用启动时自动绑定 NotificationListenerService
+            // 我们只需要确保 enabled_notification_listeners 设置正确，然后重启应用
             
+            output.append("\n\n=== 正在重启应用以激活通知监听服务 ===\n");
+            
+            // 先停止应用
             executeCommandAndReport(
                 "am force-stop " + packageName,
                 "停止应用",
                 output
             );
             
+            // 等待一下确保应用完全停止
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            
+            // 验证 enabled_notification_listeners 设置
+            output.append("\n【验证设置】正在验证通知监听器配置...\n");
             executeCommandAndReport(
-                "am startservice -n " + packageName + "/" + packageName + ".service.MediaNotificationListenerService",
-                "启动通知监听服务",
+                "settings get secure enabled_notification_listeners",
+                "当前监听器列表",
                 output
             );
             
             callback.onPermissionGranted();
-            Log.i(TAG, "【ADB权限授予】所有权限已授予完成，通知应用重新启动监听");
+            Log.i(TAG, "【ADB权限授予】所有权限已授予，应用将重新启动以激活通知监听服务");
 
         } catch (Exception e) {
             Log.e(TAG, "授予权限时发生错误: " + e.getMessage());

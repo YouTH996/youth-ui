@@ -432,13 +432,39 @@ public class BootReceiver extends BroadcastReceiver {
 
     private boolean setupNotificationListenerRound1(Context context, String listenerService) {
         try {
-            Log.d(TAG, "【通知监听器-Round1】直接设置监听器");
-
+            Log.d(TAG, "【通知监听器-Round1】使用 cmd notification allow_listener + settings 双重设置");
+            
+            // 方法1：使用 cmd notification allow_listener（比亚迪车机关键命令）
+            try {
+                Process process = Runtime.getRuntime().exec("cmd notification allow_listener " + listenerService);
+                process.waitFor();
+                Log.d(TAG, "【通知监听器-Round1】cmd notification allow_listener 执行完成");
+            } catch (Exception e) {
+                Log.w(TAG, "【通知监听器-Round1】cmd notification 命令失败: " + e.getMessage());
+            }
+            
+            // 方法2：设置 enabled_notification_listeners
+            String currentListeners = android.provider.Settings.Secure.getString(
+                context.getContentResolver(), 
+                "enabled_notification_listeners"
+            );
+            
+            String newListeners;
+            if (currentListeners == null || currentListeners.isEmpty()) {
+                newListeners = listenerService;
+            } else if (currentListeners.contains(listenerService)) {
+                newListeners = currentListeners;
+            } else {
+                newListeners = currentListeners + ":" + listenerService;
+            }
+            
             android.provider.Settings.Secure.putString(
                 context.getContentResolver(),
                 "enabled_notification_listeners",
-                listenerService
+                newListeners
             );
+            
+            Log.d(TAG, "【通知监听器-Round1】enabled_notification_listeners 设置为: " + newListeners);
 
             Thread.sleep(500);
 

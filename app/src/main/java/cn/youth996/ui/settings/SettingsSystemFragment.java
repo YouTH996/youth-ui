@@ -1,5 +1,6 @@
 package cn.youth996.ui.settings;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -285,18 +286,24 @@ public class SettingsSystemFragment extends Fragment {
                     @Override
                     public void onPermissionGranted() {
                         requireActivity().runOnUiThread(() -> {
-                            try {
-                                android.widget.Toast.makeText(requireContext(), 
-                                    "✓ 权限已授予，正在重新启动音乐监听...", 
-                                    android.widget.Toast.LENGTH_SHORT).show();
-                            } catch (Exception e) {
-                                android.util.Log.w("SettingsSystemFragment", "Toast显示失败: " + e.getMessage());
-                            }
+                            // 保存ADB授权标记，用于应用重启后恢复通知监听器
+                            saveAdbNotificationAuthorized(requireContext(), true);
+                            
+                            // ADB 权限授予完成，所有权限已通过ADB设置
+                            new android.app.AlertDialog.Builder(requireContext())
+                                .setTitle("授权完成")
+                                .setMessage("✓ 所有权限已通过ADB授予完成！\n\n" +
+                                    "通知访问权限已通过以下方式设置：\n" +
+                                    "• cmd notification allow_listener\n" +
+                                    "• settings put secure enabled_notification_listeners\n\n" +
+                                    "应用将自动重启以激活服务...")
+                                .setPositiveButton("确定", null)
+                                .show();
                             
                             android.os.Handler mainHandler = new android.os.Handler(requireContext().getMainLooper());
                             mainHandler.postDelayed(() -> {
                                 restartMusicListening();
-                            }, 1000);
+                            }, 2000);
                         });
                     }
                 });
@@ -406,6 +413,21 @@ public class SettingsSystemFragment extends Fragment {
             } catch (Exception ex) {
                 Toast.makeText(requireContext(), "无法打开设置，请手动设置", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+    
+    /**
+     * 保存ADB通知监听器授权标记
+     * 用于应用重启后恢复通知监听器权限
+     */
+    private void saveAdbNotificationAuthorized(Context context, boolean authorized) {
+        if (context == null) return;
+        try {
+            SharedPreferences prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE);
+            prefs.edit().putBoolean("adb_notification_authorized", authorized).apply();
+            android.util.Log.i("SettingsSystemFragment", "已保存ADB授权标记: " + authorized);
+        } catch (Exception e) {
+            android.util.Log.e("SettingsSystemFragment", "保存ADB授权标记失败: " + e.getMessage());
         }
     }
 }

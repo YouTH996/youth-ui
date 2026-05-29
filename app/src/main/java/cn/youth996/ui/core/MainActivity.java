@@ -3,6 +3,7 @@ package cn.youth996.ui.core;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
@@ -200,10 +201,104 @@ public class MainActivity extends AppCompatActivity {
         // 启动悬浮窗权限检查（参考BYD Launcher）
         checkOverlayPermission();
 
+        // 检查并恢复通知监听器权限（比亚迪车机ADB授权后需要）
+        checkAndRestoreNotificationListener();
+
         // 初始化导航监控
 //        initNavigationMonitor();
         // 检查并请求权限
 //        checkAndRequestPermissions();
+    }
+    
+    /**
+     * 检查并恢复通知监听器权限
+     * 比亚迪车机ADB授权后，应用重启会丢失权限，需要在这里恢复
+     */
+    private void checkAndRestoreNotificationListener() {
+        android.util.Log.i(TAG, "═══════════════════════════════════════════════════════════");
+        android.util.Log.i(TAG, "【通知监听器恢复】检查通知监听器状态...");
+        android.util.Log.i(TAG, "═══════════════════════════════════════════════════════════");
+        
+        new Thread(() -> {
+            try {
+                // 检查是否需要恢复（通过 SharedPreferences 标记）
+                SharedPreferences prefs = getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE);
+                boolean adbAuthorized = prefs.getBoolean("adb_notification_authorized", false);
+                
+                if (!adbAuthorized) {
+                    android.util.Log.i(TAG, "【通知监听器恢复】ADB未授权标记，跳过恢复");
+                    return;
+                }
+                
+                android.util.Log.i(TAG, "【通知监听器恢复】检测到ADB授权标记，开始恢复通知监听器...");
+                
+                String packageName = getPackageName();
+                String listenerService = packageName + "/" + packageName + ".service.MediaNotificationListenerService";
+                
+                // 检查服务是否已经在运行
+                if (cn.youth996.ui.service.MediaNotificationListenerService.getInstance() != null) {
+                    android.util.Log.i(TAG, "【通知监听器恢复】✓ 通知监听服务已在运行");
+                    return;
+                }
+                
+                android.util.Log.i(TAG, "【通知监听器恢复】服务未运行，开始恢复...");
+                
+                // 恢复步骤1：使用 cmd notification allow_listener
+                try {
+                    Process process = Runtime.getRuntime().exec("cmd notification allow_listener " + listenerService);
+                    int result = process.waitFor();
+                    android.util.Log.i(TAG, "【通知监听器恢复】cmd notification allow_listener 结果: " + result);
+                } catch (Exception e) {
+                    android.util.Log.w(TAG, "【通知监听器恢复】cmd notification 命令失败: " + e.getMessage());
+                }
+                
+                // 恢复步骤2：设置 enabled_notification_listeners
+                String currentListeners = android.provider.Settings.Secure.getString(
+                    getContentResolver(), 
+                    "enabled_notification_listeners"
+                );
+                
+                String newListeners;
+                if (currentListeners == null || currentListeners.isEmpty()) {
+                    newListeners = listenerService;
+                } else if (currentListeners.contains(listenerService)) {
+                    newListeners = currentListeners;
+                } else {
+                    newListeners = currentListeners + ":" + listenerService;
+                }
+                
+                android.provider.Settings.Secure.putString(
+                    getContentResolver(),
+                    "enabled_notification_listeners",
+                    newListeners
+                );
+                android.util.Log.i(TAG, "【通知监听器恢复】enabled_notification_listeners 设置为: " + newListeners);
+                
+                // 等待服务启动
+                for (int i = 0; i < 10; i++) {
+                    Thread.sleep(500);
+                    if (cn.youth996.ui.service.MediaNotificationListenerService.getInstance() != null) {
+                        android.util.Log.i(TAG, "【通知监听器恢复】✓ 通知监听服务已恢复！");
+                        return;
+                    }
+                }
+                
+                // 如果服务仍未启动，尝试重启应用
+                android.util.Log.w(TAG, "【通知监听器恢复】服务未启动，尝试重启应用...");
+                try {
+                    Runtime.getRuntime().exec("am force-stop " + packageName);
+                    Thread.sleep(500);
+                    Intent intent = new Intent(this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    android.util.Log.e(TAG, "【通知监听器恢复】重启应用失败: " + e.getMessage());
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e(TAG, "【通知监听器恢复】恢复失败: " + e.getMessage());
+            }
+        }, "NotificationListenerRestore").start();
     }
 
     /**
