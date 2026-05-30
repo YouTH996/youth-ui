@@ -13,11 +13,40 @@ public class YouthAccessibilityService extends AccessibilityService {
     private static final String TAG = "YouthAccessibilityService";
     private static YouthAccessibilityService instance;
     
+    // 高德地图常量
+    private static final String AMAP_PACKAGE = "com.autonavi.amapauto.chenmo";
+    private static final String AMAP_STANDALONE_PACKAGE = "com.autonavi.map";
+    
+    // 应用切换监听器
     public interface OnAppChangeListener {
         void onAppChanged(String packageName, String className);
     }
-    
     private OnAppChangeListener appChangeListener;
+    
+    // 高德地图画中画监听器
+    public interface OnAmapPipListener {
+        void onAmapEnterPip();
+        void onAmapExitPip();
+        void onAmapEnterFullscreen();
+        void onAmapExitFullscreen();
+    }
+    private static OnAmapPipListener amapPipListener;
+    
+    // 状态标记
+    private boolean isAmapInPipMode = false;
+    private boolean isAmapFullscreen = false;
+    
+    public static YouthAccessibilityService getInstance() {
+        return instance;
+    }
+    
+    public void setOnAppChangeListener(OnAppChangeListener listener) {
+        this.appChangeListener = listener;
+    }
+    
+    public static void setOnAmapPipListener(OnAmapPipListener listener) {
+        amapPipListener = listener;
+    }
 
     @Override
     public void onCreate() {
@@ -138,7 +167,11 @@ public class YouthAccessibilityService extends AccessibilityService {
         Log.i(TAG, "│   包名: " + packageName);
         Log.i(TAG, "│   类名: " + className);
         Log.i(TAG, "└──────────────────────────────────────────────────────────────");
-
+        
+        // 检测高德地图画中画状态
+        detectAmapPipMode(packageName, className);
+        
+        // 触发应用切换监听器回调
         if (appChangeListener != null) {
             Log.d(TAG, "【无障碍服务】触发应用切换监听器回调");
             try {
@@ -149,11 +182,79 @@ public class YouthAccessibilityService extends AccessibilityService {
             }
         }
     }
+    
+    /**
+     * 检测高德地图画中画模式
+     */
+    private void detectAmapPipMode(String packageName, String className) {
+        // 检测是否是高德地图
+        boolean isAmap = packageName.equals(AMAP_PACKAGE) || 
+                       packageName.equals(AMAP_STANDALONE_PACKAGE);
+        
+        // 检测是否是画中画模式
+        boolean isPipMode = className.contains("MainMapActivity") ;
+        
+        if (isAmap) {
+            if (isPipMode) {
+                // 高德地图进入画中画模式
+                if (!isAmapInPipMode) {
+                    isAmapInPipMode = true;
+                    isAmapFullscreen = false;
+                    Log.d(TAG, "【高德地图】进入画中画模式");
+                    
+                    if (amapPipListener != null) {
+                        amapPipListener.onAmapEnterPip();
+                    }
+                }
+            } else {
+                // 高德地图全屏模式
+                if (isAmapInPipMode) {
+                    isAmapInPipMode = false;
+                    Log.d(TAG, "【高德地图】从画中画切换到全屏");
+                    
+                    if (amapPipListener != null) {
+                        amapPipListener.onAmapExitPip();
+                    }
+                }
+                if (!isAmapFullscreen) {
+                    isAmapFullscreen = true;
+                    Log.d(TAG, "【高德地图】进入全屏模式");
+                    
+                    if (amapPipListener != null) {
+                        amapPipListener.onAmapEnterFullscreen();
+                    }
+                }
+            }
+        } else {
+            // 非高德应用
+            if (isAmapInPipMode) {
+                isAmapInPipMode = false;
+                Log.d(TAG, "【高德地图】退出画中画");
+                
+                if (amapPipListener != null) {
+                    amapPipListener.onAmapExitPip();
+                }
+            }
+            if (isAmapFullscreen) {
+                isAmapFullscreen = false;
+                Log.d(TAG, "【高德地图】退出全屏");
+                
+                if (amapPipListener != null) {
+                    amapPipListener.onAmapExitFullscreen();
+                }
+            }
+        }
+    }
 
     private void handleWindowContentChanged(AccessibilityEvent event) {
         String packageName = event.getPackageName() != null ?
                             event.getPackageName().toString() : "null";
-        Log.v(TAG, "【内容变化】包: " + packageName + ", 子节点数: " + event.getSource().getChildCount());
+        AccessibilityNodeInfo source = event.getSource();
+        if (source != null) {
+            source.recycle();
+        } else {
+            Log.v(TAG, "【内容变化】包: " + packageName + ", 无根节点");
+        }
     }
 
     private void handleViewClicked(AccessibilityEvent event) {
@@ -205,15 +306,6 @@ public class YouthAccessibilityService extends AccessibilityService {
         Log.v(TAG, "【文本变化】" + changeInfo);
     }
 
-    public void setOnAppChangeListener(OnAppChangeListener listener) {
-        this.appChangeListener = listener;
-        Log.i(TAG, "【无障碍服务】✓ 已注册应用切换监听器");
-        if (listener != null) {
-            Log.d(TAG, "【无障碍服务】监听器有效，将接收窗口状态变化事件");
-        } else {
-            Log.w(TAG, "【无障碍服务】监听器为null，将不会接收任何事件");
-        }
-    }
 
     public void removeOnAppChangeListener() {
         Log.i(TAG, "【无障碍服务】正在移除应用切换监听器");
@@ -222,14 +314,13 @@ public class YouthAccessibilityService extends AccessibilityService {
     }
 
     public static boolean isServiceEnabled() {
+        // 检查实例是否存在即可
+        // 如果实例存在，说明服务正在运行
         boolean enabled = instance != null;
         Log.d(TAG, "【无障碍服务】服务状态检查: " + (enabled ? "运行中" : "未运行"));
         return enabled;
     }
-
-    public static YouthAccessibilityService getInstance() {
-        return instance;
-    }
+    
 
     public AccessibilityNodeInfo getRootInActiveWindow() {
         AccessibilityNodeInfo rootNode = super.getRootInActiveWindow();

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/card_background_rounded"
+    android:padding="4dp">
+
+    <ImageView
+        android:id="@+id/img_pip_preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:background="#2D2D2D"
+        android:contentDescription="高德地图预览" />
+
+    <!-- 提示文字 -->
+    <TextView
+        android:id="@+id/text_pip_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="高德地图"
+        android:textSize="12sp"
+        android:textColor="@color/dark_tech_accent"
+        android:background="#80000000"
+        android:padding="8dp" />
+
+</FrameLayout>

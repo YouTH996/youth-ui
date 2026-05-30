@@ -96,20 +96,15 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         try {
             mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
             if (mediaSessionManager != null) {
-                Log.i(TAG, "【MediaNotificationListenerService】MediaSessionManager 初始化成功");
                 setupMediaCallback();
                 startPolling();
-                Log.i(TAG, "【MediaNotificationListenerService】开始轮询音乐应用");
-            } else {
-                Log.e(TAG, "【MediaNotificationListenerService】MediaSessionManager 为空");
             }
         } catch (Exception e) {
-            Log.e(TAG, "【MediaNotificationListenerService】初始化错误: " + e.getMessage());
+            // 忽略错误
         }
-        
-        Log.i(TAG, "═══════════════════════════════════════════════════════════");
     }
-    
+        
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -194,7 +189,6 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     
     private void refreshMediaSessions() {
         if (mediaSessionManager == null) {
-            Log.w(TAG, "【媒体会话】MediaSessionManager 为空，使用通知方式");
             updateFromNotification();
             return;
         }
@@ -203,12 +197,9 @@ public class MediaNotificationListenerService extends NotificationListenerServic
             ComponentName componentName = new ComponentName(this, MediaNotificationListenerService.class);
             List<MediaController> controllers = mediaSessionManager.getActiveSessions(componentName);
             
-            Log.d(TAG, "【媒体会话】检测到 " + controllers.size() + " 个活跃的媒体会话");
-            
             MediaController newController = null;
             for (MediaController controller : controllers) {
                 String pkg = controller.getPackageName();
-                Log.d(TAG, "【媒体会话】检测到应用: " + pkg + " (音乐应用: " + isMusicApp(pkg) + ")");
                 if (isMusicApp(pkg)) {
                     newController = controller;
                     break;

@@ -45,6 +45,7 @@ import cn.youth996.ui.R;
 import cn.youth996.ui.manager.CardManager;
 import cn.youth996.ui.manager.MusicPlayerManager;
 import cn.youth996.ui.manager.NotificationMonitor;
+
 import cn.youth996.ui.service.MediaNotificationListenerService;
 import cn.youth996.ui.settings.SettingsDialogFragment;
 import cn.youth996.ui.view.BatteryView;
@@ -78,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
     private HorizontalScrollView cardScrollView;
     private CardManager cardManager;
     private MusicPlayerManager musicPlayerManager;
+
+    // 屏幕录制请求码
     
     // ImageView 组件声明
     private ImageView imgBack;
@@ -108,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
     private View navModeContainer;
     private View drivingModeContainer;
     private View pipModeContainer;
+    private View centerArea;  // 中间区域容器
     private ImageView imgCarIcon;
     private TextView textSpeed;
     private TextView textDrivingStatus;
@@ -184,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         instance = this;
-        
+
         // 隐藏系统导航栏和状态栏
         hideSystemUI();
         
@@ -204,11 +208,47 @@ public class MainActivity extends AppCompatActivity {
         // 检查并恢复通知监听器权限（比亚迪车机ADB授权后需要）
         checkAndRestoreNotificationListener();
 
-        // 初始化导航监控
-//        initNavigationMonitor();
-        // 检查并请求权限
-//        checkAndRequestPermissions();
+        // 检查并恢复无障碍服务权限（比亚迪车机ADB授权后需要）
+        checkAndRestoreAccessibilityService();
+        // 初始化高德地图画中画检测
+        initAmapPipDetector();
+
     }
+    
+    /**
+     * 初始化高德地图画中画检测
+     * 高德地图的画中画是系统级窗口，会自动显示在桌面上
+     * 我们只需要检测状态即可
+     */
+    private void initAmapPipDetector() {
+        // 设置画中画状态监听
+        YouthAccessibilityService.setOnAmapPipListener(new YouthAccessibilityService.OnAmapPipListener() {
+            @Override
+            public void onAmapEnterPip() {
+                Log.d(TAG, "高德地图进入画中画，切换到导航模式");
+                runOnUiThread(() -> {
+                    switchToPipMode();
+                });
+            }
+            
+            @Override
+            public void onAmapExitPip() {
+                Log.d(TAG, "高德地图退出画中画");
+            }
+            
+            @Override
+            public void onAmapEnterFullscreen() {
+                Log.d(TAG, "高德地图进入全屏，切换到驾驶模式");
+            }
+            
+            @Override
+            public void onAmapExitFullscreen() {
+                Log.d(TAG, "高德地图退出全屏");
+            }
+        });
+        Log.d(TAG, "高德地图画中画检测已初始化");
+    }
+
     
     /**
      * 检查并恢复通知监听器权限
@@ -299,6 +339,115 @@ public class MainActivity extends AppCompatActivity {
                 android.util.Log.e(TAG, "【通知监听器恢复】恢复失败: " + e.getMessage());
             }
         }, "NotificationListenerRestore").start();
+    }
+    
+    /**
+     * 检查并恢复无障碍服务权限
+     * 比亚迪车机ADB授权后，应用重启会丢失权限，需要在这里恢复
+     */
+    private void checkAndRestoreAccessibilityService() {
+        android.util.Log.i(TAG, "═══════════════════════════════════════════════════════════");
+        android.util.Log.i(TAG, "【无障碍服务恢复】检查无障碍服务状态...");
+        android.util.Log.i(TAG, "═══════════════════════════════════════════════════════════");
+        
+        new Thread(() -> {
+            try {
+                // 检查无障碍服务是否已经在运行
+                if (YouthAccessibilityService.getInstance() != null) {
+                    android.util.Log.i(TAG, "【无障碍服务恢复】✓ 无障碍服务已在运行");
+                    return;
+                }
+                
+                // 检查是否需要恢复（通过 SharedPreferences 标记）
+                SharedPreferences prefs = getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE);
+                boolean adbAuthorized = prefs.getBoolean("adb_accessibility_authorized", false);
+                
+                if (!adbAuthorized) {
+                    android.util.Log.i(TAG, "【无障碍服务恢复】ADB未授权标记，跳过恢复");
+//                    return;
+                }
+                
+                android.util.Log.i(TAG, "【无障碍服务恢复】检测到ADB授权标记，开始恢复无障碍服务...");
+                
+                String packageName = getPackageName();
+                String serviceName = packageName + "/" + packageName + ".core.YouthAccessibilityService";
+                
+                // 恢复步骤1：使用 settings put secure enabled_accessibility_services
+                String currentServices = android.provider.Settings.Secure.getString(
+                    getContentResolver(), 
+                    "enabled_accessibility_services"
+                );
+                
+                android.util.Log.i(TAG, "【无障碍服务恢复】当前无障碍服务列表: " + currentServices);
+                
+                String newServices;
+                if (currentServices == null || currentServices.isEmpty()) {
+                    newServices = serviceName;
+                } else if (currentServices.contains(packageName)) {
+                    android.util.Log.i(TAG, "【无障碍服务恢复】服务已在列表中");
+                    newServices = currentServices;
+                } else {
+                    // 添加到现有服务列表
+                    newServices = currentServices + ":" + serviceName;
+                }
+                
+                android.provider.Settings.Secure.putString(
+                    getContentResolver(),
+                    "enabled_accessibility_services",
+                    newServices
+                );
+                android.util.Log.i(TAG, "【无障碍服务恢复】enabled_accessibility_services 设置为: " + newServices);
+                
+                // 恢复步骤2：启用触摸探索模式
+                android.provider.Settings.Secure.putInt(
+                    getContentResolver(),
+                    "accessibility_display_inversion_enabled",
+                    0
+                );
+                android.provider.Settings.Secure.putInt(
+                    getContentResolver(),
+                    "accessibility_display_magnification_enabled",
+                    0
+                );
+                
+                // 恢复步骤3：使用 cmd accessibility 命令（如果可用）
+                try {
+                    // 尝试使用 cmd accessibility enable 命令
+                    Process process = Runtime.getRuntime().exec("cmd accessibility enable " + packageName + "/" + packageName + ".core.YouthAccessibilityService");
+                    int result = process.waitFor();
+                    android.util.Log.i(TAG, "【无障碍服务恢复】cmd accessibility enable 结果: " + result);
+                } catch (Exception e) {
+                    android.util.Log.w(TAG, "【无障碍服务恢复】cmd accessibility 命令失败: " + e.getMessage());
+                }
+                
+                // 等待服务启动
+                for (int i = 0; i < 15; i++) {
+                    Thread.sleep(500);
+                    if (YouthAccessibilityService.getInstance() != null) {
+                        android.util.Log.i(TAG, "【无障碍服务恢复】✓ 无障碍服务已恢复！");
+                        
+                        // 重新注册监听器
+                        runOnUiThread(() -> registerAccessibilityListener());
+                        return;
+                    }
+                }
+                
+                // 如果服务仍未启动，尝试重启应用
+                android.util.Log.w(TAG, "【无障碍服务恢复】服务未启动，尝试重启应用...");
+                try {
+                    Runtime.getRuntime().exec("am force-stop " + packageName);
+                    Thread.sleep(500);
+                    Intent intent = new Intent(this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    android.util.Log.e(TAG, "【无障碍服务恢复】重启应用失败: " + e.getMessage());
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e(TAG, "【无障碍服务恢复】恢复失败: " + e.getMessage());
+            }
+        }, "AccessibilityRestore").start();
     }
 
     /**
@@ -467,6 +616,9 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initCenterArea() {
         Log.d("MainActivity", "=== INIT CENTER AREA ===");
+        
+        // 初始化中间区域容器
+        centerArea = findViewById(R.id.center_area);
         
         ImageView imgNavPreview = findViewById(R.id.img_nav_preview);
         ImageView imgAlbumCoverCenter = findViewById(R.id.img_album_cover_center);
@@ -665,127 +817,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-    
-    /**
-     * 检查并请求必要的权限
-     */
-    private void checkAndRequestPermissions() {
-        if (!hasUsageStatsPermission()) {
-            Log.w(TAG, "需要使用统计权限");
-            requestUsageStatsPermission();
-        }
-        
-        if (!isNotificationListenerEnabled()) {
-            Log.w(TAG, "需要通知监听器权限");
-            requestNotificationListenerPermission();
-        }
-    }
-    
-    /**
-     * 检查使用统计权限
-     */
-    private boolean hasUsageStatsPermission() {
-        try {
-            android.app.AppOpsManager appOps = (android.app.AppOpsManager) 
-                getSystemService(Context.APP_OPS_SERVICE);
-            
-            if (appOps != null) {
-                int mode = appOps.checkOpNoThrow(
-                    android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
-                    android.os.Process.myUid(),
-                    getPackageName()
-                );
-                
-                return mode == android.app.AppOpsManager.MODE_ALLOWED;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "检查使用统计权限时出错: " + e.getMessage());
-        }
-        
-        return false;
-    }
-    
-    /**
-     * 请求使用统计权限
-     */
-    private void requestUsageStatsPermission() {
-        Toast.makeText(this, "需要授权使用统计权限以检测导航应用", Toast.LENGTH_LONG).show();
-        
-        new android.os.Handler().postDelayed(() -> {
-            try {
-                Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-            } catch (Exception e) {
-                Log.e(TAG, "无法打开使用统计设置: " + e.getMessage());
-                try {
-                    Intent intent = new Intent(Settings.ACTION_SETTINGS);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                    Toast.makeText(this, "请在设置中开启'使用与应用访问权限'", Toast.LENGTH_LONG).show();
-                } catch (Exception e2) {
-                    Toast.makeText(this, "请手动在设置中授权使用统计权限", Toast.LENGTH_LONG).show();
-                }
-            }
-        }, 1000);
-    }
-    
-    /**
-     * 检查通知监听器是否已启用
-     */
-    private boolean isNotificationListenerEnabled() {
-        try {
-            String flat = Settings.Secure.getString(
-                getContentResolver(),
-                "enabled_notification_listeners"
-            );
-            
-            if (flat != null && flat.contains(getPackageName())) {
-                return true;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "检查通知监听器状态失败: " + e.getMessage());
-        }
-        return false;
-    }
-    
-    /**
-     * 请求通知监听器权限
-     */
-    private void requestNotificationListenerPermission() {
-        Toast.makeText(this, "需要授权通知监听权限以读取通知信息", Toast.LENGTH_LONG).show();
-        
-        new android.os.Handler().postDelayed(() -> {
-            try {
-                Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-            } catch (Exception e) {
-                Log.e(TAG, "无法打开通知监听器设置: " + e.getMessage());
-                Toast.makeText(this, "请手动在设置中开启'通知访问权限'", Toast.LENGTH_LONG).show();
-            }
-        }, 1000);
-    }
-    
-    /**
-     * 初始化导航监测
-     */
-    private void initNavigationMonitor() {
-        registerAccessibilityListener();
-        
-        navMonitorRunnable = new Runnable() {
-            @Override
-            public void run() {
-                checkAutoNaviFloating();
-                if (handler != null) {
-                    handler.postDelayed(this, 2000);
-                }
-            }
-        };
-        
-        startNavMonitor();
-    }
-    
+
     /**
      * 注册无障碍服务监听器
      */
@@ -798,16 +830,12 @@ public class MainActivity extends AppCompatActivity {
                     public void onAppChanged(String packageName, String className) {
                         Log.d(TAG, "检测到应用切换: " + packageName);
                         
-                        if (packageName.equals(AMAP_PACKAGE) || packageName.equals(AMAP_STANDALONE_PACKAGE)) {
+                        if (AMAP_PACKAGE.equals(packageName) || AMAP_STANDALONE_PACKAGE.equals(packageName)) {
                             Log.d(TAG, "高德地图已切换到前台");
-                            isAutoNaviFloating = true;
-                            checkAmapPipMode(className);
                         } else {
-                            if (isAutoNaviFloating) {
+                            if (!isAutoNaviFloating) {
                                 Log.d(TAG, "高德地图已切换到后台");
-                                isAutoNaviFloating = false;
-                                isAutoNaviPipMode = false;
-                                runOnUiThread(() -> switchToDrivingMode());
+
                             }
                         }
                     }
@@ -820,286 +848,6 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
-     * 启动导航监测
-     */
-    private void startNavMonitor() {
-        if (handler != null && navMonitorRunnable != null) {
-            handler.post(navMonitorRunnable);
-        }
-    }
-    
-    /**
-     * 停止导航监测
-     */
-    private void stopNavMonitor() {
-        if (handler != null && navMonitorRunnable != null) {
-            handler.removeCallbacks(navMonitorRunnable);
-        }
-    }
-    
-    /**
-     * 检测高德地图是否以悬浮窗模式运行
-     */
-    private void checkAutoNaviFloating() {
-        String topPackage = getTopPackageName();
-        
-        boolean isAmapRunning = topPackage != null && 
-            (topPackage.equals(AMAP_PACKAGE) || topPackage.equals(AMAP_STANDALONE_PACKAGE));
-        
-        if (isAmapRunning != isAutoNaviFloating || isAmapRunning) {
-            isAutoNaviFloating = isAmapRunning;
-            
-            runOnUiThread(() -> {
-                if (isAmapRunning) {
-                    checkAmapPipMode();
-                } else {
-                    switchToDrivingMode();
-                }
-            });
-        }
-    }
-    
-    /**
-     * 检测高德地图是否为画中画模式
-     */
-    private void checkAmapPipMode() {
-        try {
-            android.app.ActivityManager activityManager = 
-                (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
-            
-            if (activityManager != null) {
-                List<android.app.ActivityManager.RunningTaskInfo> runningTasks = 
-                    activityManager.getRunningTasks(10);
-                
-                boolean foundAmap = false;
-                boolean isPipMode = false;
-                
-                for (android.app.ActivityManager.RunningTaskInfo taskInfo : runningTasks) {
-                    if (taskInfo.topActivity != null) {
-                        String packageName = taskInfo.topActivity.getPackageName();
-                        String activityName = taskInfo.topActivity.getClassName();
-                        
-                        if (packageName.equals(AMAP_PACKAGE) || 
-                            packageName.equals(AMAP_STANDALONE_PACKAGE)) {
-                            
-                            foundAmap = true;
-                            
-                            if (activityName.contains("pip") || 
-                                activityName.contains("Pip") ||
-                                activityName.contains("PIP") ||
-                                activityName.contains("picture_in_picture") ||
-                                activityName.contains("float") ||
-                                activityName.contains("Float") ||
-                                activityName.contains("小窗") ||
-                                activityName.contains("悬浮")) {
-                                
-                                isPipMode = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                
-                if (foundAmap) {
-                    if (isPipMode && !isAutoNaviPipMode) {
-                        isAutoNaviPipMode = true;
-                        switchToPipMode();
-                        Log.d(TAG, "检测到高德地图画中画模式");
-                    } else if (!isPipMode) {
-                        if (isAutoNaviPipMode) {
-                            isAutoNaviPipMode = false;
-                            switchToNavigationMode();
-                            Log.d(TAG, "检测到高德地图普通模式");
-                        }
-                    }
-                } else {
-                    if (isAutoNaviPipMode) {
-                        isAutoNaviPipMode = false;
-                        switchToNavigationMode();
-                        Log.d(TAG, "高德地图未运行");
-                    }
-                }
-            }
-        } catch (SecurityException e) {
-            Log.w(TAG, "无法检测画中画模式: " + e.getMessage());
-            switchToNavigationMode();
-        } catch (Exception e) {
-            Log.e(TAG, "检测画中画模式时出错: " + e.getMessage());
-            switchToNavigationMode();
-        }
-    }
-    
-    /**
-     * 根据Activity类名检测高德地图是否为画中画模式（无障碍服务版本）
-     */
-    private void checkAmapPipMode(String className) {
-        if (className == null || className.isEmpty()) {
-            Log.d(TAG, "Activity类名为空");
-            return;
-        }
-        
-        Log.d(TAG, "检测画中画模式: " + className);
-        
-        if (className.contains("pip") || 
-            className.contains("Pip") ||
-            className.contains("PIP") ||
-            className.contains("picture_in_picture") ||
-            className.contains("float") ||
-            className.contains("Float") ||
-            className.contains("小窗") ||
-            className.contains("悬浮")) {
-            
-            if (!isAutoNaviPipMode) {
-                isAutoNaviPipMode = true;
-                runOnUiThread(() -> switchToPipMode());
-                Log.d(TAG, "检测到高德地图画中画模式（无障碍）");
-            }
-        } else {
-            if (isAutoNaviPipMode) {
-                isAutoNaviPipMode = false;
-                runOnUiThread(() -> switchToNavigationMode());
-                Log.d(TAG, "高德地图切换到普通模式（无障碍）");
-            } else {
-                runOnUiThread(() -> switchToNavigationMode());
-                Log.d(TAG, "高德地图已启动（无障碍）");
-            }
-        }
-    }
-    
-    /**
-     * 获取前台应用的包名
-     */
-    private String getTopPackageName() {
-        // 直接检查高德地图包名是否在运行
-        if (isPackageRunning(AMAP_PACKAGE)) {
-            Log.d(TAG, "高德地图车机版正在运行: " + AMAP_PACKAGE);
-            return AMAP_PACKAGE;
-        }
-        
-        if (isPackageRunning(AMAP_STANDALONE_PACKAGE)) {
-            Log.d(TAG, "高德地图独立版正在运行: " + AMAP_STANDALONE_PACKAGE);
-            return AMAP_STANDALONE_PACKAGE;
-        }
-        
-        // 如果高德地图不在运行，返回null
-        return null;
-    }
-    
-    /**
-     * 检查指定包名的应用是否正在运行
-     */
-    private boolean isPackageRunning(String packageName) {
-        try {
-            ActivityManager activityManager = 
-                (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-            
-            if (activityManager == null) {
-                Log.w(TAG, "ActivityManager服务不可用");
-                return false;
-            }
-            
-            // 方法1: 获取所有运行中的进程
-            List<ActivityManager.RunningAppProcessInfo> runningProcesses = 
-                activityManager.getRunningAppProcesses();
-            
-            if (runningProcesses != null) {
-                for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
-                    if (processInfo.processName != null && 
-                        processInfo.processName.equals(packageName)) {
-                        Log.d(TAG, "从进程列表找到应用: " + packageName);
-                        return true;
-                    }
-                }
-            }
-            
-            // 方法2: 获取运行中的任务（前台任务）
-            try {
-                List<ActivityManager.RunningTaskInfo> runningTasks = 
-                    activityManager.getRunningTasks(100);
-                
-                if (runningTasks != null) {
-                    for (ActivityManager.RunningTaskInfo taskInfo : runningTasks) {
-                        if (taskInfo.topActivity != null && 
-                            taskInfo.topActivity.getPackageName() != null &&
-                            taskInfo.topActivity.getPackageName().equals(packageName)) {
-                            Log.d(TAG, "从前台任务找到应用: " + packageName);
-                            return true;
-                        }
-                        
-                        if (taskInfo.baseActivity != null && 
-                            taskInfo.baseActivity.getPackageName() != null &&
-                            taskInfo.baseActivity.getPackageName().equals(packageName)) {
-                            Log.d(TAG, "从基础Activity找到应用: " + packageName);
-                            return true;
-                        }
-                    }
-                }
-            } catch (SecurityException e) {
-                Log.w(TAG, "无法获取任务列表: " + e.getMessage());
-            }
-            
-            // 方法3: 使用PackageManager检查应用是否已安装（不能检测运行状态，但可以确认应用存在）
-            try {
-                PackageManager pm = getPackageManager();
-                pm.getPackageInfo(packageName, 0);
-                Log.d(TAG, "应用已安装: " + packageName);
-            } catch (PackageManager.NameNotFoundException e) {
-                Log.d(TAG, "应用未安装: " + packageName);
-                return false;
-            }
-            
-            Log.d(TAG, "应用未运行: " + packageName);
-            return false;
-            
-        } catch (SecurityException e) {
-            Log.w(TAG, "权限不足: " + e.getMessage());
-            return false;
-        } catch (Exception e) {
-            Log.e(TAG, "检测应用状态失败: " + e.getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * 切换到驾驶模式（默认模式）
-     */
-    private void switchToDrivingMode() {
-        if (currentNavMode == MODE_DRIVING) {
-            return;
-        }
-        
-        if (navModeContainer != null && drivingModeContainer != null && pipModeContainer != null) {
-            navModeContainer.setVisibility(View.GONE);
-            drivingModeContainer.setVisibility(View.VISIBLE);
-            pipModeContainer.setVisibility(View.GONE);
-            
-            if (textDrivingStatus != null) {
-                textDrivingStatus.setText("驾驶模式");
-            }
-            
-            currentNavMode = MODE_DRIVING;
-            updateSimulatedSpeed();
-        }
-    }
-    
-    /**
-     * 切换到导航模式（高德地图悬浮窗模式）
-     */
-    private void switchToNavigationMode() {
-        if (currentNavMode == MODE_NAVIGATION) {
-            return;
-        }
-        
-        if (navModeContainer != null && drivingModeContainer != null && pipModeContainer != null) {
-            navModeContainer.setVisibility(View.VISIBLE);
-            drivingModeContainer.setVisibility(View.GONE);
-            pipModeContainer.setVisibility(View.GONE);
-            
-            currentNavMode = MODE_NAVIGATION;
-        }
-    }
-    
-    /**
      * 切换到画中画模式（高德地图画中画模式）
      */
     private void switchToPipMode() {
@@ -1108,6 +856,11 @@ public class MainActivity extends AppCompatActivity {
         }
         
         if (navModeContainer != null && drivingModeContainer != null && pipModeContainer != null) {
+            // 隐藏中间区域，让画中画自由显示
+            if (centerArea != null) {
+                centerArea.setVisibility(View.GONE);
+            }
+            
             navModeContainer.setVisibility(View.GONE);
             drivingModeContainer.setVisibility(View.GONE);
             pipModeContainer.setVisibility(View.VISIBLE);
@@ -1117,7 +870,6 @@ public class MainActivity extends AppCompatActivity {
             }
             
             currentNavMode = MODE_PIP;
-            
             Log.d(TAG, "已切换到画中画模式");
         }
     }
@@ -1793,8 +1545,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         hideSystemUI();
         updateTimeDisplay();
-        startNavMonitor();
-        
+
         handler.postDelayed(() -> {
             checkNotificationPermissionOnResume();
         }, 1000);
@@ -1856,7 +1607,6 @@ public class MainActivity extends AppCompatActivity {
         if (handler != null && timeUpdateRunnable != null) {
             handler.removeCallbacks(timeUpdateRunnable);
         }
-        stopNavMonitor();
         instance = null;
     }
 

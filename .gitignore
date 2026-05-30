@@ -47,3 +47,4 @@ nbdist/
 !*/build/*.xml
 build/
 app/build/
+/叁迪桌面/

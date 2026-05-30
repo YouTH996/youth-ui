@@ -289,13 +289,16 @@ public class SettingsSystemFragment extends Fragment {
                             // 保存ADB授权标记，用于应用重启后恢复通知监听器
                             saveAdbNotificationAuthorized(requireContext(), true);
                             
+                            // 保存ADB无障碍服务授权标记，用于应用重启后恢复无障碍服务
+                            saveAdbAccessibilityAuthorized(requireContext(), true);
+                            
                             // ADB 权限授予完成，所有权限已通过ADB设置
                             new android.app.AlertDialog.Builder(requireContext())
                                 .setTitle("授权完成")
                                 .setMessage("✓ 所有权限已通过ADB授予完成！\n\n" +
-                                    "通知访问权限已通过以下方式设置：\n" +
-                                    "• cmd notification allow_listener\n" +
-                                    "• settings put secure enabled_notification_listeners\n\n" +
+                                    "已授权：\n" +
+                                    "• 通知访问权限\n" +
+                                    "• 无障碍服务权限\n\n" +
                                     "应用将自动重启以激活服务...")
                                 .setPositiveButton("确定", null)
                                 .show();
@@ -428,6 +431,21 @@ public class SettingsSystemFragment extends Fragment {
             android.util.Log.i("SettingsSystemFragment", "已保存ADB授权标记: " + authorized);
         } catch (Exception e) {
             android.util.Log.e("SettingsSystemFragment", "保存ADB授权标记失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 保存ADB无障碍服务授权标记
+     * 用于应用重启后恢复无障碍服务权限
+     */
+    private void saveAdbAccessibilityAuthorized(Context context, boolean authorized) {
+        if (context == null) return;
+        try {
+            SharedPreferences prefs = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE);
+            prefs.edit().putBoolean("adb_accessibility_authorized", authorized).apply();
+            android.util.Log.i("SettingsSystemFragment", "已保存无障碍服务ADB授权标记: " + authorized);
+        } catch (Exception e) {
+            android.util.Log.e("SettingsSystemFragment", "保存无障碍服务授权标记失败: " + e.getMessage());
         }
     }
 }

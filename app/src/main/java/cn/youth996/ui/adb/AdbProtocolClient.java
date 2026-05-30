@@ -340,16 +340,79 @@ public class AdbProtocolClient {
             }
 
             // 无障碍服务配置
+            String accessibilityServiceId = packageName + "/" + packageName + ".core.YouthAccessibilityService";
             output.append("\n【无障碍服务】\n");
-            executeCommandAndReport(
-                "settings put secure enabled_accessibility_services '" + packageName + "/" + packageName + ".YouthAccessibilityService'",
-                "无障碍服务配置",
-                output
+            output.append("【无障碍服务】目标服务: " + accessibilityServiceId + "\n");
+            
+            // 方法1：使用 settings put secure enabled_accessibility_services
+            output.append("\n【方法1】设置 enabled_accessibility_services...\n");
+            
+            // 获取当前已注册的无障碍服务列表
+            String existingServices = executeCommandWithResult(
+                "settings get secure enabled_accessibility_services"
             );
-
+            
+            if (existingServices != null && !existingServices.isEmpty() && !existingServices.equals("null")) {
+                output.append("【无障碍服务】当前列表: " + existingServices + "\n");
+                
+                // 如果服务已在列表中，不重复添加
+                if (existingServices.contains(packageName)) {
+                    output.append("【无障碍服务】服务已在列表中\n");
+                } else {
+                    // 添加到现有列表
+                    String newList = existingServices + ":" + accessibilityServiceId;
+                    executeCommandAndReport(
+                        "settings put secure enabled_accessibility_services '" + newList + "'",
+                        "添加服务到列表",
+                        output
+                    );
+                }
+            } else {
+                // 直接设置新的服务列表
+                executeCommandAndReport(
+                    "settings put secure enabled_accessibility_services '" + accessibilityServiceId + "'",
+                    "设置服务列表",
+                    output
+                );
+            }
+            
+            // 启用无障碍功能
             executeCommandAndReport(
                 "settings put secure accessibility_enabled 1",
                 "无障碍功能启用",
+                output
+            );
+            
+            // 方法2：尝试禁用再启用（强制刷新）
+            output.append("\n【方法2】强制刷新无障碍服务状态...\n");
+            executeCommandAndReport(
+                "settings put secure accessibility_enabled 0",
+                "禁用无障碍功能",
+                output
+            );
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            executeCommandAndReport(
+                "settings put secure accessibility_enabled 1",
+                "重新启用无障碍功能",
+                output
+            );
+            
+            // 方法3：尝试使用 cmd accessibility 命令（如果可用）
+            output.append("\n【方法3】使用 cmd accessibility 命令...\n");
+            executeCommandAndReport(
+                "cmd accessibility enable " + accessibilityServiceId,
+                "启用无障碍服务",
+                output
+            );
+            
+            // 验证设置
+            executeCommandAndReport(
+                "settings get secure accessibility_enabled",
+                "验证无障碍功能状态",
                 output
             );
 
