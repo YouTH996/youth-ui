@@ -6,7 +6,12 @@
 !gradle/wrapper/gradle-wrapper.jar
 
 target/
-!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.
+
+decompiled_amap
+decompiled_amap_float
+decompiled_buding
+decompiled_sandiui
 
 ######################################################################
 # IDE
@@ -47,3 +52,4 @@ nbdist/
 !*/build/*.xml
 build/
 app/build/
+/apk/

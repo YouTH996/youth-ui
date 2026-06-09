@@ -779,7 +779,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 右侧：桌面设置按钮 -->
+        <!-- 右侧：桌面设置按钮和悬浮窗控制按钮 -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -787,6 +787,132 @@
             android:orientation="horizontal"
             android:gravity="center">
 
+            <!-- 悬浮地图按钮 -->
+            <LinearLayout
+                android:id="@+id/btn_floating_map"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/icon_background_selector">
+
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:src="@android:drawable/ic_dialog_map"
+                    android:scaleType="fitCenter" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="悬浮地图"
+                    android:textSize="10sp"
+                    android:textColor="@color/white"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- 关闭悬浮窗按钮 -->
+            <LinearLayout
+                android:id="@+id/btn_close_floating"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/icon_background_selector">
+
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"
+                    android:scaleType="fitCenter" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="关闭悬浮"
+                    android:textSize="10sp"
+                    android:textColor="@color/white"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- 高德地图悬浮窗按钮 -->
+            <LinearLayout
+                android:id="@+id/btn_amap_float"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/icon_background_selector">
+
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:src="@android:drawable/ic_menu_mapmode"
+                    android:scaleType="fitCenter" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="高德悬浮"
+                    android:textSize="10sp"
+                    android:textColor="@color/white"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- 自定义悬浮窗按钮 -->
+            <LinearLayout
+                android:id="@+id/btn_custom_float"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/icon_background_selector">
+
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:src="@android:drawable/ic_menu_add"
+                    android:scaleType="fitCenter" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="自定义"
+                    android:textSize="10sp"
+                    android:textColor="@color/white"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- 切换悬浮窗按钮 -->
+            <LinearLayout
+                android:id="@+id/btn_toggle_floating"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/icon_background_selector">
+
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:src="@android:drawable/ic_menu_view"
+                    android:scaleType="fitCenter" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="切换悬浮"
+                    android:textSize="10sp"
+                    android:textColor="@color/white"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- 桌面设置按钮 -->
             <LinearLayout
                 android:id="@+id/btn_desktop_settings"
                 android:layout_width="56dp"
