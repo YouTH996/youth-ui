@@ -46,13 +46,19 @@ public class FloatingWindowManager {
     private static final String SERVICE_CLASS = "cn.youth996.ui.service.FloatingMapService";
 
     /** 高德地图包名 */
-    private static final String AMAP_PACKAGE = "com.autonavi.amapauto";
+    private static final String AMAP_PACKAGE = "com.autonavi.amapauto.chenmo";
     
     /** 显示悬浮窗广播 Action */
     private static final String ACTION_SHOW_MAP = "com.autonavi.plus.showmap";
     
     /** 关闭悬浮窗广播 Action */
     private static final String ACTION_CLOSE_MAP = "com.autonavi.plus.closemap";
+
+    /** 高德悬浮窗当前是否正在显示（由本应用控制） */
+    private static boolean isAmapFloatShowing = false;
+
+    /** 用户是否开启了悬浮地图功能（用于前后台切换时自动恢复显示） */
+    private static boolean isAmapFloatEnabled = false;
 
     /**
      * 检查是否有悬浮窗权限
@@ -117,6 +123,8 @@ public class FloatingWindowManager {
             intent.putExtra("h", height);
             
             context.sendBroadcast(intent);
+            isAmapFloatShowing = true;
+            isAmapFloatEnabled = true;
             
             Log.i(TAG, "【高德悬浮窗】显示悬浮窗广播已发送");
         } catch (Exception e) {
@@ -128,7 +136,7 @@ public class FloatingWindowManager {
     /**
      * 显示高德地图悬浮窗（使用默认位置）
      *
-     * 默认显示在屏幕右上角区域
+     * 默认显示在屏幕左侧中部，尺寸较大便于查看
      *
      * @param context 上下文对象
      */
@@ -137,11 +145,11 @@ public class FloatingWindowManager {
         int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
         int screenHeight = context.getResources().getDisplayMetrics().heightPixels;
         
-        // 默认显示在右上角
-        int x = (int) (screenWidth * 0.05);  // 5% 边距
-        int y = (int) (screenHeight * 0.05); // 5% 边距
-        int width = (int) (screenWidth * 0.45); // 45% 宽度
-        int height = (int) (screenHeight * 0.35); // 35% 高度
+        // 默认显示在屏幕左侧中部，尺寸较大便于查看
+        int x = (int) (screenWidth * 0.03);   // 3% 左边距
+        int y = (int) (screenHeight * 0.10);  // 10% 顶部边距（避开状态栏）
+        int width = (int) (screenWidth * 0.52);  // 52% 宽度
+        int height = (int) (screenHeight * 0.58); // 58% 高度
         
         showAmapFloatMap(context, x, y, width, height);
     }
@@ -170,26 +178,89 @@ public class FloatingWindowManager {
     }
 
     /**
-     * 关闭高德地图悬浮窗（通过广播命令）
+     * 关闭高德地图悬浮窗（用户主动关闭）
      *
-     * 发送广播命令给高德地图，让它关闭悬浮窗
+     * 发送广播命令给高德地图，让它关闭悬浮窗，
+     * 同时标记用户已关闭悬浮地图功能，回到桌面时不会自动恢复。
      *
      * @param context 上下文对象
      */
     public static void hideAmapFloatMap(Context context) {
-        Log.i(TAG, "【高德悬浮窗】关闭悬浮窗");
+        Log.i(TAG, "【高德悬浮窗】关闭悬浮窗（用户主动）");
         
         try {
             Intent intent = new Intent(ACTION_CLOSE_MAP);
             intent.setPackage(AMAP_PACKAGE);
             
             context.sendBroadcast(intent);
+            isAmapFloatShowing = false;
+            isAmapFloatEnabled = false;
             
             Log.i(TAG, "【高德悬浮窗】关闭悬浮窗广播已发送");
         } catch (Exception e) {
             Log.e(TAG, "【高德悬浮窗】关闭悬浮窗失败: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 暂停高德地图悬浮窗（应用进入后台时自动隐藏）
+     *
+     * 仅隐藏悬浮窗，不清除用户开启状态，
+     * 回到桌面时可通过 {@link #resumeAmapFloatMap(Context)} 自动恢复。
+     *
+     * @param context 上下文对象
+     */
+    public static void pauseAmapFloatMap(Context context) {
+        if (!isAmapFloatEnabled) {
+            Log.d(TAG, "【高德悬浮窗】用户未开启悬浮地图，无需暂停");
+            return;
+        }
+        if (!isAmapFloatShowing) {
+            Log.d(TAG, "【高德悬浮窗】悬浮窗当前未显示，无需暂停");
+            return;
+        }
+        Log.i(TAG, "【高德悬浮窗】应用进入后台，自动隐藏悬浮窗");
+        
+        try {
+            Intent intent = new Intent(ACTION_CLOSE_MAP);
+            intent.setPackage(AMAP_PACKAGE);
+            context.sendBroadcast(intent);
+            isAmapFloatShowing = false;
+            Log.i(TAG, "【高德悬浮窗】自动隐藏广播已发送");
+        } catch (Exception e) {
+            Log.e(TAG, "【高德悬浮窗】自动隐藏失败: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 恢复高德地图悬浮窗（应用回到前台/桌面时自动显示）
+     *
+     * 仅当用户之前开启了悬浮地图功能时才恢复显示。
+     *
+     * @param context 上下文对象
+     */
+    public static void resumeAmapFloatMap(Context context) {
+        if (!isAmapFloatEnabled) {
+            Log.d(TAG, "【高德悬浮窗】用户未开启悬浮地图，无需恢复");
+            return;
+        }
+        if (isAmapFloatShowing) {
+            Log.d(TAG, "【高德悬浮窗】悬浮窗已在显示，无需恢复");
+            return;
+        }
+        Log.i(TAG, "【高德悬浮窗】应用回到桌面，自动恢复显示悬浮窗");
+        showAmapFloatMap(context);
+    }
+
+    /**
+     * 查询用户是否开启了悬浮地图功能
+     *
+     * @return true 表示用户已开启悬浮地图
+     */
+    public static boolean isAmapFloatEnabled() {
+        return isAmapFloatEnabled;
     }
 
     /**
@@ -204,6 +275,27 @@ public class FloatingWindowManager {
         } else {
             showAmapFloatMap(context);
         }
+    }
+
+    /**
+     * 切换高德地图悬浮窗显示状态（使用内部记录的状态）
+     *
+     * @param context 上下文对象
+     */
+    public static void toggleAmapFloatMap(Context context) {
+        toggleAmapFloatMap(context, isAmapFloatShowing);
+    }
+
+    /**
+     * 查询高德地图悬浮窗当前是否正在显示
+     *
+     * 注意：此处仅记录本应用通过 showAmapFloatMap / hideAmapFloatMap
+     * 触发的状态，不代表高德地图自身悬浮窗的实时状态。
+     *
+     * @return true 表示正在显示
+     */
+    public static boolean isAmapFloatShowing() {
+        return isAmapFloatShowing;
     }
 
     /**

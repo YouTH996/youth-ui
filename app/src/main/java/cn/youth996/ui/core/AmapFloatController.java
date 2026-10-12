@@ -96,11 +96,19 @@ public class AmapFloatController {
     /**
      * 显示高德地图悬浮窗（使用默认位置）
      *
-     * 默认显示在屏幕右上角
+     * 默认显示在屏幕左侧中部，尺寸较大便于查看
      */
     public void showFloatMap() {
-        // 默认位置和尺寸
-        showFloatMap(100, 100, 600, 400);
+        // 获取屏幕尺寸
+        int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
+        int screenHeight = context.getResources().getDisplayMetrics().heightPixels;
+
+        int x = (int) (screenWidth * 0.03);
+        int y = (int) (screenHeight * 0.10);
+        int width = (int) (screenWidth * 0.52);
+        int height = (int) (screenHeight * 0.58);
+
+        showFloatMap(x, y, width, height);
     }
 
     /**

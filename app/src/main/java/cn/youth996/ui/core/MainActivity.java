@@ -1717,28 +1717,24 @@ public class MainActivity extends AppCompatActivity {
         }
         
         // ==================== 悬浮窗控制按钮 ====================
-        // 悬浮地图按钮 - 启动悬浮地图服务
+        // 悬浮地图按钮 - 显示高德地图悬浮窗
         View btnFloatingMap = findViewById(R.id.btn_floating_map);
         if (btnFloatingMap != null) {
             btnFloatingMap.setOnClickListener(v -> {
                 Log.i(TAG, "【悬浮窗控制】点击了悬浮地图按钮");
                 
-                // 检查悬浮窗权限
-                if (!cn.youth996.ui.core.FloatingWindowManager.hasOverlayPermission(this)) {
-                    Log.w(TAG, "【悬浮窗控制】没有悬浮窗权限，正在请求授权");
-                    cn.youth996.ui.core.FloatingWindowManager.requestOverlayPermission(this);
-                    Toast.makeText(this, "请先授权悬浮窗权限", Toast.LENGTH_SHORT).show();
+                // 检查高德地图是否安装
+                if (!cn.youth996.ui.core.FloatingWindowManager.isAmapInstalled(this)) {
+                    Log.w(TAG, "【悬浮窗控制】高德地图未安装");
+                    Toast.makeText(this, "请先安装高德地图车机版", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 
-                // 启动悬浮地图服务
-                cn.youth996.ui.core.FloatingWindowManager.startService(this);
-                
-                // 显示悬浮窗
-                cn.youth996.ui.core.FloatingWindowManager.show(this);
+                // 显示高德地图悬浮窗（使用默认位置）
+                cn.youth996.ui.core.FloatingWindowManager.showAmapFloatMap(this);
                 
                 Toast.makeText(this, "悬浮地图已显示", Toast.LENGTH_SHORT).show();
-                Log.i(TAG, "【悬浮窗控制】悬浮地图已启动");
+                Log.i(TAG, "【悬浮窗控制】高德悬浮地图已显示");
             });
         }
         
@@ -1748,14 +1744,11 @@ public class MainActivity extends AppCompatActivity {
             btnCloseFloating.setOnClickListener(v -> {
                 Log.i(TAG, "【悬浮窗控制】点击了关闭悬浮窗按钮");
                 
-                // 隐藏悬浮窗
-                cn.youth996.ui.core.FloatingWindowManager.hide(this);
-                
-                // 停止服务
-                cn.youth996.ui.core.FloatingWindowManager.stopService(this);
+                // 关闭高德地图悬浮窗
+                cn.youth996.ui.core.FloatingWindowManager.hideAmapFloatMap(this);
                 
                 Toast.makeText(this, "悬浮地图已关闭", Toast.LENGTH_SHORT).show();
-                Log.i(TAG, "【悬浮窗控制】悬浮地图已关闭");
+                Log.i(TAG, "【悬浮窗控制】高德悬浮地图已关闭");
             });
         }
         
@@ -1765,19 +1758,24 @@ public class MainActivity extends AppCompatActivity {
             btnToggleFloating.setOnClickListener(v -> {
                 Log.i(TAG, "【悬浮窗控制】点击了切换悬浮窗按钮");
                 
-                // 检查悬浮窗权限
-                if (!cn.youth996.ui.core.FloatingWindowManager.hasOverlayPermission(this)) {
-                    Log.w(TAG, "【悬浮窗控制】没有悬浮窗权限，正在请求授权");
-                    cn.youth996.ui.core.FloatingWindowManager.requestOverlayPermission(this);
-                    Toast.makeText(this, "请先授权悬浮窗权限", Toast.LENGTH_SHORT).show();
+                // 检查高德地图是否安装
+                if (!cn.youth996.ui.core.FloatingWindowManager.isAmapInstalled(this)) {
+                    Log.w(TAG, "【悬浮窗控制】高德地图未安装");
+                    Toast.makeText(this, "请先安装高德地图车机版", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 
-                // 切换悬浮窗状态
-                cn.youth996.ui.core.FloatingWindowManager.toggle(this);
+                // 切换高德地图悬浮窗显示状态
+                boolean wasShowing = cn.youth996.ui.core.FloatingWindowManager.isAmapFloatShowing();
+                cn.youth996.ui.core.FloatingWindowManager.toggleAmapFloatMap(this);
                 
-                Toast.makeText(this, "悬浮地图状态已切换", Toast.LENGTH_SHORT).show();
-                Log.i(TAG, "【悬浮窗控制】悬浮地图状态已切换");
+                if (wasShowing) {
+                    Toast.makeText(this, "悬浮地图已关闭", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "【悬浮窗控制】高德悬浮地图已关闭");
+                } else {
+                    Toast.makeText(this, "悬浮地图已显示", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "【悬浮窗控制】高德悬浮地图已显示");
+                }
             });
         }
     }
@@ -1817,9 +1815,19 @@ public class MainActivity extends AppCompatActivity {
         updateTimeDisplay();
         startNavMonitor();
         
+        // 回到桌面时，如果用户开启了悬浮地图，自动恢复显示
+        cn.youth996.ui.core.FloatingWindowManager.resumeAmapFloatMap(this);
+        
         handler.postDelayed(() -> {
             checkNotificationPermissionOnResume();
         }, 1000);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // 切换到其他应用时，自动隐藏悬浮地图（保留用户开启状态，回桌面会自动恢复）
+        cn.youth996.ui.core.FloatingWindowManager.pauseAmapFloatMap(this);
     }
     
     /**
