@@ -8,7 +8,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="0dp"
+        android:id="@+id/desktop_main_layout">
 
         <!-- 状态栏 -->
         <LinearLayout
@@ -165,13 +167,13 @@
         <LinearLayout
             android:id="@+id/center_area"
             android:layout_width="match_parent"
-            android:layout_height="320dp"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
+            android:layout_marginTop="@dimen/center_area_margin_top"
+            android:layout_marginBottom="@dimen/center_area_margin_bottom"
+            android:paddingStart="@dimen/center_area_padding_h"
+            android:paddingEnd="@dimen/center_area_padding_h">
 
             <!-- 左侧：导航软件 -->
             <FrameLayout
@@ -316,7 +318,7 @@
             <!-- 右侧：音乐播放卡片 -->
             <RelativeLayout
                 android:id="@+id/music_player_card"
-                android:layout_width="300dp"
+                android:layout_width="@dimen/music_card_width"
                 android:layout_height="match_parent"
                 android:background="@drawable/card_background_rounded"
                 android:padding="16dp"
@@ -520,9 +522,9 @@
         android:scrollbars="none"
         android:overScrollMode="never"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="56dp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp">
+        android:layout_marginBottom="@dimen/card_container_margin_bottom"
+        android:paddingStart="@dimen/card_container_padding_h"
+        android:paddingEnd="@dimen/card_container_padding_h">
 
         <LinearLayout
             android:id="@+id/card_container"

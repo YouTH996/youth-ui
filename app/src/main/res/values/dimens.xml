@@ -26,4 +26,16 @@
 
     <dimen name="shadow_elevation">4dp</dimen>
     <dimen name="card_corner_radius">12dp</dimen>
+
+    <!-- 桌面主区域相关尺寸（用于多屏幕适配，可被 values-sw* 覆盖） -->
+    <dimen name="center_area_height">320dp</dimen>
+    <dimen name="center_area_margin_top">8dp</dimen>
+    <dimen name="center_area_margin_bottom">8dp</dimen>
+    <dimen name="center_area_padding_h">16dp</dimen>
+    <dimen name="music_card_width">300dp</dimen>
+    <dimen name="card_corner_radius_main">16dp</dimen>
+    <dimen name="card_container_margin_bottom">56dp</dimen>
+    <dimen name="card_container_padding_h">12dp</dimen>
+    <!-- 底部安全区 = taskbar + 小卡片容器+间距，用于外层 LinearLayout 预留底部空间 -->
+    <dimen name="bottom_safe_area">180dp</dimen>
 </resources>

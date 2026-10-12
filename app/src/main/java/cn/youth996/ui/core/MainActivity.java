@@ -77,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
     private HorizontalScrollView cardScrollView;
     private CardManager cardManager;
     private MusicPlayerManager musicPlayerManager;
+    private LinearLayout desktopMainLayout;
+    private LinearLayout centerArea;
     
     // ImageView 组件声明
     private ImageView imgBack;
@@ -204,6 +206,93 @@ public class MainActivity extends AppCompatActivity {
 //        initNavigationMonitor();
         // 检查并请求权限
 //        checkAndRequestPermissions();
+
+        // 动态计算外层主布局的底部安全区，避免中间卡片与底部小卡片/taskbar 重叠
+        adjustMainLayoutBottomSafeArea();
+        // 给中间主区域一个最小高度（占屏幕 50%），保证中间两张主卡足够大
+        applyCenterAreaMinHeight();
+    }
+
+    /**
+     * 动态计算并设置桌面主布局（外层 vertical LinearLayout）的底部 padding。
+     * 预留空间 = taskbar 实际高度 + 小卡片容器距屏底距离 + 小卡片容器本身高度。
+     * 这样无论屏幕尺寸如何变化，中间两张主卡片都会恰好显示在
+     * "状态栏" 与 "小卡片+taskbar" 之间的可用空间里。
+     */
+    private void adjustMainLayoutBottomSafeArea() {
+        if (desktopMainLayout == null || taskbar == null || cardScrollView == null) {
+            return;
+        }
+        // 等小卡片容器首次布局完成后再测量（此时 CardManager 已设置好 minHeight）
+        cardScrollView.post(() -> cardScrollView.post(this::applyBottomSafeArea));
+    }
+
+    /**
+     * 实际把"taskbar + 小卡片 + 间距"的总和写到外层 LinearLayout 的 paddingBottom 上。
+     * 该方法在 cardScrollView 二次 post 后被调用，确保 minHeight 已生效。
+     */
+    private void applyBottomSafeArea() {
+        try {
+            int taskbarHeight = taskbar.getHeight();
+            if (taskbarHeight <= 0) {
+                taskbarHeight = (int) (getResources().getDimension(R.dimen.taskbar_height));
+            }
+            int cardScrollMarginBottomPx = (int) (getResources().getDimension(R.dimen.card_container_margin_bottom));
+            int cardScrollHeight = cardScrollView.getHeight();
+            int extraPad = (int) (4 * getResources().getDisplayMetrics().density);
+            int total = taskbarHeight + cardScrollMarginBottomPx + cardScrollHeight + extraPad;
+            desktopMainLayout.setPadding(
+                    desktopMainLayout.getPaddingLeft(),
+                    desktopMainLayout.getPaddingTop(),
+                    desktopMainLayout.getPaddingRight(),
+                    total
+            );
+            android.util.Log.i(TAG, "【布局适配】动态底部安全区 px=" + total +
+                    " (taskbar=" + taskbarHeight +
+                    ", cardScrollMargin=" + cardScrollMarginBottomPx +
+                    ", cardScrollHeight=" + cardScrollHeight + ")");
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "【布局适配】计算底部安全区失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 强制设置中间主区域（左侧导航卡 + 右侧音乐卡）高度 = 屏幕高度的 80%，
+     * 让两张主卡在桌面布局中占绝对主体。
+     * 并把外层 LinearLayout 的 paddingBottom 同步增大，
+     * 保证底部小卡片容器和 taskbar 始终在中间区域下方。
+     */
+    private void applyCenterAreaMinHeight() {
+        if (centerArea == null) {
+            return;
+        }
+        try {
+            float density = getResources().getDisplayMetrics().density;
+            int screenHeightPx = getResources().getDisplayMetrics().heightPixels;
+            int targetHeightPx = (int) (screenHeightPx * 0.80f);
+            // 强制覆盖 wrap_content：直接设 layoutParams.height
+            android.view.ViewGroup.LayoutParams lp = centerArea.getLayoutParams();
+            lp.height = targetHeightPx;
+            centerArea.setLayoutParams(lp);
+            // 同步外层 paddingBottom = statusBar + centerArea + 8dp 缓冲
+            centerArea.post(() -> {
+                int realHeight = centerArea.getHeight();
+                int statusBarHeight = statusBar != null ? statusBar.getHeight() : 0;
+                int desiredSafe = realHeight + statusBarHeight + (int) (8 * density);
+                if (desktopMainLayout != null) {
+                    desktopMainLayout.setPadding(
+                            desktopMainLayout.getPaddingLeft(),
+                            desktopMainLayout.getPaddingTop(),
+                            desktopMainLayout.getPaddingRight(),
+                            desiredSafe
+                    );
+                    android.util.Log.i(TAG, "【布局适配】centerArea 强制高度 px=" + realHeight +
+                            "（屏幕 80%），外层 paddingBottom=" + desiredSafe);
+                }
+            });
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "【布局适配】中间区域高度设置失败: " + e.getMessage());
+        }
     }
 
     /**
@@ -299,6 +388,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViews() {
         desktopContainer = findViewById(R.id.desktop_container);
+        desktopMainLayout = findViewById(R.id.desktop_main_layout);
+        centerArea = findViewById(R.id.center_area);
         statusBar = findViewById(R.id.status_bar);
         taskbar = findViewById(R.id.taskbar);
 
