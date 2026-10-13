@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent">
+
+    <!-- 背景层 -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.3"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 前景层 -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/fg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 左上角控制点 -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/leftUp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/shape_corner_control_point"
+        android:padding="4dp"
+        android:src="@android:drawable/ic_menu_crop"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 右上角控制点 -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/rightUp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/shape_corner_control_point"
+        android:padding="4dp"
+        android:src="@android:drawable/ic_menu_crop"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 右下角控制点 -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/rightDown"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/shape_corner_control_point"
+        android:padding="4dp"
+        android:src="@android:drawable/ic_menu_crop"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 左下角控制点 -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/leftDown"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/shape_corner_control_point"
+        android:padding="4dp"
+        android:src="@android:drawable/ic_menu_crop"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- 中上控制点 -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/middleUp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/shape_corner_control_point"
+        android:padding="4dp"
+        android:src="@android:drawable/ic_menu_crop"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 中下控制点 -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/middleDown"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/shape_corner_control_point"
+        android:padding="4dp"
+        android:src="@android:drawable/ic_menu_crop"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- 左中控制点 -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/leftMiddle"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/shape_corner_control_point"
+        android:padding="4dp"
+        android:src="@android:drawable/ic_menu_crop"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 右中控制点 -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/rightMiddle"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/shape_corner_control_point"
+        android:padding="4dp"
+        android:src="@android:drawable/ic_menu_crop"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

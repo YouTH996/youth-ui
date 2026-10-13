@@ -87,6 +87,26 @@
             </intent-filter>
         </service>
 
+        <!-- 悬浮地图服务 -->
+        <service
+            android:name="cn.youth996.ui.service.FloatingMapService"
+            android:exported="false"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/floating_service_config" />
+        </service>
+
+        <!-- 高德地图悬浮窗角落服务 -->
+        <service
+            android:name="cn.youth996.ui.service.FloatAmapCornerService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
         <receiver
             android:name="cn.youth996.ui.receiver.BootReceiver"
             android:enabled="true"
