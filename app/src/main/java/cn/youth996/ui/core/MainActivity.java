@@ -473,11 +473,18 @@ public class MainActivity extends AppCompatActivity {
         
         ViewGroup layoutLyrics = findViewById(R.id.layout_lyrics_center);
 
+        // 状态栏灵动岛歌词
+        View islandContainer = findViewById(R.id.island_lyric_container);
+        ImageView imgIslandWave = findViewById(R.id.img_island_wave);
+        TextView textIslandTitle = findViewById(R.id.text_island_title);
+        TextView textIslandLyric = findViewById(R.id.text_island_lyric);
+
         Log.d("MainActivity", "Creating MusicPlayerManager...");
         musicPlayerManager = new MusicPlayerManager(this);
         musicPlayerManager.bindViews(imgAlbumCoverCenter, imgMusicSource, textMusicSource,
                                      textSongTitle, textSongArtist, btnPlayPauseCenter);
         musicPlayerManager.bindLyricsViews(layoutLyrics);
+        musicPlayerManager.bindIslandViews(islandContainer, imgIslandWave, textIslandTitle, textIslandLyric);
         Log.d("MainActivity", "MusicPlayerManager created, setting listener...");
         
         musicPlayerManager.setOnMusicUpdateListener(new MusicPlayerManager.OnMusicUpdateListener() {

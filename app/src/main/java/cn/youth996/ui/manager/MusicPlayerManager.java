@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -15,6 +16,7 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -47,6 +49,16 @@ public class MusicPlayerManager {
     private int lastRenderedMaxLines = -1;
     private List<String> lastRenderedLyrics = null;
     private ImageView btnPlayPause;
+
+    // 状态栏灵动岛歌词
+    private View islandContainer;
+    private ImageView islandWave;
+    private TextView islandTitle;
+    private TextView islandLyric;
+    private Bitmap waveIdleFrame;
+    private Bitmap[] waveFrames;
+    private int waveFrameIndex = 0;
+    private Runnable waveAnimRunnable;
     
     private String currentPackageName = "";
     private String currentTitle = "";
@@ -93,6 +105,75 @@ public class MusicPlayerManager {
         }
     }
     
+    /**
+     * 绑定状态栏灵动岛视图：波形动画图标 + 固定歌名 + 当前歌词
+     */
+    public void bindIslandViews(View container, ImageView wave, TextView title, TextView lyric) {
+        this.islandContainer = container;
+        this.islandWave = wave;
+        this.islandTitle = title;
+        this.islandLyric = lyric;
+        if (lyric != null) {
+            lyric.setSelected(true); // 触发跑马灯滚动
+        }
+        loadWaveFrames();
+    }
+
+    private void loadWaveFrames() {
+        try {
+            waveIdleFrame = BitmapFactory.decodeStream(
+                    activity.getAssets().open("webui/img/island/Y1.png"));
+            waveFrames = new Bitmap[5];
+            for (int i = 0; i < waveFrames.length; i++) {
+                waveFrames[i] = BitmapFactory.decodeStream(
+                        activity.getAssets().open("webui/img/island/Y" + (11 + i) + ".png"));
+            }
+            if (islandWave != null) {
+                islandWave.setImageBitmap(waveIdleFrame);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "加载灵动岛波形帧失败: " + e.getMessage());
+        }
+    }
+
+    private void updateIslandLyric(String text) {
+        if (islandLyric != null) {
+            islandLyric.setText(text == null ? "" : text);
+        }
+        updateIslandVisibility();
+    }
+
+    private void updateIslandVisibility() {
+        if (islandContainer == null) return;
+        boolean hasTitle = currentTitle != null && !currentTitle.isEmpty();
+        boolean hasLyric = islandLyric != null && islandLyric.getText().length() > 0;
+        islandContainer.setVisibility(hasTitle || hasLyric ? View.VISIBLE : View.GONE);
+    }
+
+    private void startWaveAnimation() {
+        if (islandWave == null || waveFrames == null || waveAnimRunnable != null) return;
+        waveAnimRunnable = new Runnable() {
+            @Override
+            public void run() {
+                islandWave.setImageBitmap(waveFrames[waveFrameIndex]);
+                waveFrameIndex = (waveFrameIndex + 1) % waveFrames.length;
+                handler.postDelayed(this, 150);
+            }
+        };
+        handler.post(waveAnimRunnable);
+    }
+
+    private void stopWaveAnimation() {
+        if (waveAnimRunnable != null) {
+            handler.removeCallbacks(waveAnimRunnable);
+            waveAnimRunnable = null;
+        }
+        waveFrameIndex = 0;
+        if (islandWave != null && waveIdleFrame != null) {
+            islandWave.setImageBitmap(waveIdleFrame);
+        }
+    }
+
     public void startListening() {
         try {
             notificationMonitor = new NotificationMonitor(activity);
@@ -144,6 +225,11 @@ public class MusicPlayerManager {
         if (textSongTitle != null) {
             textSongTitle.setText(currentTitle);
         }
+
+        if (islandTitle != null) {
+            islandTitle.setText(currentTitle);
+        }
+        updateIslandVisibility();
         
         if (textSongArtist != null) {
             textSongArtist.setText(currentArtist);
@@ -171,8 +257,10 @@ public class MusicPlayerManager {
         
         if (isPlaying) {
             startLyricsUpdateTimer();
+            startWaveAnimation();
         } else {
             stopLyricsUpdateTimer();
+            stopWaveAnimation();
         }
         
         if (listener != null) {
@@ -196,12 +284,15 @@ public class MusicPlayerManager {
             lyricsContainer.removeAllViews();
             lastRenderedIndex = -1;
             lastRenderedLyrics = null;
+            updateIslandLyric(null);
             return;
         }
 
         if (currentLyricIndex < 0 || currentLyricIndex >= lyricTexts.size()) {
             return;
         }
+
+        updateIslandLyric(lyricTexts.get(currentLyricIndex));
 
         int maxLines = computeMaxLyricLines();
         // 歌词索引和行数都未变化时跳过重绘，避免播放进度轮询导致的频繁重建
@@ -510,6 +601,7 @@ public class MusicPlayerManager {
     }
     
     public void stopListening() {
+        stopWaveAnimation();
         if (refreshRunnable != null) {
             handler.removeCallbacks(refreshRunnable);
         }
