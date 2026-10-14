@@ -1322,9 +1322,15 @@ public class MainActivity extends AppCompatActivity {
         // 风向图标 - 初始化时设置默认状态
         updateAirDirectionIcon();
         
-        // 设置图标
-        loadImageFromAssets("webui/img/navbar/sys_nav_bar_apps.png", imgSettings);
-        
+        // 设置图标（使用汽车 logo 图标）
+        loadImageFromAssets("webui/img/navbar/sys_nav_bar_car.png", imgSettings);
+
+        // 显示应用图标（九宫格）
+        ImageView imgShowApps = findViewById(R.id.img_show_apps);
+        if (imgShowApps != null) {
+            loadImageFromAssets("webui/img/navbar/sys_nav_bar_apps.png", imgShowApps);
+        }
+
         // 后除霜图标 - 使用前除霜图标作为备用
         loadImageFromAssets("webui/img/navbar/ac_bar_front_defrost0.png", imgDefrostRear);
     }
@@ -1753,6 +1759,22 @@ public class MainActivity extends AppCompatActivity {
         View btnDesktopSettings = findViewById(R.id.btn_desktop_settings);
         if (btnDesktopSettings != null) {
             btnDesktopSettings.setOnClickListener(v -> showSettingsDialog());
+        }
+
+        // 显示应用弹窗（点击启动 AppDrawerActivity）
+        View btnShowApps = findViewById(R.id.btn_show_apps);
+        if (btnShowApps != null) {
+            btnShowApps.setOnClickListener(v -> {
+                try {
+                    Log.i(TAG, "【应用抽屉】启动 AppDrawerActivity");
+                    Intent drawerIntent = new Intent(this, cn.youth996.ui.ui.AppDrawerActivity.class);
+                    drawerIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(drawerIntent);
+                } catch (Exception e) {
+                    Log.e(TAG, "启动 AppDrawerActivity 失败: " + e.getMessage(), e);
+                    Toast.makeText(this, "无法打开应用列表", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
         
         // ==================== 悬浮地图状态切换按钮 ====================

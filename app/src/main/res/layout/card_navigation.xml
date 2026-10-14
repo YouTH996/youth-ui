@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  底部导航卡片（恢复显示版）
+
+  用户最终需求：底部小卡片栏中的「导航卡片」需要显示出来（带回家/去公司等图标），
+  而中间区域左侧的大导航卡片（车速 + 驾驶模式）需要隐藏。
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"

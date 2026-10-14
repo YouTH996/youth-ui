@@ -121,7 +121,7 @@ public class CardManager {
         View btnNavIcon = navigationCard.findViewById(R.id.btn_nav_icon);
         View btnNavHome = navigationCard.findViewById(R.id.btn_nav_home);
         View btnNavCompany = navigationCard.findViewById(R.id.btn_nav_company);
-        
+
         try {
             InputStream is = activity.getAssets().open("webui/img/widget/automap_logo.png");
             Bitmap bitmap = BitmapFactory.decodeStream(is);
@@ -130,7 +130,7 @@ public class CardManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         try {
             InputStream is = activity.getAssets().open("webui/img/widget/nav_btn_home.png");
             Bitmap bitmap = BitmapFactory.decodeStream(is);

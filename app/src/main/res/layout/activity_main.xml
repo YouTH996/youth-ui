@@ -175,16 +175,22 @@
             android:paddingStart="@dimen/center_area_padding_h"
             android:paddingEnd="@dimen/center_area_padding_h">
 
-            <!-- 左侧：导航软件 -->
+            <!-- 左侧：导航卡片（中间区域）做成全透明占位
+                 - 容器保持可见，仅保留位置与权重（layout_weight="1"）让布局节奏不变
+                 - 背景改 transparent，不再绘制圆角卡片
+                 - 所有子容器 / 子 View 一律 visibility="gone"，保留 id 以兼容 Java 端
+                 底部小卡片栏中的导航卡片依然显示（在 card_navigation.xml）。 -->
             <FrameLayout
                 android:id="@+id/nav_preview_container"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="@drawable/card_background_rounded"
-                android:layout_marginEnd="8dp">
+                android:background="@android:color/transparent"
+                android:layout_marginEnd="8dp"
+                android:clickable="false"
+                android:focusable="false">
 
-                <!-- 驾驶模式：显示车辆图标和车速 -->
+                <!-- 驾驶模式：占位隐藏，保留 id 以兼容 Java 端 findViewById -->
                 <LinearLayout
                     android:id="@+id/driving_mode_container"
                     android:layout_width="match_parent"
@@ -192,17 +198,17 @@
                     android:orientation="vertical"
                     android:gravity="center"
                     android:padding="12dp"
-                    android:visibility="visible">
+                    android:visibility="gone">
 
-                    <!-- 车辆图标 -->
+                    <!-- 车辆图标（占位） -->
                     <ImageView
                         android:id="@+id/img_car_icon"
                         android:layout_width="80dp"
                         android:layout_height="80dp"
-                        android:src="@drawable/car_ty_placeholder"
-                        android:scaleType="fitCenter" />
+                        android:scaleType="fitCenter"
+                        android:visibility="gone" />
 
-                    <!-- 车速显示 -->
+                    <!-- 车速显示（占位） -->
                     <TextView
                         android:id="@+id/text_speed"
                         android:layout_width="wrap_content"
@@ -211,7 +217,8 @@
                         android:textSize="36sp"
                         android:textColor="@color/dark_tech_accent"
                         android:fontFamily="sans-serif-black"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="4dp"
+                        android:visibility="gone" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -219,9 +226,10 @@
                         android:text="km/h"
                         android:textSize="14sp"
                         android:textColor="@color/dark_tech_text"
-                        android:fontFamily="sans-serif-medium" />
+                        android:fontFamily="sans-serif-medium"
+                        android:visibility="gone" />
 
-                    <!-- 状态标签 -->
+                    <!-- 状态标签（占位） -->
                     <TextView
                         android:id="@+id/text_driving_status"
                         android:layout_width="wrap_content"
@@ -231,10 +239,11 @@
                         android:textColor="@color/dark_tech_text"
                         android:fontFamily="sans-serif-medium"
                         android:layout_marginTop="4dp"
-                        android:alpha="0.7" />
+                        android:alpha="0.7"
+                        android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- 画中画模式：显示高德地图 -->
+                <!-- 画中画模式：仅保留结构以兼容 Java 端，默认 gone -->
                 <LinearLayout
                     android:id="@+id/pip_mode_container"
                     android:layout_width="match_parent"
@@ -244,7 +253,6 @@
                     android:padding="12dp"
                     android:visibility="gone">
 
-                    <!-- 画中画预览容器 -->
                     <FrameLayout
                         android:id="@+id/pip_preview_frame"
                         android:layout_width="match_parent"
@@ -253,7 +261,6 @@
                         android:background="@drawable/card_background_rounded"
                         android:padding="4dp">
 
-                        <!-- 画中画占位图标 -->
                         <ImageView
                             android:id="@+id/img_pip_icon"
                             android:layout_width="48dp"
@@ -262,7 +269,6 @@
                             android:src="@drawable/ic_nav_default"
                             android:scaleType="fitCenter" />
 
-                        <!-- 画中画状态文字 -->
                         <TextView
                             android:id="@+id/text_pip_status"
                             android:layout_width="wrap_content"
@@ -275,7 +281,6 @@
                             android:layout_marginBottom="8dp" />
                     </FrameLayout>
 
-                    <!-- 画中画模式标签 -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -287,7 +292,7 @@
                         android:alpha="0.7" />
                 </LinearLayout>
 
-                <!-- 导航模式：显示导航预览 -->
+                <!-- 导航模式：仅保留结构以兼容 Java 端，默认 gone -->
                 <LinearLayout
                     android:id="@+id/nav_mode_container"
                     android:layout_width="match_parent"
@@ -817,10 +822,27 @@
                 android:layout_height="56dp"
                 android:orientation="vertical"
                 android:gravity="center"
+                android:layout_marginEnd="8dp"
                 android:background="@drawable/icon_background_selector">
 
                 <ImageView
                     android:id="@+id/img_settings"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:scaleType="fitCenter" />
+            </LinearLayout>
+
+            <!-- 显示应用弹窗按钮（九宫格图标，点击启动 AppDrawerActivity） -->
+            <LinearLayout
+                android:id="@+id/btn_show_apps"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/icon_background_selector">
+
+                <ImageView
+                    android:id="@+id/img_show_apps"
                     android:layout_width="42dp"
                     android:layout_height="42dp"
                     android:scaleType="fitCenter" />
