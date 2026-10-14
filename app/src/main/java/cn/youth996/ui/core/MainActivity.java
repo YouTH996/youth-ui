@@ -492,14 +492,26 @@ public class MainActivity extends AppCompatActivity {
             public void onMusicUpdate(String packageName, String title, String artist, Bitmap albumArt, boolean isPlaying) {
 //                Log.d("MainActivity", "=== MUSIC UPDATE: " + title + " - " + artist);
                 updateMusicPlayerUI(title, artist, isPlaying);
+                if (cardManager != null) {
+                    cardManager.updateMusicInfo(title, artist, albumArt);
+                    cardManager.updateMusicPlayState(isPlaying);
+                }
             }
-            
+
             @Override
             public void onPlaybackStateChanged(boolean isPlaying) {
 //                Log.d("MainActivity", "Playback state changed: " + isPlaying);
                 btnPlayPauseCenter.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+                if (cardManager != null) {
+                    cardManager.updateMusicPlayState(isPlaying);
+                }
             }
         });
+
+        // 底部音乐卡片改为展示真实歌曲信息，控制按钮接管真实播放控制
+        if (cardManager != null) {
+            cardManager.bindMusicCardControls(musicPlayerManager);
+        }
         
         Log.d("MainActivity", "Starting music listening...");
         musicPlayerManager.startListening();
@@ -1759,19 +1771,19 @@ public class MainActivity extends AppCompatActivity {
         ImageView img = findViewById(R.id.img_floating_state_icon);
         if (img == null) return;
         if (cn.youth996.ui.core.FloatingWindowManager.isAmapFloatShowing()) {
-            img.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+            loadImageFromAssets("webui/img/navbar/sys_nav_bar_guanbi.png", img);
         } else {
-            img.setImageResource(android.R.drawable.ic_dialog_map);
+            loadImageFromAssets("webui/img/navbar/sys_nav_bar_xuanfu.png", img);
         }
     }
 
     private void updateAcTempDisplay() {
         if (acTempText != null) {
             if (isAcOn) {
-                acTempText.setText(currentTemp + "°C");
-                acTempText.setTextColor(getResources().getColor(R.color.primary, getTheme()));
+                acTempText.setText(currentTemp + "°");
+                acTempText.setTextColor(getResources().getColor(R.color.dark_tech_text, getTheme()));
             } else {
-                acTempText.setText("--°C");
+                acTempText.setText("--°");
                 acTempText.setTextColor(getResources().getColor(R.color.text_hint, getTheme()));
             }
         }

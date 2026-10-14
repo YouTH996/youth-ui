@@ -563,10 +563,10 @@ public class CardManager {
             TextView textSongTitle = musicCard.findViewById(R.id.text_song_title);
             TextView textSongArtist = musicCard.findViewById(R.id.text_song_artist);
             ImageView imgAlbumCover = musicCard.findViewById(R.id.img_album_cover);
-            
+
             textSongTitle.setText(title);
             textSongArtist.setText(artist);
-            
+
             if (albumPath != null && !albumPath.isEmpty()) {
                 try {
                     InputStream is = activity.getAssets().open(albumPath);
@@ -578,6 +578,63 @@ public class CardManager {
                 }
             }
         }
+    }
+
+    /**
+     * 用真实的媒体数据更新音乐卡片（来自 MusicPlayerManager 的通知监听）
+     */
+    public void updateMusicInfo(String title, String artist, Bitmap albumArt) {
+        if (musicCard == null) return;
+        TextView textSongTitle = musicCard.findViewById(R.id.text_song_title);
+        TextView textSongArtist = musicCard.findViewById(R.id.text_song_artist);
+        ImageView imgAlbumCover = musicCard.findViewById(R.id.img_album_cover);
+
+        if (textSongTitle != null) textSongTitle.setText(title);
+        if (textSongArtist != null) textSongArtist.setText(artist);
+        if (imgAlbumCover != null && albumArt != null) {
+            imgAlbumCover.setImageBitmap(albumArt);
+        }
+    }
+
+    /**
+     * 同步音乐卡片的播放/暂停按钮状态
+     */
+    public void updateMusicPlayState(boolean playing) {
+        if (musicCard == null) return;
+        ImageView btnPlayPause = musicCard.findViewById(R.id.btn_play_pause);
+        if (btnPlayPause != null) {
+            btnPlayPause.setImageResource(playing ? R.drawable.ic_pause : R.drawable.ic_play);
+        }
+    }
+
+    /**
+     * 将音乐卡片的控制按钮绑定到真实的 MusicPlayerManager，
+     * 同时停止本地模拟进度，避免与真实播放状态冲突
+     */
+    public void bindMusicCardControls(MusicPlayerManager manager) {
+        if (musicCard == null || manager == null) return;
+        stopMusicProgressSimulation();
+
+        // 清除写死的演示数据，等待真实媒体信息填充
+        TextView textSongTitle = musicCard.findViewById(R.id.text_song_title);
+        TextView textSongArtist = musicCard.findViewById(R.id.text_song_artist);
+        if (textSongTitle != null) textSongTitle.setText("");
+        if (textSongArtist != null) textSongArtist.setText("");
+
+        View btnPrevious = musicCard.findViewById(R.id.btn_previous);
+        View btnPlayPause = musicCard.findViewById(R.id.btn_play_pause);
+        View btnNext = musicCard.findViewById(R.id.btn_next);
+
+        if (btnPrevious != null) {
+            btnPrevious.setOnClickListener(v -> manager.previousTrack());
+        }
+        if (btnPlayPause != null) {
+            btnPlayPause.setOnClickListener(v -> manager.playPause());
+        }
+        if (btnNext != null) {
+            btnNext.setOnClickListener(v -> manager.nextTrack());
+        }
+        musicCard.setOnClickListener(v -> manager.openMusicApp());
     }
     
     public void updateTirePressure(float fl, float fr, float rl, float rr) {
