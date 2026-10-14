@@ -471,17 +471,13 @@ public class MainActivity extends AppCompatActivity {
         TextView textSongTitle = findViewById(R.id.text_song_title_center);
         TextView textSongArtist = findViewById(R.id.text_song_artist_center);
         
-        TextView textLyric1 = findViewById(R.id.text_lyric_1);
-        TextView textLyric2 = findViewById(R.id.text_lyric_2);
-        TextView textLyricCurrent = findViewById(R.id.text_lyric_current_center);
-        TextView textLyric4 = findViewById(R.id.text_lyric_4);
-        TextView textLyric5 = findViewById(R.id.text_lyric_5);
-        
+        ViewGroup layoutLyrics = findViewById(R.id.layout_lyrics_center);
+
         Log.d("MainActivity", "Creating MusicPlayerManager...");
         musicPlayerManager = new MusicPlayerManager(this);
         musicPlayerManager.bindViews(imgAlbumCoverCenter, imgMusicSource, textMusicSource,
                                      textSongTitle, textSongArtist, btnPlayPauseCenter);
-        musicPlayerManager.bindLyricsViews(textLyric1, textLyric2, textLyricCurrent, textLyric4, textLyric5);
+        musicPlayerManager.bindLyricsViews(layoutLyrics);
         Log.d("MainActivity", "MusicPlayerManager created, setting listener...");
         
         musicPlayerManager.setOnMusicUpdateListener(new MusicPlayerManager.OnMusicUpdateListener() {
@@ -510,10 +506,8 @@ public class MainActivity extends AppCompatActivity {
     private void setupLyricsListener() {
         MediaNotificationListenerService.setLyricsListener(new MediaNotificationListenerService.OnLyricsUpdateListener() {
             @Override
-            public void onLyricsUpdate(String lyric1, String lyric2, String currentLyric, String lyric4, String lyric5, int index) {
-                runOnUiThread(() -> {
-                    musicPlayerManager.updateLyrics(lyric1, lyric2, currentLyric, lyric4, lyric5);
-                });
+            public void onLyricsUpdate(List<String> lyrics, int index) {
+                runOnUiThread(() -> musicPlayerManager.updateLyrics(lyrics, index));
             }
         });
     }

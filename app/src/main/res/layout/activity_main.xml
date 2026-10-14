@@ -352,87 +352,20 @@
                     android:maxLines="1"
                     android:ellipsize="end" />
 
-                <!-- 歌词区域 -->
+                <!-- 歌词区域：填充歌手名与控制按钮之间的剩余空间，行数由 Java 端按高度动态计算 -->
                 <LinearLayout
                     android:id="@+id/layout_lyrics_center"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:gravity="center"
                     android:layout_below="@id/text_song_artist_center"
-                    android:layout_marginTop="4dp"
-                    android:minHeight="130dp">
-
-                    <!-- 第1句歌词 -->
-                    <TextView
-                        android:id="@+id/text_lyric_1"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text=""
-                        android:textSize="11sp"
-                        android:textColor="@color/dark_tech_text_secondary"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        android:alpha="0.4" />
-
-                    <!-- 第2句歌词 -->
-                    <TextView
-                        android:id="@+id/text_lyric_2"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text=""
-                        android:textSize="11sp"
-                        android:textColor="@color/dark_tech_text_secondary"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        android:alpha="0.6" />
-
-                    <!-- 当前播放歌词（高亮） -->
-                    <TextView
-                        android:id="@+id/text_lyric_current_center"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="该配合你演出的我演视而不见"
-                        android:textSize="14sp"
-                        android:textColor="@color/dark_tech_accent"
-                        android:fontFamily="sans-serif-medium"
-                        android:gravity="center"
-                        android:layout_marginTop="4dp"
-                        android:layout_marginBottom="4dp"
-                        android:maxLines="1"
-                        android:ellipsize="end" />
-
-                    <!-- 第4句歌词 -->
-                    <TextView
-                        android:id="@+id/text_lyric_4"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text=""
-                        android:textSize="11sp"
-                        android:textColor="@color/dark_tech_text_secondary"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        android:alpha="0.6" />
-
-                    <!-- 第5句歌词 -->
-                    <TextView
-                        android:id="@+id/text_lyric_5"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text=""
-                        android:textSize="11sp"
-                        android:textColor="@color/dark_tech_text_secondary"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        android:alpha="0.4" />
-                </LinearLayout>
+                    android:layout_above="@id/layout_music_controls"
+                    android:layout_marginTop="4dp" />
 
                 <!-- 控制按钮 -->
                 <LinearLayout
+                    android:id="@+id/layout_music_controls"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
