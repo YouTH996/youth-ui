@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,6 +21,7 @@ import androidx.fragment.app.Fragment;
 
 import cn.youth996.ui.R;
 import cn.youth996.ui.adb.AdbProtocolClient;
+import cn.youth996.ui.core.FloatingWindowManager;
 import cn.youth996.ui.receiver.BootReceiver;
 
 public class SettingsSystemFragment extends Fragment {

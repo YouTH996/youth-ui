@@ -1,11 +1,11 @@
 package cn.youth996.ui.service;
 
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.MediaMetadata;
+import android.media.Rating;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
@@ -17,9 +17,9 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -203,7 +203,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
             ComponentName componentName = new ComponentName(this, MediaNotificationListenerService.class);
             List<MediaController> controllers = mediaSessionManager.getActiveSessions(componentName);
             
-            Log.d(TAG, "【媒体会话】检测到 " + controllers.size() + " 个活跃的媒体会话");
+//            Log.d(TAG, "【媒体会话】检测到 " + controllers.size() + " 个活跃的媒体会话");
             
             MediaController newController = null;
             for (MediaController controller : controllers) {
@@ -230,7 +230,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
             } else if (newController != null && mediaController != null) {
                 updateFromMediaController();
             } else if (newController == null) {
-                Log.d(TAG, "【媒体会话】未检测到音乐应用，尝试从通知获取");
+//                Log.d(TAG, "【媒体会话】未检测到音乐应用，尝试从通知获取");
                 updateFromNotification();
             }
             
@@ -263,27 +263,85 @@ public class MediaNotificationListenerService extends NotificationListenerServic
             Log.e(TAG, "Error updating from media controller: " + e.getMessage(), e);
         }
     }
-    
+
+    private Bundle getMediaMetadataBundle(MediaMetadata metadata) {
+        if (metadata == null) {
+            return Bundle.EMPTY;
+        }
+
+        Bundle result = new Bundle();
+
+        try {
+            Set<String> keys = metadata.keySet();
+
+            if (keys == null) {
+                return result;
+            }
+
+            for (String key : keys) {
+                if (key == null || !metadata.containsKey(key)) {
+                    continue;
+                }
+
+                try {
+                    // Bitmap 图片：ART、ALBUM_ART、DISPLAY_ICON 等
+                    Bitmap bitmap = metadata.getBitmap(key);
+                    if (bitmap != null) {
+                        result.putParcelable(key, bitmap);
+                        continue;
+                    }
+
+                    // Rating 类型
+                    Rating rating = metadata.getRating(key);
+                    if (rating != null) {
+                        result.putParcelable(key, rating);
+                        continue;
+                    }
+
+                    // 先读取文本类型，兼容 CharSequence
+                    CharSequence text = metadata.getText(key);
+                    if (text != null) {
+                        result.putCharSequence(key, text);
+                        continue;
+                    }
+
+                    // 字符串类型：包括 URI、MEDIA_ID 和自定义 LYRIC
+                    String string = metadata.getString(key);
+                    if (string != null) {
+                        result.putString(key, string);
+                        continue;
+                    }
+
+                    // 数值类型：DURATION、TRACK_NUMBER 等
+                    // 必须先检查 key 是否存在，避免缺失字段被误认为 0。
+                    result.putLong(key, metadata.getLong(key));
+
+                } catch (Exception e) {
+                    Log.w(TAG, "读取媒体元数据失败，key=" + key, e);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "遍历媒体元数据失败", e);
+        }
+        return result;
+    }
     private void updateFromMetadata(MediaMetadata metadata) {
         if (metadata == null) return;
         
         String title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
         String artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST);
+
         try {
+
             Bundle bundle = getMediaMetadataBundle(metadata);
             if (bundle != null) {
-                String lyrics = null;
-                
-                if (bundle.containsKey("android.media.metadata.LYRIC")) {
-                    lyrics = bundle.getString("android.media.metadata.LYRIC");
-                } else if (bundle.containsKey("android.media.metadata.LYRICS")) {
-                    lyrics = bundle.getString("android.media.metadata.LYRICS");
-                }
-                
+                String lyrics =  bundle.getString(
+                        "android.media.metadata.LYRIC");
+
                 if (lyrics != null && !lyrics.isEmpty()) {
                     parseAndNotifyLyrics(lyrics);
                 } else {
-                    Log.d(TAG, "No LYRIC found in bundle");
+                    Log.w(TAG, "No LYRIC found in bundle");
                 }
             }
         } catch (Exception e) {
@@ -559,15 +617,4 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         return mediaController;
     }
     
-    private Bundle getMediaMetadataBundle(MediaMetadata metadata) {
-        try {
-            @SuppressLint("SoonBlockedPrivateApi")
-            Field field = MediaMetadata.class.getDeclaredField("mBundle");
-            field.setAccessible(true);
-            return (Bundle) field.get(metadata);
-        } catch (Exception e) {
-            Log.e(TAG, "get bundle error", e);
-        }
-        return null;
-    }
 }
