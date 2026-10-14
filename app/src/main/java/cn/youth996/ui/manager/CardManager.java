@@ -96,7 +96,11 @@ public class CardManager {
                 tirePressureCard, frequentAppsCard}) {
             card.getLayoutParams().height = targetCardHeightPx;
             card.setPadding(cardPaddingPx, cardPaddingPx, cardPaddingPx, cardPaddingPx);
-            scaleCardInnerViews(card, buttonSizePx, iconSizePx, density);
+            // 胎压卡不参与图标尺寸重写：它的汽车俯视图需要保持自身比例，
+            // 被 scaleCardInnerViews 二次缩放后会变得过小。
+            if (card != tirePressureCard) {
+                scaleCardInnerViews(card, buttonSizePx, iconSizePx, density);
+            }
         }
         
         cardContainer.addView(navigationCard);
@@ -311,13 +315,11 @@ public class CardManager {
         TextView textTireFr = tirePressureCard.findViewById(R.id.text_tire_fr);
         TextView textTireRl = tirePressureCard.findViewById(R.id.text_tire_rl);
         TextView textTireRr = tirePressureCard.findViewById(R.id.text_tire_rr);
-        TextView textTireTemp = tirePressureCard.findViewById(R.id.text_tire_temp);
-        
+
         textTireFl.setText("2.3");
         textTireFr.setText("2.4");
         textTireRl.setText("2.3");
         textTireRr.setText("2.5");
-        textTireTemp.setText("胎温: 45°C");
         
         updateTirePressureColor(textTireFl, 2.3f);
         updateTirePressureColor(textTireFr, 2.4f);
@@ -578,20 +580,18 @@ public class CardManager {
         }
     }
     
-    public void updateTirePressure(float fl, float fr, float rl, float rr, float temp) {
+    public void updateTirePressure(float fl, float fr, float rl, float rr) {
         if (tirePressureCard != null) {
             TextView textTireFl = tirePressureCard.findViewById(R.id.text_tire_fl);
             TextView textTireFr = tirePressureCard.findViewById(R.id.text_tire_fr);
             TextView textTireRl = tirePressureCard.findViewById(R.id.text_tire_rl);
             TextView textTireRr = tirePressureCard.findViewById(R.id.text_tire_rr);
-            TextView textTireTemp = tirePressureCard.findViewById(R.id.text_tire_temp);
-            
+
             textTireFl.setText(String.format("%.1f", fl));
             textTireFr.setText(String.format("%.1f", fr));
             textTireRl.setText(String.format("%.1f", rl));
             textTireRr.setText(String.format("%.1f", rr));
-            textTireTemp.setText(String.format("胎温: %.0f°C", temp));
-            
+
             updateTirePressureColor(textTireFl, fl);
             updateTirePressureColor(textTireFr, fr);
             updateTirePressureColor(textTireRl, rl);
