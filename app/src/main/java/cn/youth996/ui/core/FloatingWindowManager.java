@@ -142,16 +142,44 @@ public class FloatingWindowManager {
      */
     public static void showAmapFloatMap(Context context) {
         // 获取屏幕尺寸
+        float density = context.getResources().getDisplayMetrics().density;
         int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
         int screenHeight = context.getResources().getDisplayMetrics().heightPixels;
-        
-        // 默认显示在屏幕左侧中部，尺寸较大便于查看
-        int x = (int) (screenWidth * 0.03);   // 3% 左边距
-        int y = (int) (screenHeight * 0.10);  // 10% 顶部边距（避开状态栏）
-        int width = (int) (screenWidth * 0.52);  // 52% 宽度
-        int height = (int) (screenHeight * 0.58); // 58% 高度
-        
+
+        // 顶部留出真实 statusBar 高度（系统可能切了刘海/挖孔，固定 32dp 不准）
+        int systemStatusBarPx = getSystemStatusBarHeightPx(context);
+
+        // 尺寸与删除前的「左侧导航卡片」完全对齐：
+        //   - 顶部 = statusBar(真实高度) + centerArea_marginTop(8dp)
+        //   - 高度 = 屏幕 70%（比 80% 更小，避开下方 taskbar 安全区）
+        //   - 左边 = centerArea_padding_h(16dp)
+        //   - 右边与音乐卡(300dp)对齐：宽度 = 屏宽 - 左边 - 音乐卡(300dp) - 间隙(8dp) - 右边距(16dp)
+        int topMarginPx = systemStatusBarPx + (int) (16 * density);
+        int y = topMarginPx;
+        int x = (int) (20 * density);                              // 16dp 左边距
+        int musicCardWidthPx = (int) (300 * density);              // 音乐卡片宽度 300dp
+        int gapPx = (int) (8 * density);                           // 中间间隙 8dp
+        int rightPaddingPx = (int) (16 * density);                 // 右边距 16dp
+        int width = screenWidth - x - musicCardWidthPx - gapPx - rightPaddingPx;
+        int height = (int) (screenHeight * 0.68f);                 // 70% 屏幕高度（与原导航卡大致一致且更紧凑）
+
         showAmapFloatMap(context, x, y, width, height);
+    }
+
+    /**
+     * 获取系统 statusBar 高度（像素）。优先用 system 资源的 status_bar_height，
+     * 失败时 fallback 到 24dp。
+     */
+    private static int getSystemStatusBarHeightPx(Context context) {
+        try {
+            int resId = context.getResources().getIdentifier(
+                    "status_bar_height", "dimen", "android");
+            if (resId > 0) {
+                return context.getResources().getDimensionPixelSize(resId);
+            }
+        } catch (Throwable ignored) {
+        }
+        return (int) (24 * context.getResources().getDisplayMetrics().density);
     }
 
     /**
