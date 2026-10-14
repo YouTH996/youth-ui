@@ -109,9 +109,6 @@ public class MainActivity extends AppCompatActivity {
     private View navModeContainer;
     private View drivingModeContainer;
     private View pipModeContainer;
-    private ImageView imgCarIcon;
-    private TextView textSpeed;
-    private TextView textDrivingStatus;
     private ImageView imgPipIcon;
     private TextView textPipStatus;
     private FrameLayout pipPreviewFrame;
@@ -404,9 +401,6 @@ public class MainActivity extends AppCompatActivity {
         navModeContainer = findViewById(R.id.nav_mode_container);
         drivingModeContainer = findViewById(R.id.driving_mode_container);
         pipModeContainer = findViewById(R.id.pip_mode_container);
-        imgCarIcon = findViewById(R.id.img_car_icon);
-        textSpeed = findViewById(R.id.text_speed);
-        textDrivingStatus = findViewById(R.id.text_driving_status);
         imgPipIcon = findViewById(R.id.img_pip_icon);
         textPipStatus = findViewById(R.id.text_pip_status);
         pipPreviewFrame = findViewById(R.id.pip_preview_frame);
@@ -803,7 +797,6 @@ public class MainActivity extends AppCompatActivity {
                                 Log.d(TAG, "高德地图已切换到后台");
                                 isAutoNaviFloating = false;
                                 isAutoNaviPipMode = false;
-                                runOnUiThread(() -> switchToDrivingMode());
                             }
                         }
                     }
@@ -848,8 +841,6 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (isAmapRunning) {
                     checkAmapPipMode();
-                } else {
-                    switchToDrivingMode();
                 }
             });
         }
@@ -1057,28 +1048,6 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
-     * 切换到驾驶模式（默认模式）
-     */
-    private void switchToDrivingMode() {
-        if (currentNavMode == MODE_DRIVING) {
-            return;
-        }
-        
-        if (navModeContainer != null && drivingModeContainer != null && pipModeContainer != null) {
-            navModeContainer.setVisibility(View.GONE);
-            drivingModeContainer.setVisibility(View.VISIBLE);
-            pipModeContainer.setVisibility(View.GONE);
-            
-            if (textDrivingStatus != null) {
-                textDrivingStatus.setText("驾驶模式");
-            }
-            
-            currentNavMode = MODE_DRIVING;
-            updateSimulatedSpeed();
-        }
-    }
-    
-    /**
      * 切换到导航模式（高德地图悬浮窗模式）
      */
     private void switchToNavigationMode() {
@@ -1116,33 +1085,6 @@ public class MainActivity extends AppCompatActivity {
             
             Log.d(TAG, "已切换到画中画模式");
         }
-    }
-    
-    /**
-     * 更新模拟的车速（实际应用中应该从车辆CAN总线或OBD读取）
-     */
-    private void updateSimulatedSpeed() {
-        if (textSpeed == null || currentGear != 3) {
-            return;
-        }
-        
-        int speed = 0;
-        switch (currentGear) {
-            case 0:
-                speed = 0;
-                break;
-            case 1:
-                speed = 15 + (int)(Math.random() * 10);
-                break;
-            case 2:
-                speed = 0;
-                break;
-            case 3:
-                speed = 60 + (int)(Math.random() * 40);
-                break;
-        }
-        
-        textSpeed.setText(String.valueOf(speed));
     }
     
     /**
@@ -1598,7 +1540,6 @@ public class MainActivity extends AppCompatActivity {
                 updateGearDisplay();
                 String[] gears = {"P档", "R档", "N档", "D档"};
                 Toast.makeText(this, gears[currentGear], Toast.LENGTH_SHORT).show();
-                updateSimulatedSpeed();
             });
         }
         

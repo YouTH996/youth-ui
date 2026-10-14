@@ -199,48 +199,6 @@
                     android:gravity="center"
                     android:padding="12dp"
                     android:visibility="gone">
-
-                    <!-- 车辆图标（占位） -->
-                    <ImageView
-                        android:id="@+id/img_car_icon"
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:scaleType="fitCenter"
-                        android:visibility="gone" />
-
-                    <!-- 车速显示（占位） -->
-                    <TextView
-                        android:id="@+id/text_speed"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textSize="36sp"
-                        android:textColor="@color/dark_tech_accent"
-                        android:fontFamily="sans-serif-black"
-                        android:layout_marginTop="4dp"
-                        android:visibility="gone" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="km/h"
-                        android:textSize="14sp"
-                        android:textColor="@color/dark_tech_text"
-                        android:fontFamily="sans-serif-medium"
-                        android:visibility="gone" />
-
-                    <!-- 状态标签（占位） -->
-                    <TextView
-                        android:id="@+id/text_driving_status"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="驾驶模式"
-                        android:textSize="11sp"
-                        android:textColor="@color/dark_tech_text"
-                        android:fontFamily="sans-serif-medium"
-                        android:layout_marginTop="4dp"
-                        android:alpha="0.7"
-                        android:visibility="gone" />
                 </LinearLayout>
 
                 <!-- 画中画模式：仅保留结构以兼容 Java 端，默认 gone -->
