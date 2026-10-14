@@ -437,8 +437,8 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center"
-                    android:layout_below="@id/layout_lyrics_center"
-                    android:layout_marginTop="2dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="100dp"
                     android:layout_centerHorizontal="true">
 
                     <ImageView
