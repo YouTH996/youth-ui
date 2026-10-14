@@ -19,7 +19,6 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -208,8 +207,8 @@ public class MediaNotificationListenerService extends NotificationListenerServic
             MediaController newController = null;
             for (MediaController controller : controllers) {
                 String pkg = controller.getPackageName();
-                Log.d(TAG, "【媒体会话】检测到应用: " + pkg + " (音乐应用: " + isMusicApp(pkg) + ")");
-                if (isMusicApp(pkg)) {
+                boolean music = isMusicApp(pkg);
+                if (music) {
                     newController = controller;
                     break;
                 }
@@ -222,8 +221,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                 
                 mediaController = newController;
                 currentPackage = mediaController.getPackageName();
-                Log.i(TAG, "【媒体会话】✓ 连接到音乐应用: " + currentPackage);
-                
+
                 mediaController.registerCallback(mediaCallback);
                 
                 updateFromMediaController();
@@ -264,6 +262,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         }
     }
 
+
     private Bundle getMediaMetadataBundle(MediaMetadata metadata) {
         if (metadata == null) {
             return Bundle.EMPTY;
@@ -272,59 +271,71 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         Bundle result = new Bundle();
 
         try {
-            Set<String> keys = metadata.keySet();
-
-            if (keys == null) {
-                return result;
-            }
-
-            for (String key : keys) {
+            for (String key : metadata.keySet()) {
                 if (key == null || !metadata.containsKey(key)) {
                     continue;
                 }
 
                 try {
-                    // Bitmap 图片：ART、ALBUM_ART、DISPLAY_ICON 等
-                    Bitmap bitmap = metadata.getBitmap(key);
-                    if (bitmap != null) {
-                        result.putParcelable(key, bitmap);
+                    // 图片字段：只对明确的图片 key 调用 getBitmap()
+                    if (MediaMetadata.METADATA_KEY_ART.equals(key)
+                            || MediaMetadata.METADATA_KEY_ALBUM_ART.equals(key)
+                            || MediaMetadata.METADATA_KEY_DISPLAY_ICON.equals(key)) {
+
+                        Bitmap bitmap = metadata.getBitmap(key);
+                        if (bitmap != null) {
+                            result.putParcelable(key, bitmap);
+                        }
                         continue;
                     }
 
-                    // Rating 类型
-                    Rating rating = metadata.getRating(key);
-                    if (rating != null) {
-                        result.putParcelable(key, rating);
+                    // Rating 字段：只对明确的 Rating key 调用 getRating()
+                    if (MediaMetadata.METADATA_KEY_RATING.equals(key)
+                            || MediaMetadata.METADATA_KEY_USER_RATING.equals(key)) {
+
+                        Rating rating = metadata.getRating(key);
+                        if (rating != null) {
+                            result.putParcelable(key, rating);
+                        }
                         continue;
                     }
 
-                    // 先读取文本类型，兼容 CharSequence
+                    // 已知的数值字段
+                    if (MediaMetadata.METADATA_KEY_DURATION.equals(key)
+                            || MediaMetadata.METADATA_KEY_TRACK_NUMBER.equals(key)
+                            || MediaMetadata.METADATA_KEY_NUM_TRACKS.equals(key)
+                            || MediaMetadata.METADATA_KEY_DISC_NUMBER.equals(key)
+                            || MediaMetadata.METADATA_KEY_YEAR.equals(key)
+                            || MediaMetadata.METADATA_KEY_BT_FOLDER_TYPE.equals(key)) {
+
+                        result.putLong(key, metadata.getLong(key));
+                        continue;
+                    }
+
+                    // 其他字段优先按文本读取
                     CharSequence text = metadata.getText(key);
                     if (text != null) {
                         result.putCharSequence(key, text);
                         continue;
                     }
 
-                    // 字符串类型：包括 URI、MEDIA_ID 和自定义 LYRIC
-                    String string = metadata.getString(key);
-                    if (string != null) {
-                        result.putString(key, string);
-                        continue;
+                    // 自定义字段，包括歌词、媒体 ID、URI
+                    String value = metadata.getString(key);
+                    if (value != null) {
+                        result.putString(key, value);
                     }
 
-                    // 数值类型：DURATION、TRACK_NUMBER 等
-                    // 必须先检查 key 是否存在，避免缺失字段被误认为 0。
-                    result.putLong(key, metadata.getLong(key));
-
-                } catch (Exception e) {
-                    Log.w(TAG, "读取媒体元数据失败，key=" + key, e);
+                } catch (RuntimeException e) {
+                    Log.w(TAG, "跳过无法读取的字段: " + key, e);
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "遍历媒体元数据失败", e);
+            Log.e(TAG, "导出媒体元数据失败", e);
         }
+
         return result;
     }
+
     private void updateFromMetadata(MediaMetadata metadata) {
         if (metadata == null) return;
         
@@ -572,24 +583,50 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     
     private boolean isMusicApp(String packageName) {
         if (packageName == null) return false;
-        
-        packageName = packageName.toLowerCase();
-        
-        String[] musicPackages = {
-            "netease", "cloudmusic", "music",
-            "qqmusic", "tencent.qqmusic",
-            "kugou", "kugou.player",
-            "kuwo", "kuwo.player",
-            "baidu.music",
-            "player", "media", "audio"
+
+        String lower = packageName.toLowerCase();
+
+        // 优先级 1：精确匹配已知音乐 App 包名（最准确，避免误判）
+        String[] exactMusicPackages = {
+            "com.netease.cloudmusic",        // 网易云音乐
+            "com.netease.cloudmusic.activity",// 网易云音乐车机版
+            "com.tencent.qqmusic",            // QQ 音乐
+            "com.tencent.qqmusiccar",         // QQ 音乐车机版
+            "com.tencent.qqmusiccar.activity",
+            "com.kugou.android",              // 酷狗
+            "com.kugou.android.lite",
+            "com.kugou.player",               // 酷狗车机版
+            "cn.kuwo.player",                 // 酷我
+            "cn.kuwo.kwmusiccar",             // 酷我车机版
+            "com.baidu.music",                // 百度音乐
+            "com.baidu.music.pad",
+            "com.meizu.media.music",          // 魅族音乐
+            "com.huawei.himusic",             // 华为音乐
+            "com.huawei.music",
+            "com.xiaomi.music",               // 小米音乐
+            "com.miui.player",                // 小米音乐
+            "com.oppo.music",                 // OPPO 音乐
+            "com.vivo.music",                 // vivo 音乐
+            "com.coloros.music",
+            "fm.qingting.qtradio",            // 蜻蜓 FM
+            "com.ting.mp3.player",            // 听见音乐
         };
-        
-        for (String musicPackage : musicPackages) {
-            if (packageName.contains(musicPackage)) {
+        for (String exact : exactMusicPackages) {
+            if (lower.equals(exact)) {
                 return true;
             }
         }
-        
+
+        // 优先级 2：通用关键字兜底（覆盖未知车机定制音乐包名）
+        String[] musicKeywords = {
+            "music", "player", "audio"
+        };
+        for (String keyword : musicKeywords) {
+            if (lower.contains(keyword)) {
+                return true;
+            }
+        }
+
         return false;
     }
     
