@@ -137,10 +137,20 @@ public class MusicPlayerManager {
     }
 
     private void updateIslandLyric(String text) {
-        if (islandLyric != null) {
-            islandLyric.setText(text == null ? "" : text);
-        }
+        setTextIfChanged(islandLyric, text == null ? "" : text);
         updateIslandVisibility();
+    }
+
+    /**
+     * 仅在文本变化时才 setText，避免跑马灯/单行 TextView 反复触发
+     * StaticLayout 的 "maxLineHeight should not be -1" 警告
+     */
+    private void setTextIfChanged(TextView tv, String text) {
+        if (tv == null) return;
+        CharSequence old = tv.getText();
+        if (old == null || !old.toString().equals(text)) {
+            tv.setText(text);
+        }
     }
 
     private void updateIslandVisibility() {
@@ -222,18 +232,11 @@ public class MusicPlayerManager {
     }
     
     private void updateMusicUI() {
-        if (textSongTitle != null) {
-            textSongTitle.setText(currentTitle);
-        }
-
-        if (islandTitle != null) {
-            islandTitle.setText(currentTitle);
-        }
+        setTextIfChanged(textSongTitle, currentTitle);
+        setTextIfChanged(islandTitle, currentTitle);
         updateIslandVisibility();
-        
-        if (textSongArtist != null) {
-            textSongArtist.setText(currentArtist);
-        }
+
+        setTextIfChanged(textSongArtist, currentArtist);
         
         if (imgAlbumCover != null && currentAlbumArt != null) {
             imgAlbumCover.setImageBitmap(currentAlbumArt);
@@ -241,7 +244,7 @@ public class MusicPlayerManager {
         
         if (textMusicSource != null && !currentPackageName.isEmpty()) {
             String appName = getAppName(currentPackageName);
-            textMusicSource.setText(appName);
+            setTextIfChanged(textMusicSource, appName);
         }
         
         if (imgMusicSource != null && !currentPackageName.isEmpty()) {
