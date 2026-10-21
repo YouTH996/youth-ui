@@ -327,6 +327,22 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 android.util.Log.w(TAG, "【悬浮窗权限】用户未授权");
             }
+            return;
+        }
+        if (requestCode == cn.youth996.ui.core.PipVirtualDisplayManager.REQUEST_MEDIA_PROJECTION) {
+            // 画中画屏幕捕获授权结果：授权成功后重试内嵌显示
+            if (cn.youth996.ui.core.PipVirtualDisplayManager.onProjectionResult(this, resultCode, data)) {
+                if (pipPreviewFrame != null) {
+                    cn.youth996.ui.core.PipVirtualDisplayManager.showPipMap(this, pipPreviewFrame);
+                    refreshFloatingMapButtonIcon();
+                    Toast.makeText(this, "画中画地图已显示", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                if (pipModeContainer != null) {
+                    pipModeContainer.setVisibility(View.GONE);
+                }
+                Toast.makeText(this, "未获得屏幕捕获授权，无法使用画中画", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -1745,7 +1761,9 @@ public class MainActivity extends AppCompatActivity {
         View btnFloatingMap = findViewById(R.id.btn_floating_map);
         if (btnFloatingMap != null) {
             btnFloatingMap.setOnClickListener(v -> {
-                if (cn.youth996.ui.core.FloatingWindowManager.isAmapFloatShowing()) {
+                if (cn.youth996.ui.core.FloatingWindowManager.isMapPipMode(this)) {
+                    toggleEmbeddedPipMap();
+                } else if (cn.youth996.ui.core.FloatingWindowManager.isAmapFloatShowing()) {
                     // 当前已显示 → 点击关闭
                     Log.i(TAG, "【悬浮地图】点击关闭悬浮");
                     cn.youth996.ui.core.FloatingWindowManager.hideAmapFloatMap(this);
@@ -1777,10 +1795,67 @@ public class MainActivity extends AppCompatActivity {
     private void refreshFloatingMapButtonIcon() {
         ImageView img = findViewById(R.id.img_floating_state_icon);
         if (img == null) return;
-        if (cn.youth996.ui.core.FloatingWindowManager.isAmapFloatShowing()) {
+        if (cn.youth996.ui.core.FloatingWindowManager.isAmapFloatShowing()
+                || cn.youth996.ui.core.PipVirtualDisplayManager.isShowing()) {
             loadImageFromAssets("webui/img/navbar/sys_nav_bar_guanbi.png", img);
         } else {
             loadImageFromAssets("webui/img/navbar/sys_nav_bar_xuanfu.png", img);
+        }
+    }
+
+    /**
+     * 切换内嵌画中画地图（画中画模式下 taskbar 地图按钮的行为）
+     *
+     * 将地图 App 启动到 VirtualDisplay，画面直接渲染进左侧 pip 卡片容器。
+     */
+    private void toggleEmbeddedPipMap() {
+        if (cn.youth996.ui.core.PipVirtualDisplayManager.isShowing()) {
+            Log.i(TAG, "【画中画】点击关闭");
+            cn.youth996.ui.core.PipVirtualDisplayManager.hidePipMap(this);
+            if (pipModeContainer != null) {
+                pipModeContainer.setVisibility(View.GONE);
+            }
+            Toast.makeText(this, "画中画地图已关闭", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.i(TAG, "【画中画】点击开启");
+        if (!cn.youth996.ui.core.FloatingWindowManager.isAmapInstalled(this)) {
+            Toast.makeText(this, "请先安装高德地图车机版", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (pipModeContainer == null || pipPreviewFrame == null) {
+            Toast.makeText(this, "画中画容器不可用", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // 显示画中画卡片容器，隐藏占位图标与文字
+        if (navModeContainer != null) navModeContainer.setVisibility(View.GONE);
+        if (drivingModeContainer != null) drivingModeContainer.setVisibility(View.GONE);
+        pipModeContainer.setVisibility(View.VISIBLE);
+        if (imgPipIcon != null) imgPipIcon.setVisibility(View.GONE);
+        if (textPipStatus != null) textPipStatus.setVisibility(View.GONE);
+
+        if (cn.youth996.ui.core.PipVirtualDisplayManager.showPipMap(this, pipPreviewFrame)) {
+            if (cn.youth996.ui.core.PipVirtualDisplayManager.hasProjection()) {
+                Toast.makeText(this, "画中画地图已显示", Toast.LENGTH_SHORT).show();
+            }
+            // 未授权时会弹系统录屏授权框，结果在 onActivityResult 中处理
+        } else {
+            pipModeContainer.setVisibility(View.GONE);
+            Toast.makeText(this, "未找到地图应用", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 供设置页调用：切换地图模式时，若画中画正在显示则关闭
+     */
+    public void hideEmbeddedPipMap() {
+        if (cn.youth996.ui.core.PipVirtualDisplayManager.isShowing()) {
+            cn.youth996.ui.core.PipVirtualDisplayManager.hidePipMap(this);
+            if (pipModeContainer != null) {
+                pipModeContainer.setVisibility(View.GONE);
+            }
+            refreshFloatingMapButtonIcon();
         }
     }
 

@@ -50,6 +50,7 @@ public class SettingsSystemFragment extends Fragment {
     private LinearLayout layoutFloatMapApp;
     private ImageView imgFloatMapIcon;
     private TextView textFloatMapPackage;
+    private Switch switchMapPipMode;
 
     private SharedPreferences prefs;
 
@@ -89,6 +90,7 @@ public class SettingsSystemFragment extends Fragment {
         layoutFloatMapApp = view.findViewById(R.id.layout_float_map_app);
         imgFloatMapIcon = view.findViewById(R.id.img_float_map_icon);
         textFloatMapPackage = view.findViewById(R.id.text_float_map_package);
+        switchMapPipMode = view.findViewById(R.id.switch_map_pip_mode);
     }
 
     private void loadSettings() {
@@ -111,6 +113,9 @@ public class SettingsSystemFragment extends Fragment {
         if (switchMobileData != null) switchMobileData.setChecked(mobileData);
         if (switchTouchSound != null) switchTouchSound.setChecked(touchSound);
         if (switchVibration != null) switchVibration.setChecked(vibration);
+        if (switchMapPipMode != null && getContext() != null) {
+            switchMapPipMode.setChecked(FloatingWindowManager.isMapPipMode(requireContext()));
+        }
 
         refreshFloatMapApp();
     }
@@ -214,6 +219,23 @@ public class SettingsSystemFragment extends Fragment {
 
         if (layoutFloatMapApp != null) {
             layoutFloatMapApp.setOnClickListener(v -> showMapAppPickerDialog());
+        }
+
+        if (switchMapPipMode != null) {
+            switchMapPipMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (getContext() == null) return;
+                FloatingWindowManager.setMapPipMode(requireContext(), isChecked);
+                // 切换模式时若地图正在显示，先关闭当前形态，由用户重新打开
+                if (FloatingWindowManager.isAmapFloatShowing()) {
+                    FloatingWindowManager.hideAmapFloatMap(requireContext());
+                }
+                if (getActivity() instanceof cn.youth996.ui.core.MainActivity) {
+                    ((cn.youth996.ui.core.MainActivity) getActivity()).hideEmbeddedPipMap();
+                }
+                Toast.makeText(requireContext(),
+                        isChecked ? "已切换为画中画地图模式" : "已切换为悬浮地图模式",
+                        Toast.LENGTH_SHORT).show();
+            });
         }
     }
 

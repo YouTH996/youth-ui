@@ -395,6 +395,37 @@ public class AdbEnhancedClient {
         });
     }
 
+    /**
+     * 轻量执行单条 shell 命令（连接 → 执行 → 断开），不走权限授予流程
+     *
+     * 适用于画中画等只需要 shell 身份执行单条命令的场景（如 am start --display）。
+     * 需要设备已开启 ADB TCP 端口（5555）。
+     */
+    public void runShellCommand(String command, AdbEnhancedCallback callback) {
+        executor.execute(() -> {
+            try {
+                Socket socket = new Socket(deviceIp, devicePort);
+                socket.setSoTimeout(DEFAULT_TIMEOUT);
+                AdbCrypto crypto = loadOrCreateAdbCrypto();
+                adbConnection = AdbConnection.create(socket, crypto);
+                adbConnection.connect();
+                isConnected.set(true);
+
+                String result = executeCommand(command);
+                if (callback != null) {
+                    callback.onCommandExecuted(true, result);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "runShellCommand 失败: " + e.getMessage());
+                if (callback != null) {
+                    callback.onCommandExecuted(false, e.getMessage());
+                }
+            } finally {
+                closeConnection();
+            }
+        });
+    }
+
     public void setupComplete(String packageName, boolean reboot, AdbEnhancedCallback callback) {
         connect(packageName, new AdbEnhancedCallback() {
             @Override

@@ -54,6 +54,9 @@ public class FloatingWindowManager {
     /** 悬浮地图包名 key */
     private static final String KEY_MAP_PACKAGE = "float_map_package";
 
+    /** 画中画模式 key（true=画中画小窗，false=悬浮大面板） */
+    private static final String KEY_MAP_PIP_MODE = "map_pip_mode";
+
     /** 显示悬浮窗广播 Action */
     private static final String ACTION_SHOW_MAP = "com.autonavi.plus.showmap";
     
@@ -81,6 +84,30 @@ public class FloatingWindowManager {
         context.getSharedPreferences(MAP_PREFS_NAME, Context.MODE_PRIVATE)
                 .edit()
                 .putString(KEY_MAP_PACKAGE, packageName)
+                .apply();
+    }
+
+    /**
+     * 查询是否为画中画地图模式
+     *
+     * @param context 上下文对象
+     * @return true=画中画小窗模式，false=悬浮大面板模式（默认）
+     */
+    public static boolean isMapPipMode(Context context) {
+        return context.getSharedPreferences(MAP_PREFS_NAME, Context.MODE_PRIVATE)
+                .getBoolean(KEY_MAP_PIP_MODE, false);
+    }
+
+    /**
+     * 保存画中画地图模式开关
+     *
+     * @param context    上下文对象
+     * @param isPipMode  true=画中画小窗模式，false=悬浮大面板模式
+     */
+    public static void setMapPipMode(Context context, boolean isPipMode) {
+        context.getSharedPreferences(MAP_PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(KEY_MAP_PIP_MODE, isPipMode)
                 .apply();
     }
 
@@ -170,11 +197,17 @@ public class FloatingWindowManager {
     /**
      * 显示高德地图悬浮窗（使用默认位置）
      *
-     * 默认显示在屏幕左侧中部，尺寸较大便于查看
+     * 根据设置中的模式决定显示形态：
+     *   - 悬浮地图模式：屏幕左侧大面板，便于查看
+     *   - 画中画模式：屏幕右上角小窗（类视频画中画样式）
      *
      * @param context 上下文对象
      */
     public static void showAmapFloatMap(Context context) {
+        if (isMapPipMode(context)) {
+            showAmapPipMap(context);
+            return;
+        }
         // 获取屏幕尺寸
         float density = context.getResources().getDisplayMetrics().density;
         int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
@@ -198,6 +231,28 @@ public class FloatingWindowManager {
         int height = (int) (screenHeight * 0.68f);                 // 70% 屏幕高度（与原导航卡大致一致且更紧凑）
 
         showAmapFloatMap(context, x, y, width, height);
+    }
+
+    /**
+     * 显示高德地图画中画小窗
+     *
+     * 类视频画中画样式：宽度约为屏宽 40%，16:9 比例，停靠在屏幕右上角
+     *
+     * @param context 上下文对象
+     */
+    public static void showAmapPipMap(Context context) {
+        float density = context.getResources().getDisplayMetrics().density;
+        int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
+
+        int width = (int) (screenWidth * 0.40f);
+        int height = (int) (width * 9f / 16f);
+        int marginPx = (int) (16 * density);
+        int x = screenWidth - width - marginPx;
+        int y = getSystemStatusBarHeightPx(context) + marginPx;
+
+        // 注意：高德 showmap 广播的 w/h 实际是窗口右/下边缘坐标（并非宽高），
+        // 实测其内部按 w-x / h-y 计算实际窗口尺寸，x 较大时直接传宽高会得到负值导致创建失败
+        showAmapFloatMap(context, x, y, x + width, y + height);
     }
 
     /**
