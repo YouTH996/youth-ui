@@ -187,6 +187,69 @@
                 android:background="@color/dark_tech_bg_light"
                 android:layout_marginVertical="16dp" />
 
+            <!-- 地图设置 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="地图设置"
+                android:textSize="14sp"
+                android:textColor="@color/dark_tech_accent"
+                android:textStyle="bold"
+                android:paddingBottom="12dp" />
+
+            <LinearLayout
+                android:id="@+id/layout_float_map_app"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="12dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/img_float_map_icon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="12dp"
+                    android:contentDescription="地图图标" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="默认地图"
+                        android:textSize="14sp"
+                        android:textColor="@color/dark_tech_text" />
+
+                    <TextView
+                        android:id="@+id/text_float_map_package"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:textColor="@color/dark_tech_text_secondary"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_right_white"
+                    android:contentDescription="进入" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_tech_bg_light"
+                android:layout_marginVertical="16dp" />
+
             <!-- 其他设置 -->
             <TextView
                 android:layout_width="match_parent"

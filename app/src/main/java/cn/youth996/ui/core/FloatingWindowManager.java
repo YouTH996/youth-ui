@@ -45,14 +45,44 @@ public class FloatingWindowManager {
     /** 服务类名 */
     private static final String SERVICE_CLASS = "cn.youth996.ui.service.FloatingMapService";
 
-    /** 高德地图包名 */
-    private static final String AMAP_PACKAGE = "com.autonavi.amapauto.chenmo";
-    
+    /** 默认悬浮地图包名（高德地图车机版） */
+    public static final String DEFAULT_MAP_PACKAGE = "com.autonavi.amapauto.chenmo";
+
+    /** 悬浮地图设置 SharedPreferences 文件名 */
+    private static final String MAP_PREFS_NAME = "map_settings";
+
+    /** 悬浮地图包名 key */
+    private static final String KEY_MAP_PACKAGE = "float_map_package";
+
     /** 显示悬浮窗广播 Action */
     private static final String ACTION_SHOW_MAP = "com.autonavi.plus.showmap";
     
     /** 关闭悬浮窗广播 Action */
     private static final String ACTION_CLOSE_MAP = "com.autonavi.plus.closemap";
+
+    /**
+     * 获取当前配置的悬浮地图包名
+     *
+     * @param context 上下文对象
+     * @return 用户选择的悬浮地图包名，未设置时返回默认高德车机版包名
+     */
+    public static String getMapPackage(Context context) {
+        return context.getSharedPreferences(MAP_PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(KEY_MAP_PACKAGE, DEFAULT_MAP_PACKAGE);
+    }
+
+    /**
+     * 保存悬浮地图包名
+     *
+     * @param context     上下文对象
+     * @param packageName 悬浮地图应用包名
+     */
+    public static void setMapPackage(Context context, String packageName) {
+        context.getSharedPreferences(MAP_PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_MAP_PACKAGE, packageName)
+                .apply();
+    }
 
     /** 高德悬浮窗当前是否正在显示（由本应用控制） */
     private static boolean isAmapFloatShowing = false;
@@ -114,8 +144,12 @@ public class FloatingWindowManager {
         
         try {
             Intent intent = new Intent(ACTION_SHOW_MAP);
-            intent.setPackage(AMAP_PACKAGE);
-            
+            intent.setPackage(getMapPackage(context));
+            //region debug-point float-map-show-pkg
+            Log.i(TAG, "【debug】show setPackage=" + getMapPackage(context)
+                    + " isShowing=" + isAmapFloatShowing + " isEnabled=" + isAmapFloatEnabled);
+            //endregion
+
             // 设置悬浮窗位置和尺寸
             intent.putExtra("x", x);
             intent.putExtra("y", y);
@@ -218,8 +252,11 @@ public class FloatingWindowManager {
         
         try {
             Intent intent = new Intent(ACTION_CLOSE_MAP);
-            intent.setPackage(AMAP_PACKAGE);
-            
+            intent.setPackage(getMapPackage(context));
+            //region debug-point float-map-hide-pkg
+            Log.i(TAG, "【debug】hide setPackage=" + getMapPackage(context));
+            //endregion
+
             context.sendBroadcast(intent);
             isAmapFloatShowing = false;
             isAmapFloatEnabled = false;
@@ -252,7 +289,10 @@ public class FloatingWindowManager {
         
         try {
             Intent intent = new Intent(ACTION_CLOSE_MAP);
-            intent.setPackage(AMAP_PACKAGE);
+            intent.setPackage(getMapPackage(context));
+            //region debug-point float-map-pause-pkg
+            Log.i(TAG, "【debug】pause setPackage=" + getMapPackage(context));
+            //endregion
             context.sendBroadcast(intent);
             isAmapFloatShowing = false;
             Log.i(TAG, "【高德悬浮窗】自动隐藏广播已发送");
@@ -333,12 +373,13 @@ public class FloatingWindowManager {
      * @return true表示已安装，false表示未安装
      */
     public static boolean isAmapInstalled(Context context) {
+        String mapPackage = getMapPackage(context);
         try {
-            context.getPackageManager().getPackageInfo(AMAP_PACKAGE, 0);
-            Log.i(TAG, "【高德悬浮窗】高德地图已安装: " + AMAP_PACKAGE);
+            context.getPackageManager().getPackageInfo(mapPackage, 0);
+            Log.i(TAG, "【悬浮地图】地图应用已安装: " + mapPackage);
             return true;
         } catch (Exception e) {
-            Log.w(TAG, "【高德悬浮窗】高德地图未安装: " + AMAP_PACKAGE);
+            Log.w(TAG, "【悬浮地图】地图应用未安装: " + mapPackage);
             return false;
         }
     }

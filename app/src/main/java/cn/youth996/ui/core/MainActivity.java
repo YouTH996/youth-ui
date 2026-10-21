@@ -113,8 +113,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textPipStatus;
     private FrameLayout pipPreviewFrame;
     
-    // 高德地图悬浮窗检测
-    private static final String AMAP_PACKAGE = "com.autonavi.amapauto.chenmo";
+    // 高德地图悬浮窗检测（主包名在系统设置-地图设置中可配置）
     private static final String AMAP_STANDALONE_PACKAGE = "com.autonavi.map";
     private static final String AMAP_FLOAT_WINDOW_ACTIVITY = "com.autonavi.auto.ui.SplashActivity";
     private boolean isAutoNaviFloating = false;
@@ -801,7 +800,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onAppChanged(String packageName, String className) {
                         Log.d(TAG, "检测到应用切换: " + packageName);
                         
-                        if (packageName.equals(AMAP_PACKAGE) || packageName.equals(AMAP_STANDALONE_PACKAGE)) {
+                        if (packageName.equals(getMapPackage()) || packageName.equals(AMAP_STANDALONE_PACKAGE)) {
                             Log.d(TAG, "高德地图已切换到前台");
                             isAutoNaviFloating = true;
                             checkAmapPipMode(className);
@@ -845,8 +844,8 @@ public class MainActivity extends AppCompatActivity {
     private void checkAutoNaviFloating() {
         String topPackage = getTopPackageName();
         
-        boolean isAmapRunning = topPackage != null && 
-            (topPackage.equals(AMAP_PACKAGE) || topPackage.equals(AMAP_STANDALONE_PACKAGE));
+        boolean isAmapRunning = topPackage != null &&
+            (topPackage.equals(getMapPackage()) || topPackage.equals(AMAP_STANDALONE_PACKAGE));
         
         if (isAmapRunning != isAutoNaviFloating || isAmapRunning) {
             isAutoNaviFloating = isAmapRunning;
@@ -879,9 +878,9 @@ public class MainActivity extends AppCompatActivity {
                         String packageName = taskInfo.topActivity.getPackageName();
                         String activityName = taskInfo.topActivity.getClassName();
                         
-                        if (packageName.equals(AMAP_PACKAGE) || 
+                        if (packageName.equals(getMapPackage()) ||
                             packageName.equals(AMAP_STANDALONE_PACKAGE)) {
-                            
+
                             foundAmap = true;
                             
                             if (activityName.contains("pip") || 
@@ -967,13 +966,21 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
+     * 获取用户配置的悬浮地图包名（系统设置-地图设置中选择）
+     */
+    private String getMapPackage() {
+        return cn.youth996.ui.core.FloatingWindowManager.getMapPackage(this);
+    }
+
+    /**
      * 获取前台应用的包名
      */
     private String getTopPackageName() {
-        // 直接检查高德地图包名是否在运行
-        if (isPackageRunning(AMAP_PACKAGE)) {
-            Log.d(TAG, "高德地图车机版正在运行: " + AMAP_PACKAGE);
-            return AMAP_PACKAGE;
+        // 直接检查配置的地图包名是否在运行
+        String mapPackage = getMapPackage();
+        if (isPackageRunning(mapPackage)) {
+            Log.d(TAG, "地图应用正在运行: " + mapPackage);
+            return mapPackage;
         }
         
         if (isPackageRunning(AMAP_STANDALONE_PACKAGE)) {
@@ -1107,8 +1114,8 @@ public class MainActivity extends AppCompatActivity {
         try {
             PackageManager pm = getPackageManager();
             
-            Intent intent = pm.getLaunchIntentForPackage(AMAP_PACKAGE);
-            
+            Intent intent = pm.getLaunchIntentForPackage(getMapPackage());
+
             if (intent == null) {
                 intent = pm.getLaunchIntentForPackage(AMAP_STANDALONE_PACKAGE);
             }
@@ -1143,9 +1150,9 @@ public class MainActivity extends AppCompatActivity {
                     if (taskInfo.topActivity != null) {
                         String packageName = taskInfo.topActivity.getPackageName();
                         
-                        if (packageName.equals(AMAP_PACKAGE) || 
+                        if (packageName.equals(getMapPackage()) ||
                             packageName.equals(AMAP_STANDALONE_PACKAGE)) {
-                            
+
                             activityManager.moveTaskToFront(
                                 taskInfo.id, 
                                 android.app.ActivityManager.MOVE_TASK_WITH_HOME
