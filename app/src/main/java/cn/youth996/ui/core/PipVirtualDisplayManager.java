@@ -393,29 +393,49 @@ public class PipVirtualDisplayManager {
     }
 
     /**
-     * 推送触摸服务 jar 并以指定虚拟屏启动（重复调用会先杀旧服务）
+     * 推送触摸服务 jar 并以指定虚拟屏启动
      *
+     * 耗时优化（分块推送每块都要新建 ADB 连接，全量部署需数秒，期间触摸被静默丢弃）：
+     *   1. 同 displayId 的触摸服务已在运行 → 直接复用，整段跳过
+     *   2. 设备上 jar 的 MD5 与 assets 内一致 → 跳过分块推送，仅重启服务
      * jar 经 base64 分块追加写入：整条命令塞 4KB base64 会被部分 adbd 拒绝
      * （Stream open actively rejected），分块推送实测可靠
      */
     private static void deployTouchServer(Activity activity, int displayId) {
         touchExecutor.execute(() -> {
             try {
-                byte[] jarBytes = readAsset(activity, TOUCH_JAR_ASSET);
-                String base64 = Base64.encodeToString(jarBytes, Base64.NO_WRAP);
-                // 分块写入 b64 临时文件
-                final int chunkSize = 900;
-                for (int i = 0; i < base64.length(); i += chunkSize) {
-                    String part = base64.substring(i, Math.min(i + chunkSize, base64.length()));
-                    String redirect = (i == 0) ? ">" : ">>";
-                    runShellSync(activity,
-                            "echo -n " + part + " " + redirect + " /data/local/tmp/pip_touch.b64; echo OK");
+                // 正则写成 TouchServe[r]，避免匹配到执行该命令的 shell 自身
+                String running = runShellSync(activity,
+                        "pgrep -f 'cn.youth996.pip.TouchServe[r] " + displayId + "'; echo END");
+                if (running != null
+                        && running.substring(0, running.indexOf("END")).trim().length() > 0) {
+                    Log.i(TAG, "【画中画】触摸服务已在运行，跳过部署, display=" + displayId);
+                    return;
                 }
-                // 解码 → 杀旧服务 → 后台启动新服务
+
+                byte[] jarBytes = readAsset(activity, TOUCH_JAR_ASSET);
+                String remoteMd5 = runShellSync(activity,
+                        "md5sum " + TOUCH_JAR_REMOTE + " 2>/dev/null; echo END");
+                boolean jarReady = remoteMd5 != null
+                        && remoteMd5.trim().startsWith(md5Hex(jarBytes));
+                if (!jarReady) {
+                    String base64 = Base64.encodeToString(jarBytes, Base64.NO_WRAP);
+                    // 分块写入 b64 临时文件
+                    final int chunkSize = 900;
+                    for (int i = 0; i < base64.length(); i += chunkSize) {
+                        String part = base64.substring(i, Math.min(i + chunkSize, base64.length()));
+                        String redirect = (i == 0) ? ">" : ">>";
+                        runShellSync(activity,
+                                "echo -n " + part + " " + redirect + " /data/local/tmp/pip_touch.b64; echo OK");
+                    }
+                    runShellSync(activity, "base64 -d /data/local/tmp/pip_touch.b64 > " + TOUCH_JAR_REMOTE
+                            + "; rm -f /data/local/tmp/pip_touch.b64; echo PIP_TOUCH_PUSHED");
+                } else {
+                    Log.i(TAG, "【画中画】jar 未变化，跳过推送");
+                }
+                // 杀旧服务 → 后台启动新服务
                 // 注意不能用 pkill -f TouchServer：命令行里含 TouchServer 字样会误杀 shell 自身
-                runShellSync(activity, "base64 -d /data/local/tmp/pip_touch.b64 > " + TOUCH_JAR_REMOTE
-                        + "; rm -f /data/local/tmp/pip_touch.b64"
-                        + "; " + KILL_TOUCH_SERVER_CMD
+                runShellSync(activity, KILL_TOUCH_SERVER_CMD
                         + "; CLASSPATH=" + TOUCH_JAR_REMOTE
                         + " nohup app_process /system/bin cn.youth996.pip.TouchServer " + displayId
                         + " > " + TOUCH_LOG_REMOTE + " 2>&1 & echo PIP_TOUCH_STARTED");
@@ -424,6 +444,15 @@ public class PipVirtualDisplayManager {
                 Log.e(TAG, "【画中画】触摸服务部署失败: " + e.getMessage());
             }
         });
+    }
+
+    private static String md5Hex(byte[] data) throws Exception {
+        byte[] digest = java.security.MessageDigest.getInstance("MD5").digest(data);
+        StringBuilder sb = new StringBuilder(digest.length * 2);
+        for (byte b : digest) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 
     /**
@@ -475,7 +504,8 @@ public class PipVirtualDisplayManager {
 
     private static void writeTouchLine(String line) {
         synchronized (touchLock) {
-            for (int attempt = 0; attempt < 2; attempt++) {
+            // 触摸服务可能刚下发、app_process 仍在启动，重试间隔放宽以覆盖该窗口期
+            for (int attempt = 0; attempt < 3; attempt++) {
                 try {
                     if (touchSocket == null || touchSocket.isClosed() || !touchSocket.isConnected()) {
                         touchSocket = new Socket();
@@ -487,6 +517,11 @@ public class PipVirtualDisplayManager {
                     return;
                 } catch (Exception e) {
                     closeTouchChannel();
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ignored) {
+                        return;
+                    }
                 }
             }
         }
