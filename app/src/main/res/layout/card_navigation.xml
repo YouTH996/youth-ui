@@ -1,23 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  底部导航卡片（第三轮优化 - 解决"挤成小方块"问题）
+
+  - 容器固定一个合理宽度，保证横向可读、不会与其他卡片一起被压缩；
+  - 三块区域按 weight 等宽分布，左侧主图标略大；
+  - 无分隔线。
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="220dp"
+    android:layout_height="100dp"
     android:orientation="horizontal"
     android:background="@drawable/card_background_rounded"
-    android:padding="16dp"
-    android:layout_marginEnd="12dp"
+    android:padding="8dp"
+    android:layout_marginEnd="10dp"
     android:elevation="4dp"
     android:gravity="center_vertical">
 
-    <!-- 导航图标 -->
+    <!-- 左侧主图标（导航 logo，明显更大） -->
     <LinearLayout
         android:id="@+id/btn_nav_icon"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1.3"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="?attr/selectableItemBackground"
-        android:padding="8dp">
+        android:background="?attr/selectableItemBackground">
 
         <ImageView
             android:id="@+id/img_nav_icon"
@@ -26,55 +33,37 @@
             android:scaleType="fitCenter" />
     </LinearLayout>
 
-    <!-- 分隔线 -->
-    <View
-        android:layout_width="1dp"
-        android:layout_height="48dp"
-        android:background="@color/dark_tech_text_secondary"
-        android:alpha="0.3"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp" />
-
     <!-- 回家图标 -->
     <LinearLayout
         android:id="@+id/btn_nav_home"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="?attr/selectableItemBackground"
-        android:padding="8dp">
+        android:background="?attr/selectableItemBackground">
 
         <ImageView
             android:id="@+id/img_nav_home"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:scaleType="fitCenter" />
     </LinearLayout>
-
-    <!-- 分隔线 -->
-    <View
-        android:layout_width="1dp"
-        android:layout_height="48dp"
-        android:background="@color/dark_tech_text_secondary"
-        android:alpha="0.3"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp" />
 
     <!-- 去公司图标 -->
     <LinearLayout
         android:id="@+id/btn_nav_company"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="?attr/selectableItemBackground"
-        android:padding="8dp">
+        android:background="?attr/selectableItemBackground">
 
         <ImageView
             android:id="@+id/img_nav_company"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:scaleType="fitCenter" />
     </LinearLayout>
 

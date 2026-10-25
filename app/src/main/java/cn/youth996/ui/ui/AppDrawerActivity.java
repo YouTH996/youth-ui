@@ -8,8 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
-import android.view.Window;
-import android.view.WindowManager;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -90,20 +89,7 @@ public class AppDrawerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 获取Window对象
-        Window window = getWindow();
-        // 设置布局标志,使内容填充整个屏幕
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-        );
-        // 设置非触摸模式标志,允许触摸事件穿透到下层
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-        );
-
-        // 设置内容布局
+        // 设置内容布局（窗口为全屏透明，根布局提供半透明遮罩，弹窗主体居中）
         setContentView(R.layout.activity_app_drawer);
 
         // 初始化视图组件
@@ -212,6 +198,12 @@ public class AppDrawerActivity extends AppCompatActivity {
      * 实现关闭抽屉、返回主页和搜索应用的功能
      */
     private void setupClickListeners() {
+        // 点击弹窗外的遮罩区域关闭弹窗
+        View drawerRoot = findViewById(R.id.drawer_root);
+        if (drawerRoot != null) {
+            drawerRoot.setOnClickListener(v -> animateOut());
+        }
+
         // 设置关闭按钮点击事件 - 关闭抽屉
         closeButton.setOnClickListener(v -> animateOut());
 
@@ -283,20 +275,21 @@ public class AppDrawerActivity extends AppCompatActivity {
      * - Y轴位移：高度 → 0（滑入）
      */
     private void animateIn() {
-        // 初始状态设置
+        // 初始状态设置：居中缩放 + 淡入（弹窗居中显示，不再从底部滑入）
         drawerContainer.setAlpha(0f);
-        drawerContainer.setTranslationY(drawerContainer.getHeight());
+        drawerContainer.setScaleX(0.92f);
+        drawerContainer.setScaleY(0.92f);
 
         // 创建动画集合
         AnimatorSet animatorSet = new AnimatorSet();
         // 创建透明度动画（淡入）
         ObjectAnimator alphaAnim = ObjectAnimator.ofFloat(drawerContainer, "alpha", 0f, 1f);
-        // 创建Y轴位移动画（滑入）
-        ObjectAnimator translateAnim = ObjectAnimator.ofFloat(drawerContainer, "translationY",
-            drawerContainer.getHeight(), 0f);
+        // 创建缩放动画
+        ObjectAnimator scaleXAnim = ObjectAnimator.ofFloat(drawerContainer, "scaleX", 0.92f, 1f);
+        ObjectAnimator scaleYAnim = ObjectAnimator.ofFloat(drawerContainer, "scaleY", 0.92f, 1f);
 
-        // 同时播放两个动画
-        animatorSet.playTogether(alphaAnim, translateAnim);
+        // 同时播放动画
+        animatorSet.playTogether(alphaAnim, scaleXAnim, scaleYAnim);
         // 设置动画时长为300毫秒
         animatorSet.setDuration(300);
         // 设置减速插值器,开始快结束慢
@@ -322,12 +315,12 @@ public class AppDrawerActivity extends AppCompatActivity {
         AnimatorSet animatorSet = new AnimatorSet();
         // 创建透明度动画（淡出）
         ObjectAnimator alphaAnim = ObjectAnimator.ofFloat(drawerContainer, "alpha", 1f, 0f);
-        // 创建Y轴位移动画（滑出）
-        ObjectAnimator translateAnim = ObjectAnimator.ofFloat(drawerContainer, "translationY",
-            0f, drawerContainer.getHeight());
+        // 创建缩放动画（缩小）
+        ObjectAnimator scaleXAnim = ObjectAnimator.ofFloat(drawerContainer, "scaleX", 1f, 0.92f);
+        ObjectAnimator scaleYAnim = ObjectAnimator.ofFloat(drawerContainer, "scaleY", 1f, 0.92f);
 
-        // 同时播放两个动画
-        animatorSet.playTogether(alphaAnim, translateAnim);
+        // 同时播放动画
+        animatorSet.playTogether(alphaAnim, scaleXAnim, scaleYAnim);
         // 设置动画时长为300毫秒
         animatorSet.setDuration(300);
         // 设置加速插值器,开始慢结束快

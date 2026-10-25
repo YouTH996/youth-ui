@@ -79,6 +79,30 @@ public class CardManager {
         tirePressureCard = inflater.inflate(R.layout.card_tire_pressure, cardContainer, false);
         frequentAppsCard = inflater.inflate(R.layout.card_frequent_apps, cardContainer, false);
         
+        // 底部小卡片（倒数第二排）高度：因中间主卡调整为屏幕 80%，
+        // 这里压缩到屏幕 5%，兜底 60~100dp，给中间主卡让出空间。
+        float density = activity.getResources().getDisplayMetrics().density;
+        float screenHeightDp = activity.getResources().getDisplayMetrics().heightPixels / density;
+        int targetCardHeightDp = (int) (screenHeightDp * 0.13f);
+        targetCardHeightDp = Math.max(60, Math.min(100, targetCardHeightDp));
+        int targetCardHeightPx = (int) (targetCardHeightDp * density);
+        int buttonSizeDp = Math.max(48, targetCardHeightDp - 24);
+        int buttonSizePx = (int) (buttonSizeDp * density);
+        int iconSizeDp = (int) (buttonSizeDp * 0.7f);
+        int iconSizePx = (int) (iconSizeDp * density);
+        int cardPaddingDp = Math.max(10, (int) (buttonSizeDp * 0.22f));
+        int cardPaddingPx = (int) (cardPaddingDp * density);
+        for (View card : new View[]{navigationCard, musicCard, vehicleControlCard,
+                tirePressureCard, frequentAppsCard}) {
+            card.getLayoutParams().height = targetCardHeightPx;
+            card.setPadding(cardPaddingPx, cardPaddingPx, cardPaddingPx, cardPaddingPx);
+            // 胎压卡不参与图标尺寸重写：它的汽车俯视图需要保持自身比例，
+            // 被 scaleCardInnerViews 二次缩放后会变得过小。
+            if (card != tirePressureCard) {
+                scaleCardInnerViews(card, buttonSizePx, iconSizePx, density);
+            }
+        }
+        
         cardContainer.addView(navigationCard);
         cardContainer.addView(musicCard);
         cardContainer.addView(vehicleControlCard);
@@ -101,7 +125,7 @@ public class CardManager {
         View btnNavIcon = navigationCard.findViewById(R.id.btn_nav_icon);
         View btnNavHome = navigationCard.findViewById(R.id.btn_nav_home);
         View btnNavCompany = navigationCard.findViewById(R.id.btn_nav_company);
-        
+
         try {
             InputStream is = activity.getAssets().open("webui/img/widget/automap_logo.png");
             Bitmap bitmap = BitmapFactory.decodeStream(is);
@@ -110,7 +134,7 @@ public class CardManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         try {
             InputStream is = activity.getAssets().open("webui/img/widget/nav_btn_home.png");
             Bitmap bitmap = BitmapFactory.decodeStream(is);
@@ -291,13 +315,11 @@ public class CardManager {
         TextView textTireFr = tirePressureCard.findViewById(R.id.text_tire_fr);
         TextView textTireRl = tirePressureCard.findViewById(R.id.text_tire_rl);
         TextView textTireRr = tirePressureCard.findViewById(R.id.text_tire_rr);
-        TextView textTireTemp = tirePressureCard.findViewById(R.id.text_tire_temp);
-        
+
         textTireFl.setText("2.3");
         textTireFr.setText("2.4");
         textTireRl.setText("2.3");
         textTireRr.setText("2.5");
-        textTireTemp.setText("胎温: 45°C");
         
         updateTirePressureColor(textTireFl, 2.3f);
         updateTirePressureColor(textTireFr, 2.4f);
@@ -395,6 +417,50 @@ public class CardManager {
         prefs.edit().putStringSet(KEY_FREQUENT_APPS, packageNames).apply();
     }
     
+    /**
+     * 遍历卡片内部所有子 View，把固定 72dp 按钮和 48dp 图标按比例放大，
+     * 使卡片整体视觉高度和元素大小都跟着目标高度变化。
+     */
+    private void scaleCardInnerViews(View root, int buttonSizePx, int iconSizePx, float density) {
+        if (root == null) return;
+        // 阈值：原值是 72dp / 48dp，对应 px 取决于 dpr。比较 px 更稳。
+        int btnThreshold = (int) (65 * density);   // 65dp 及以上视为按钮
+        int iconThreshold = (int) (40 * density);  // 40~64dp 视为图标
+        if (root instanceof android.view.ViewGroup) {
+            android.view.ViewGroup vg = (android.view.ViewGroup) root;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                scaleCardInnerViews(vg.getChildAt(i), buttonSizePx, iconSizePx, density);
+            }
+        } else {
+            android.view.ViewGroup.LayoutParams lp = root.getLayoutParams();
+            if (lp == null) return;
+            int curW = lp.width;
+            int curH = lp.height;
+            // 改固定 72dp 的按钮/容器
+            if (curH >= btnThreshold && curH < btnThreshold + (int) (20 * density)
+                    && curW == curH) {
+                lp.width = buttonSizePx;
+                lp.height = buttonSizePx;
+                root.setLayoutParams(lp);
+                // 如果是 ImageView，缩小到图标尺寸
+                if (root instanceof ImageView) {
+                    android.view.ViewGroup.LayoutParams imgLp = root.getLayoutParams();
+                    imgLp.width = iconSizePx;
+                    imgLp.height = iconSizePx;
+                    root.setLayoutParams(imgLp);
+                }
+            }
+            // 改固定 48dp 的图标
+            if (root instanceof ImageView) {
+                if (curH >= iconThreshold && curH < btnThreshold) {
+                    lp.width = iconSizePx;
+                    lp.height = iconSizePx;
+                    root.setLayoutParams(lp);
+                }
+            }
+        }
+    }
+
     private void updateFrequentAppsDisplay() {
         ImageView imgApp1 = frequentAppsCard.findViewById(R.id.img_app_1);
         ImageView imgApp2 = frequentAppsCard.findViewById(R.id.img_app_2);
@@ -497,10 +563,10 @@ public class CardManager {
             TextView textSongTitle = musicCard.findViewById(R.id.text_song_title);
             TextView textSongArtist = musicCard.findViewById(R.id.text_song_artist);
             ImageView imgAlbumCover = musicCard.findViewById(R.id.img_album_cover);
-            
+
             textSongTitle.setText(title);
             textSongArtist.setText(artist);
-            
+
             if (albumPath != null && !albumPath.isEmpty()) {
                 try {
                     InputStream is = activity.getAssets().open(albumPath);
@@ -513,21 +579,76 @@ public class CardManager {
             }
         }
     }
+
+    /**
+     * 用真实的媒体数据更新音乐卡片（来自 MusicPlayerManager 的通知监听）
+     */
+    public void updateMusicInfo(String title, String artist, Bitmap albumArt) {
+        if (musicCard == null) return;
+        TextView textSongTitle = musicCard.findViewById(R.id.text_song_title);
+        TextView textSongArtist = musicCard.findViewById(R.id.text_song_artist);
+        ImageView imgAlbumCover = musicCard.findViewById(R.id.img_album_cover);
+
+        if (textSongTitle != null) textSongTitle.setText(title);
+        if (textSongArtist != null) textSongArtist.setText(artist);
+        if (imgAlbumCover != null && albumArt != null) {
+            imgAlbumCover.setImageBitmap(albumArt);
+        }
+    }
+
+    /**
+     * 同步音乐卡片的播放/暂停按钮状态
+     */
+    public void updateMusicPlayState(boolean playing) {
+        if (musicCard == null) return;
+        ImageView btnPlayPause = musicCard.findViewById(R.id.btn_play_pause);
+        if (btnPlayPause != null) {
+            btnPlayPause.setImageResource(playing ? R.drawable.ic_pause : R.drawable.ic_play);
+        }
+    }
+
+    /**
+     * 将音乐卡片的控制按钮绑定到真实的 MusicPlayerManager，
+     * 同时停止本地模拟进度，避免与真实播放状态冲突
+     */
+    public void bindMusicCardControls(MusicPlayerManager manager) {
+        if (musicCard == null || manager == null) return;
+        stopMusicProgressSimulation();
+
+        // 清除写死的演示数据，等待真实媒体信息填充
+        TextView textSongTitle = musicCard.findViewById(R.id.text_song_title);
+        TextView textSongArtist = musicCard.findViewById(R.id.text_song_artist);
+        if (textSongTitle != null) textSongTitle.setText("");
+        if (textSongArtist != null) textSongArtist.setText("");
+
+        View btnPrevious = musicCard.findViewById(R.id.btn_previous);
+        View btnPlayPause = musicCard.findViewById(R.id.btn_play_pause);
+        View btnNext = musicCard.findViewById(R.id.btn_next);
+
+        if (btnPrevious != null) {
+            btnPrevious.setOnClickListener(v -> manager.previousTrack());
+        }
+        if (btnPlayPause != null) {
+            btnPlayPause.setOnClickListener(v -> manager.playPause());
+        }
+        if (btnNext != null) {
+            btnNext.setOnClickListener(v -> manager.nextTrack());
+        }
+        musicCard.setOnClickListener(v -> manager.openMusicApp());
+    }
     
-    public void updateTirePressure(float fl, float fr, float rl, float rr, float temp) {
+    public void updateTirePressure(float fl, float fr, float rl, float rr) {
         if (tirePressureCard != null) {
             TextView textTireFl = tirePressureCard.findViewById(R.id.text_tire_fl);
             TextView textTireFr = tirePressureCard.findViewById(R.id.text_tire_fr);
             TextView textTireRl = tirePressureCard.findViewById(R.id.text_tire_rl);
             TextView textTireRr = tirePressureCard.findViewById(R.id.text_tire_rr);
-            TextView textTireTemp = tirePressureCard.findViewById(R.id.text_tire_temp);
-            
+
             textTireFl.setText(String.format("%.1f", fl));
             textTireFr.setText(String.format("%.1f", fr));
             textTireRl.setText(String.format("%.1f", rl));
             textTireRr.setText(String.format("%.1f", rr));
-            textTireTemp.setText(String.format("胎温: %.0f°C", temp));
-            
+
             updateTirePressureColor(textTireFl, fl);
             updateTirePressureColor(textTireFr, fr);
             updateTirePressureColor(textTireRl, rl);

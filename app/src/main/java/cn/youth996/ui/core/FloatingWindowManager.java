@@ -45,14 +45,71 @@ public class FloatingWindowManager {
     /** 服务类名 */
     private static final String SERVICE_CLASS = "cn.youth996.ui.service.FloatingMapService";
 
-    /** 高德地图包名 */
-    private static final String AMAP_PACKAGE = "com.autonavi.amapauto.chenmo";
-    
+    /** 默认悬浮地图包名（高德地图车机版） */
+    public static final String DEFAULT_MAP_PACKAGE = "com.autonavi.amapauto.chenmo";
+
+    /** 悬浮地图设置 SharedPreferences 文件名 */
+    private static final String MAP_PREFS_NAME = "map_settings";
+
+    /** 悬浮地图包名 key */
+    private static final String KEY_MAP_PACKAGE = "float_map_package";
+
+    /** 画中画模式 key（true=画中画小窗，false=悬浮大面板） */
+    private static final String KEY_MAP_PIP_MODE = "map_pip_mode";
+
     /** 显示悬浮窗广播 Action */
     private static final String ACTION_SHOW_MAP = "com.autonavi.plus.showmap";
     
     /** 关闭悬浮窗广播 Action */
     private static final String ACTION_CLOSE_MAP = "com.autonavi.plus.closemap";
+
+    /**
+     * 获取当前配置的悬浮地图包名
+     *
+     * @param context 上下文对象
+     * @return 用户选择的悬浮地图包名，未设置时返回默认高德车机版包名
+     */
+    public static String getMapPackage(Context context) {
+        return context.getSharedPreferences(MAP_PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(KEY_MAP_PACKAGE, DEFAULT_MAP_PACKAGE);
+    }
+
+    /**
+     * 保存悬浮地图包名
+     *
+     * @param context     上下文对象
+     * @param packageName 悬浮地图应用包名
+     */
+    public static void setMapPackage(Context context, String packageName) {
+        context.getSharedPreferences(MAP_PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_MAP_PACKAGE, packageName)
+                .apply();
+    }
+
+    /**
+     * 查询是否为画中画地图模式
+     *
+     * @param context 上下文对象
+     * @return true=画中画小窗模式，false=悬浮大面板模式（默认）
+     */
+    public static boolean isMapPipMode(Context context) {
+        return context.getSharedPreferences(MAP_PREFS_NAME, Context.MODE_PRIVATE)
+                .getBoolean(KEY_MAP_PIP_MODE, false);
+    }
+
+    /**
+     * 保存画中画地图模式开关
+     *
+     * @param context    上下文对象
+     * @param isPipMode  true=画中画小窗模式，false=悬浮大面板模式
+     */
+    public static void setMapPipMode(Context context, boolean isPipMode) {
+        context.getSharedPreferences(MAP_PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(KEY_MAP_PIP_MODE, isPipMode)
+                .apply();
+    }
 
     /** 高德悬浮窗当前是否正在显示（由本应用控制） */
     private static boolean isAmapFloatShowing = false;
@@ -114,8 +171,12 @@ public class FloatingWindowManager {
         
         try {
             Intent intent = new Intent(ACTION_SHOW_MAP);
-            intent.setPackage(AMAP_PACKAGE);
-            
+            intent.setPackage(getMapPackage(context));
+            //region debug-point float-map-show-pkg
+            Log.i(TAG, "【debug】show setPackage=" + getMapPackage(context)
+                    + " isShowing=" + isAmapFloatShowing + " isEnabled=" + isAmapFloatEnabled);
+            //endregion
+
             // 设置悬浮窗位置和尺寸
             intent.putExtra("x", x);
             intent.putExtra("y", y);
@@ -136,22 +197,78 @@ public class FloatingWindowManager {
     /**
      * 显示高德地图悬浮窗（使用默认位置）
      *
-     * 默认显示在屏幕左侧中部，尺寸较大便于查看
+     * 根据设置中的模式决定显示形态：
+     *   - 悬浮地图模式：屏幕左侧大面板，便于查看
+     *   - 画中画模式：屏幕右上角小窗（类视频画中画样式）
      *
      * @param context 上下文对象
      */
     public static void showAmapFloatMap(Context context) {
+        if (isMapPipMode(context)) {
+            showAmapPipMap(context);
+            return;
+        }
         // 获取屏幕尺寸
+        float density = context.getResources().getDisplayMetrics().density;
         int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
         int screenHeight = context.getResources().getDisplayMetrics().heightPixels;
-        
-        // 默认显示在屏幕左侧中部，尺寸较大便于查看
-        int x = (int) (screenWidth * 0.03);   // 3% 左边距
-        int y = (int) (screenHeight * 0.10);  // 10% 顶部边距（避开状态栏）
-        int width = (int) (screenWidth * 0.52);  // 52% 宽度
-        int height = (int) (screenHeight * 0.58); // 58% 高度
-        
+
+        // 顶部留出真实 statusBar 高度（系统可能切了刘海/挖孔，固定 32dp 不准）
+        int systemStatusBarPx = getSystemStatusBarHeightPx(context);
+
+        // 尺寸与删除前的「左侧导航卡片」完全对齐：
+        //   - 顶部 = statusBar(真实高度) + centerArea_marginTop(8dp)
+        //   - 高度 = 屏幕 70%（比 80% 更小，避开下方 taskbar 安全区）
+        //   - 左边 = centerArea_padding_h(16dp)
+        //   - 右边与音乐卡(300dp)对齐：宽度 = 屏宽 - 左边 - 音乐卡(300dp) - 间隙(8dp) - 右边距(16dp)
+        int topMarginPx = systemStatusBarPx + (int) (16 * density);
+        int y = topMarginPx;
+        int x = (int) (20 * density);                              // 16dp 左边距
+        int musicCardWidthPx = (int) (300 * density);              // 音乐卡片宽度 300dp
+        int gapPx = (int) (8 * density);                           // 中间间隙 8dp
+        int rightPaddingPx = (int) (16 * density);                 // 右边距 16dp
+        int width = screenWidth - x - musicCardWidthPx - gapPx - rightPaddingPx;
+        int height = (int) (screenHeight * 0.68f);                 // 70% 屏幕高度（与原导航卡大致一致且更紧凑）
+
         showAmapFloatMap(context, x, y, width, height);
+    }
+
+    /**
+     * 显示高德地图画中画小窗
+     *
+     * 类视频画中画样式：宽度约为屏宽 40%，16:9 比例，停靠在屏幕右上角
+     *
+     * @param context 上下文对象
+     */
+    public static void showAmapPipMap(Context context) {
+        float density = context.getResources().getDisplayMetrics().density;
+        int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
+
+        int width = (int) (screenWidth * 0.40f);
+        int height = (int) (width * 9f / 16f);
+        int marginPx = (int) (16 * density);
+        int x = screenWidth - width - marginPx;
+        int y = getSystemStatusBarHeightPx(context) + marginPx;
+
+        // 注意：高德 showmap 广播的 w/h 实际是窗口右/下边缘坐标（并非宽高），
+        // 实测其内部按 w-x / h-y 计算实际窗口尺寸，x 较大时直接传宽高会得到负值导致创建失败
+        showAmapFloatMap(context, x, y, x + width, y + height);
+    }
+
+    /**
+     * 获取系统 statusBar 高度（像素）。优先用 system 资源的 status_bar_height，
+     * 失败时 fallback 到 24dp。
+     */
+    private static int getSystemStatusBarHeightPx(Context context) {
+        try {
+            int resId = context.getResources().getIdentifier(
+                    "status_bar_height", "dimen", "android");
+            if (resId > 0) {
+                return context.getResources().getDimensionPixelSize(resId);
+            }
+        } catch (Throwable ignored) {
+        }
+        return (int) (24 * context.getResources().getDisplayMetrics().density);
     }
 
     /**
@@ -190,8 +307,11 @@ public class FloatingWindowManager {
         
         try {
             Intent intent = new Intent(ACTION_CLOSE_MAP);
-            intent.setPackage(AMAP_PACKAGE);
-            
+            intent.setPackage(getMapPackage(context));
+            //region debug-point float-map-hide-pkg
+            Log.i(TAG, "【debug】hide setPackage=" + getMapPackage(context));
+            //endregion
+
             context.sendBroadcast(intent);
             isAmapFloatShowing = false;
             isAmapFloatEnabled = false;
@@ -224,7 +344,10 @@ public class FloatingWindowManager {
         
         try {
             Intent intent = new Intent(ACTION_CLOSE_MAP);
-            intent.setPackage(AMAP_PACKAGE);
+            intent.setPackage(getMapPackage(context));
+            //region debug-point float-map-pause-pkg
+            Log.i(TAG, "【debug】pause setPackage=" + getMapPackage(context));
+            //endregion
             context.sendBroadcast(intent);
             isAmapFloatShowing = false;
             Log.i(TAG, "【高德悬浮窗】自动隐藏广播已发送");
@@ -305,12 +428,13 @@ public class FloatingWindowManager {
      * @return true表示已安装，false表示未安装
      */
     public static boolean isAmapInstalled(Context context) {
+        String mapPackage = getMapPackage(context);
         try {
-            context.getPackageManager().getPackageInfo(AMAP_PACKAGE, 0);
-            Log.i(TAG, "【高德悬浮窗】高德地图已安装: " + AMAP_PACKAGE);
+            context.getPackageManager().getPackageInfo(mapPackage, 0);
+            Log.i(TAG, "【悬浮地图】地图应用已安装: " + mapPackage);
             return true;
         } catch (Exception e) {
-            Log.w(TAG, "【高德悬浮窗】高德地图未安装: " + AMAP_PACKAGE);
+            Log.w(TAG, "【悬浮地图】地图应用未安装: " + mapPackage);
             return false;
         }
     }

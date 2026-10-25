@@ -5,14 +5,27 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.media.session.MediaController;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextPaint;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import cn.youth996.ui.R;
 
@@ -30,12 +43,22 @@ public class MusicPlayerManager {
     private TextView textMusicSource;
     private TextView textSongTitle;
     private TextView textSongArtist;
-    private TextView textLyric1;
-    private TextView textLyric2;
-    private TextView textLyricCurrent;
-    private TextView textLyric4;
-    private TextView textLyric5;
+    private ViewGroup lyricsContainer;
+    private List<String> lyricTexts = new ArrayList<>();
+    private int lastRenderedIndex = -1;
+    private int lastRenderedMaxLines = -1;
+    private List<String> lastRenderedLyrics = null;
     private ImageView btnPlayPause;
+
+    // 状态栏灵动岛歌词
+    private View islandContainer;
+    private ImageView islandWave;
+    private TextView islandTitle;
+    private TextView islandLyric;
+    private Bitmap waveIdleFrame;
+    private Bitmap[] waveFrames;
+    private int waveFrameIndex = 0;
+    private Runnable waveAnimRunnable;
     
     private String currentPackageName = "";
     private String currentTitle = "";
@@ -74,14 +97,93 @@ public class MusicPlayerManager {
         this.btnPlayPause = playPauseBtn;
     }
     
-    public void bindLyricsViews(TextView lyric1, TextView lyric2, TextView lyricCurrent, TextView lyric4, TextView lyric5) {
-        this.textLyric1 = lyric1;
-        this.textLyric2 = lyric2;
-        this.textLyricCurrent = lyricCurrent;
-        this.textLyric4 = lyric4;
-        this.textLyric5 = lyric5;
+    public void bindLyricsViews(ViewGroup container) {
+        this.lyricsContainer = container;
+        if (container != null) {
+            // 布局完成或高度变化后，重新按可用高度计算可显示的歌词行数
+            container.getViewTreeObserver().addOnGlobalLayoutListener(this::updateLyricsDisplay);
+        }
     }
     
+    /**
+     * 绑定状态栏灵动岛视图：波形动画图标 + 固定歌名 + 当前歌词
+     */
+    public void bindIslandViews(View container, ImageView wave, TextView title, TextView lyric) {
+        this.islandContainer = container;
+        this.islandWave = wave;
+        this.islandTitle = title;
+        this.islandLyric = lyric;
+        if (lyric != null) {
+            lyric.setSelected(true); // 触发跑马灯滚动
+        }
+        loadWaveFrames();
+    }
+
+    private void loadWaveFrames() {
+        try {
+            waveIdleFrame = BitmapFactory.decodeStream(
+                    activity.getAssets().open("webui/img/island/Y1.png"));
+            waveFrames = new Bitmap[5];
+            for (int i = 0; i < waveFrames.length; i++) {
+                waveFrames[i] = BitmapFactory.decodeStream(
+                        activity.getAssets().open("webui/img/island/Y" + (11 + i) + ".png"));
+            }
+            if (islandWave != null) {
+                islandWave.setImageBitmap(waveIdleFrame);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "加载灵动岛波形帧失败: " + e.getMessage());
+        }
+    }
+
+    private void updateIslandLyric(String text) {
+        setTextIfChanged(islandLyric, text == null ? "" : text);
+        updateIslandVisibility();
+    }
+
+    /**
+     * 仅在文本变化时才 setText，避免跑马灯/单行 TextView 反复触发
+     * StaticLayout 的 "maxLineHeight should not be -1" 警告
+     */
+    private void setTextIfChanged(TextView tv, String text) {
+        if (tv == null) return;
+        CharSequence old = tv.getText();
+        if (old == null || !old.toString().equals(text)) {
+            tv.setText(text);
+        }
+    }
+
+    private void updateIslandVisibility() {
+        if (islandContainer == null) return;
+        boolean hasTitle = currentTitle != null && !currentTitle.isEmpty();
+        boolean hasLyric = islandLyric != null && islandLyric.getText().length() > 0;
+        islandContainer.setVisibility(hasTitle || hasLyric ? View.VISIBLE : View.GONE);
+    }
+
+    private void startWaveAnimation() {
+        if (islandWave == null || waveFrames == null || waveAnimRunnable != null) return;
+        waveAnimRunnable = new Runnable() {
+            @Override
+            public void run() {
+                islandWave.setImageBitmap(waveFrames[waveFrameIndex]);
+                waveFrameIndex = (waveFrameIndex + 1) % waveFrames.length;
+                handler.postDelayed(this, 150);
+            }
+        };
+        handler.post(waveAnimRunnable);
+    }
+
+    private void stopWaveAnimation() {
+        if (waveAnimRunnable != null) {
+            handler.removeCallbacks(waveAnimRunnable);
+            waveAnimRunnable = null;
+        }
+        waveFrameIndex = 0;
+        if (islandWave != null && waveIdleFrame != null) {
+            islandWave.setImageBitmap(waveIdleFrame);
+        }
+    }
+
     public void startListening() {
         try {
             notificationMonitor = new NotificationMonitor(activity);
@@ -130,13 +232,11 @@ public class MusicPlayerManager {
     }
     
     private void updateMusicUI() {
-        if (textSongTitle != null) {
-            textSongTitle.setText(currentTitle);
-        }
-        
-        if (textSongArtist != null) {
-            textSongArtist.setText(currentArtist);
-        }
+        setTextIfChanged(textSongTitle, currentTitle);
+        setTextIfChanged(islandTitle, currentTitle);
+        updateIslandVisibility();
+
+        setTextIfChanged(textSongArtist, currentArtist);
         
         if (imgAlbumCover != null && currentAlbumArt != null) {
             imgAlbumCover.setImageBitmap(currentAlbumArt);
@@ -144,7 +244,7 @@ public class MusicPlayerManager {
         
         if (textMusicSource != null && !currentPackageName.isEmpty()) {
             String appName = getAppName(currentPackageName);
-            textMusicSource.setText(appName);
+            setTextIfChanged(textMusicSource, appName);
         }
         
         if (imgMusicSource != null && !currentPackageName.isEmpty()) {
@@ -160,8 +260,10 @@ public class MusicPlayerManager {
         
         if (isPlaying) {
             startLyricsUpdateTimer();
+            startWaveAnimation();
         } else {
             stopLyricsUpdateTimer();
+            stopWaveAnimation();
         }
         
         if (listener != null) {
@@ -179,47 +281,95 @@ public class MusicPlayerManager {
     }
     
     private void updateLyricsDisplay() {
-        if (currentLyrics.length == 0) return;
-        
-        if (currentLyricIndex < 0 || currentLyricIndex >= currentLyrics.length) {
+        if (lyricsContainer == null) return;
+
+        if (lyricTexts.isEmpty()) {
+            lyricsContainer.removeAllViews();
+            lastRenderedIndex = -1;
+            lastRenderedLyrics = null;
+            updateIslandLyric(null);
             return;
         }
-        
-        if (textLyric1 != null) {
-            if (currentLyricIndex >= 2) {
-                textLyric1.setText(removeTimeTag(currentLyrics[currentLyricIndex - 2]));
+
+        if (currentLyricIndex < 0 || currentLyricIndex >= lyricTexts.size()) {
+            return;
+        }
+
+        updateIslandLyric(lyricTexts.get(currentLyricIndex));
+
+        int maxLines = computeMaxLyricLines();
+        // 歌词索引和行数都未变化时跳过重绘，避免播放进度轮询导致的频繁重建
+        if (maxLines == lastRenderedMaxLines && currentLyricIndex == lastRenderedIndex
+                && lyricTexts == lastRenderedLyrics) {
+            return;
+        }
+        lastRenderedMaxLines = maxLines;
+        lastRenderedIndex = currentLyricIndex;
+        lastRenderedLyrics = lyricTexts;
+
+        renderLyricLines(maxLines);
+    }
+
+    /**
+     * 根据歌词容器剩余高度计算可显示的行数（保证奇数，当前行居中）
+     */
+    private int computeMaxLyricLines() {
+        if (lyricsContainer == null) return 5;
+
+        int availableHeight = lyricsContainer.getHeight()
+                - lyricsContainer.getPaddingTop() - lyricsContainer.getPaddingBottom();
+        if (availableHeight <= 0) return 5;
+
+        float scaledDensity = activity.getResources().getDisplayMetrics().scaledDensity;
+        TextPaint paint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        paint.setTextSize(11 * scaledDensity);
+        Paint.FontMetrics fm = paint.getFontMetrics();
+        int lineHeight = (int) Math.ceil(fm.descent - fm.ascent + fm.leading)
+                + Math.round(8 * scaledDensity);
+        if (lineHeight <= 0) return 5;
+
+        int maxLines = availableHeight / lineHeight;
+        if (maxLines < 3) maxLines = 3;
+        if (maxLines % 2 == 0) maxLines--;
+        return maxLines;
+    }
+
+    /**
+     * 以当前歌词为中心，按 maxLines 动态创建歌词 TextView
+     */
+    private void renderLyricLines(int maxLines) {
+        lyricsContainer.removeAllViews();
+
+        int accentColor = ContextCompat.getColor(activity, R.color.dark_tech_accent);
+        int secondaryColor = ContextCompat.getColor(activity, R.color.dark_tech_text_secondary);
+        Typeface mediumTypeface = Typeface.create("sans-serif-medium", Typeface.NORMAL);
+
+        int half = maxLines / 2;
+        for (int i = currentLyricIndex - half; i <= currentLyricIndex + half; i++) {
+            TextView tv = new TextView(activity);
+            tv.setText(i >= 0 && i < lyricTexts.size() ? lyricTexts.get(i) : "");
+            tv.setGravity(Gravity.CENTER);
+            tv.setSingleLine(true);
+            tv.setEllipsize(TextUtils.TruncateAt.END);
+
+            int distance = Math.abs(i - currentLyricIndex);
+            if (distance == 0) {
+                tv.setTextSize(14);
+                tv.setTextColor(accentColor);
+                tv.setTypeface(mediumTypeface);
+                int padding = dpToPx(4);
+                tv.setPadding(0, padding, 0, padding);
             } else {
-                textLyric1.setText("");
+                tv.setTextSize(11);
+                tv.setTextColor(secondaryColor);
+                tv.setAlpha(Math.max(0.15f, 0.75f - 0.15f * distance));
             }
+            lyricsContainer.addView(tv);
         }
-        
-        if (textLyric2 != null) {
-            if (currentLyricIndex >= 1) {
-                textLyric2.setText(removeTimeTag(currentLyrics[currentLyricIndex - 1]));
-            } else {
-                textLyric2.setText("");
-            }
-        }
-        
-        if (textLyricCurrent != null) {
-            textLyricCurrent.setText(removeTimeTag(currentLyrics[currentLyricIndex]));
-        }
-        
-        if (textLyric4 != null) {
-            if (currentLyricIndex < currentLyrics.length - 1) {
-                textLyric4.setText(removeTimeTag(currentLyrics[currentLyricIndex + 1]));
-            } else {
-                textLyric4.setText("");
-            }
-        }
-        
-        if (textLyric5 != null) {
-            if (currentLyricIndex < currentLyrics.length - 2) {
-                textLyric5.setText(removeTimeTag(currentLyrics[currentLyricIndex + 2]));
-            } else {
-                textLyric5.setText("");
-            }
-        }
+    }
+
+    private int dpToPx(int dp) {
+        return Math.round(dp * activity.getResources().getDisplayMetrics().density);
     }
     
     private String removeTimeTag(String lyric) {
@@ -230,18 +380,27 @@ public class MusicPlayerManager {
     public void updateLyrics(String[] lyrics) {
         if (lyrics != null && lyrics.length > 0) {
             this.currentLyrics = lyrics;
+            List<String> texts = new ArrayList<>(lyrics.length);
+            for (String line : lyrics) {
+                texts.add(removeTimeTag(line));
+            }
+            this.lyricTexts = texts;
             this.currentLyricIndex = 0;
             updateLyricsDisplay();
             startLyricsUpdateTimer();
         }
     }
-    
-    public void updateLyrics(String lyric1, String lyric2, String currentLyric, String lyric4, String lyric5) {
-        if (textLyric1 != null) textLyric1.setText(lyric1);
-        if (textLyric2 != null) textLyric2.setText(lyric2);
-        if (textLyricCurrent != null) textLyricCurrent.setText(currentLyric);
-        if (textLyric4 != null) textLyric4.setText(lyric4);
-        if (textLyric5 != null) textLyric5.setText(lyric5);
+
+    /**
+     * 由外部歌词服务驱动：传入完整歌词文本（已去除时间标签）和当前行索引
+     */
+    public void updateLyrics(List<String> lyrics, int index) {
+        if (lyrics == null || lyrics.isEmpty()) return;
+        this.lyricTexts = lyrics;
+        // 置空内置歌词源，避免内置定时器与外部驱动互相覆盖
+        this.currentLyrics = new String[0];
+        this.currentLyricIndex = index;
+        updateLyricsDisplay();
     }
     
     private void startLyricsUpdateTimer() {
@@ -330,15 +489,17 @@ public class MusicPlayerManager {
     }
     
     public void highlightLyric(int index) {
-        if (index >= 0 && index < currentLyrics.length) {
+        if (index >= 0 && index < lyricTexts.size()) {
             this.currentLyricIndex = index;
             updateLyricsDisplay();
         }
     }
-    
+
     public void updateCurrentLyrics(String lyrics) {
         if (lyrics != null && !lyrics.isEmpty()) {
             this.currentLyrics = new String[]{lyrics};
+            this.lyricTexts = new ArrayList<>();
+            this.lyricTexts.add(removeTimeTag(lyrics));
             this.currentLyricIndex = 0;
             updateLyricsDisplay();
             Log.d(TAG, "Updated lyrics: " + lyrics);
@@ -443,6 +604,7 @@ public class MusicPlayerManager {
     }
     
     public void stopListening() {
+        stopWaveAnimation();
         if (refreshRunnable != null) {
             handler.removeCallbacks(refreshRunnable);
         }

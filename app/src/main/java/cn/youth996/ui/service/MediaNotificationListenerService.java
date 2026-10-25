@@ -1,11 +1,11 @@
 package cn.youth996.ui.service;
 
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.MediaMetadata;
+import android.media.Rating;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
@@ -17,7 +17,6 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -49,7 +48,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     }
     
     public interface OnLyricsUpdateListener {
-        void onLyricsUpdate(String lyric1, String lyric2, String currentLyric, String lyric4, String lyric5, int index);
+        void onLyricsUpdate(List<String> lyrics, int index);
     }
     
     private static OnMediaInfoListener listener;
@@ -96,15 +95,20 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         try {
             mediaSessionManager = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
             if (mediaSessionManager != null) {
+                Log.i(TAG, "【MediaNotificationListenerService】MediaSessionManager 初始化成功");
                 setupMediaCallback();
                 startPolling();
+                Log.i(TAG, "【MediaNotificationListenerService】开始轮询音乐应用");
+            } else {
+                Log.e(TAG, "【MediaNotificationListenerService】MediaSessionManager 为空");
             }
         } catch (Exception e) {
-            // 忽略错误
+            Log.e(TAG, "【MediaNotificationListenerService】初始化错误: " + e.getMessage());
         }
-    }
         
-
+        Log.i(TAG, "═══════════════════════════════════════════════════════════");
+    }
+    
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -189,6 +193,7 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     
     private void refreshMediaSessions() {
         if (mediaSessionManager == null) {
+            Log.w(TAG, "【媒体会话】MediaSessionManager 为空，使用通知方式");
             updateFromNotification();
             return;
         }
@@ -197,10 +202,13 @@ public class MediaNotificationListenerService extends NotificationListenerServic
             ComponentName componentName = new ComponentName(this, MediaNotificationListenerService.class);
             List<MediaController> controllers = mediaSessionManager.getActiveSessions(componentName);
             
+//            Log.d(TAG, "【媒体会话】检测到 " + controllers.size() + " 个活跃的媒体会话");
+            
             MediaController newController = null;
             for (MediaController controller : controllers) {
                 String pkg = controller.getPackageName();
-                if (isMusicApp(pkg)) {
+                boolean music = isMusicApp(pkg);
+                if (music) {
                     newController = controller;
                     break;
                 }
@@ -213,15 +221,14 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                 
                 mediaController = newController;
                 currentPackage = mediaController.getPackageName();
-                Log.i(TAG, "【媒体会话】✓ 连接到音乐应用: " + currentPackage);
-                
+
                 mediaController.registerCallback(mediaCallback);
                 
                 updateFromMediaController();
             } else if (newController != null && mediaController != null) {
                 updateFromMediaController();
             } else if (newController == null) {
-                Log.d(TAG, "【媒体会话】未检测到音乐应用，尝试从通知获取");
+//                Log.d(TAG, "【媒体会话】未检测到音乐应用，尝试从通知获取");
                 updateFromNotification();
             }
             
@@ -254,27 +261,98 @@ public class MediaNotificationListenerService extends NotificationListenerServic
             Log.e(TAG, "Error updating from media controller: " + e.getMessage(), e);
         }
     }
-    
+
+
+    private Bundle getMediaMetadataBundle(MediaMetadata metadata) {
+        if (metadata == null) {
+            return Bundle.EMPTY;
+        }
+
+        Bundle result = new Bundle();
+
+        try {
+            for (String key : metadata.keySet()) {
+                if (key == null || !metadata.containsKey(key)) {
+                    continue;
+                }
+
+                try {
+                    // 图片字段：只对明确的图片 key 调用 getBitmap()
+                    if (MediaMetadata.METADATA_KEY_ART.equals(key)
+                            || MediaMetadata.METADATA_KEY_ALBUM_ART.equals(key)
+                            || MediaMetadata.METADATA_KEY_DISPLAY_ICON.equals(key)) {
+
+                        Bitmap bitmap = metadata.getBitmap(key);
+                        if (bitmap != null) {
+                            result.putParcelable(key, bitmap);
+                        }
+                        continue;
+                    }
+
+                    // Rating 字段：只对明确的 Rating key 调用 getRating()
+                    if (MediaMetadata.METADATA_KEY_RATING.equals(key)
+                            || MediaMetadata.METADATA_KEY_USER_RATING.equals(key)) {
+
+                        Rating rating = metadata.getRating(key);
+                        if (rating != null) {
+                            result.putParcelable(key, rating);
+                        }
+                        continue;
+                    }
+
+                    // 已知的数值字段
+                    if (MediaMetadata.METADATA_KEY_DURATION.equals(key)
+                            || MediaMetadata.METADATA_KEY_TRACK_NUMBER.equals(key)
+                            || MediaMetadata.METADATA_KEY_NUM_TRACKS.equals(key)
+                            || MediaMetadata.METADATA_KEY_DISC_NUMBER.equals(key)
+                            || MediaMetadata.METADATA_KEY_YEAR.equals(key)
+                            || MediaMetadata.METADATA_KEY_BT_FOLDER_TYPE.equals(key)) {
+
+                        result.putLong(key, metadata.getLong(key));
+                        continue;
+                    }
+
+                    // 其他字段优先按文本读取
+                    CharSequence text = metadata.getText(key);
+                    if (text != null) {
+                        result.putCharSequence(key, text);
+                        continue;
+                    }
+
+                    // 自定义字段，包括歌词、媒体 ID、URI
+                    String value = metadata.getString(key);
+                    if (value != null) {
+                        result.putString(key, value);
+                    }
+
+                } catch (RuntimeException e) {
+                    Log.w(TAG, "跳过无法读取的字段: " + key, e);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "导出媒体元数据失败", e);
+        }
+
+        return result;
+    }
+
     private void updateFromMetadata(MediaMetadata metadata) {
         if (metadata == null) return;
         
         String title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE);
         String artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST);
+
         try {
+
             Bundle bundle = getMediaMetadataBundle(metadata);
             if (bundle != null) {
-                String lyrics = null;
-                
-                if (bundle.containsKey("android.media.metadata.LYRIC")) {
-                    lyrics = bundle.getString("android.media.metadata.LYRIC");
-                } else if (bundle.containsKey("android.media.metadata.LYRICS")) {
-                    lyrics = bundle.getString("android.media.metadata.LYRICS");
-                }
-                
+                String lyrics =  bundle.getString(
+                        "android.media.metadata.LYRIC");
+
                 if (lyrics != null && !lyrics.isEmpty()) {
                     parseAndNotifyLyrics(lyrics);
                 } else {
-                    Log.d(TAG, "No LYRIC found in bundle");
+                    Log.w(TAG, "No LYRIC found in bundle");
                 }
             }
         } catch (Exception e) {
@@ -365,13 +443,12 @@ public class MediaNotificationListenerService extends NotificationListenerServic
                     
                     int index = findCurrentLyricIndex(position);
                     if (index >= 0 && lyricsListener != null) {
-                        String lyric1 = index >= 2 ? currentLyrics.get(index - 2).text : "";
-                        String lyric2 = index >= 1 ? currentLyrics.get(index - 1).text : "";
-                        String currentLyric = currentLyrics.get(index).text;
-                        String lyric4 = index < currentLyrics.size() - 1 ? currentLyrics.get(index + 1).text : "";
-                        String lyric5 = index < currentLyrics.size() - 2 ? currentLyrics.get(index + 2).text : "";
-                        
-                        lyricsListener.onLyricsUpdate(lyric1, lyric2, currentLyric, lyric4, lyric5, index);
+                        // 传递完整歌词列表，由 UI 层根据可用空间决定显示多少行
+                        List<String> texts = new ArrayList<>(currentLyrics.size());
+                        for (LyricLine line : currentLyrics) {
+                            texts.add(line.text);
+                        }
+                        lyricsListener.onLyricsUpdate(texts, index);
                     }
                 }
             }
@@ -505,24 +582,50 @@ public class MediaNotificationListenerService extends NotificationListenerServic
     
     private boolean isMusicApp(String packageName) {
         if (packageName == null) return false;
-        
-        packageName = packageName.toLowerCase();
-        
-        String[] musicPackages = {
-            "netease", "cloudmusic", "music",
-            "qqmusic", "tencent.qqmusic",
-            "kugou", "kugou.player",
-            "kuwo", "kuwo.player",
-            "baidu.music",
-            "player", "media", "audio"
+
+        String lower = packageName.toLowerCase();
+
+        // 优先级 1：精确匹配已知音乐 App 包名（最准确，避免误判）
+        String[] exactMusicPackages = {
+            "com.netease.cloudmusic",        // 网易云音乐
+            "com.netease.cloudmusic.activity",// 网易云音乐车机版
+            "com.tencent.qqmusic",            // QQ 音乐
+            "com.tencent.qqmusiccar",         // QQ 音乐车机版
+            "com.tencent.qqmusiccar.activity",
+            "com.kugou.android",              // 酷狗
+            "com.kugou.android.lite",
+            "com.kugou.player",               // 酷狗车机版
+            "cn.kuwo.player",                 // 酷我
+            "cn.kuwo.kwmusiccar",             // 酷我车机版
+            "com.baidu.music",                // 百度音乐
+            "com.baidu.music.pad",
+            "com.meizu.media.music",          // 魅族音乐
+            "com.huawei.himusic",             // 华为音乐
+            "com.huawei.music",
+            "com.xiaomi.music",               // 小米音乐
+            "com.miui.player",                // 小米音乐
+            "com.oppo.music",                 // OPPO 音乐
+            "com.vivo.music",                 // vivo 音乐
+            "com.coloros.music",
+            "fm.qingting.qtradio",            // 蜻蜓 FM
+            "com.ting.mp3.player",            // 听见音乐
         };
-        
-        for (String musicPackage : musicPackages) {
-            if (packageName.contains(musicPackage)) {
+        for (String exact : exactMusicPackages) {
+            if (lower.equals(exact)) {
                 return true;
             }
         }
-        
+
+        // 优先级 2：通用关键字兜底（覆盖未知车机定制音乐包名）
+        String[] musicKeywords = {
+            "music", "player", "audio"
+        };
+        for (String keyword : musicKeywords) {
+            if (lower.contains(keyword)) {
+                return true;
+            }
+        }
+
         return false;
     }
     
@@ -550,15 +653,4 @@ public class MediaNotificationListenerService extends NotificationListenerServic
         return mediaController;
     }
     
-    private Bundle getMediaMetadataBundle(MediaMetadata metadata) {
-        try {
-            @SuppressLint("SoonBlockedPrivateApi")
-            Field field = MediaMetadata.class.getDeclaredField("mBundle");
-            field.setAccessible(true);
-            return (Bundle) field.get(metadata);
-        } catch (Exception e) {
-            Log.e(TAG, "get bundle error", e);
-        }
-        return null;
-    }
 }

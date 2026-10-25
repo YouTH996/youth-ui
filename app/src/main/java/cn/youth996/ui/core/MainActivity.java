@@ -77,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
     private HorizontalScrollView cardScrollView;
     private CardManager cardManager;
     private MusicPlayerManager musicPlayerManager;
+    private LinearLayout desktopMainLayout;
+    private LinearLayout centerArea;
     
     // ImageView 组件声明
     private ImageView imgBack;
@@ -107,15 +109,11 @@ public class MainActivity extends AppCompatActivity {
     private View navModeContainer;
     private View drivingModeContainer;
     private View pipModeContainer;
-    private ImageView imgCarIcon;
-    private TextView textSpeed;
-    private TextView textDrivingStatus;
     private ImageView imgPipIcon;
     private TextView textPipStatus;
     private FrameLayout pipPreviewFrame;
     
-    // 高德地图悬浮窗检测
-    private static final String AMAP_PACKAGE = "com.autonavi.amapauto.chenmo";
+    // 高德地图悬浮窗检测（主包名在系统设置-地图设置中可配置）
     private static final String AMAP_STANDALONE_PACKAGE = "com.autonavi.map";
     private static final String AMAP_FLOAT_WINDOW_ACTIVITY = "com.autonavi.auto.ui.SplashActivity";
     private boolean isAutoNaviFloating = false;
@@ -204,6 +202,93 @@ public class MainActivity extends AppCompatActivity {
 //        initNavigationMonitor();
         // 检查并请求权限
 //        checkAndRequestPermissions();
+
+        // 动态计算外层主布局的底部安全区，避免中间卡片与底部小卡片/taskbar 重叠
+        adjustMainLayoutBottomSafeArea();
+        // 给中间主区域一个最小高度（占屏幕 50%），保证中间两张主卡足够大
+        applyCenterAreaMinHeight();
+    }
+
+    /**
+     * 动态计算并设置桌面主布局（外层 vertical LinearLayout）的底部 padding。
+     * 预留空间 = taskbar 实际高度 + 小卡片容器距屏底距离 + 小卡片容器本身高度。
+     * 这样无论屏幕尺寸如何变化，中间两张主卡片都会恰好显示在
+     * "状态栏" 与 "小卡片+taskbar" 之间的可用空间里。
+     */
+    private void adjustMainLayoutBottomSafeArea() {
+        if (desktopMainLayout == null || taskbar == null || cardScrollView == null) {
+            return;
+        }
+        // 等小卡片容器首次布局完成后再测量（此时 CardManager 已设置好 minHeight）
+        cardScrollView.post(() -> cardScrollView.post(this::applyBottomSafeArea));
+    }
+
+    /**
+     * 实际把"taskbar + 小卡片 + 间距"的总和写到外层 LinearLayout 的 paddingBottom 上。
+     * 该方法在 cardScrollView 二次 post 后被调用，确保 minHeight 已生效。
+     */
+    private void applyBottomSafeArea() {
+        try {
+            int taskbarHeight = taskbar.getHeight();
+            if (taskbarHeight <= 0) {
+                taskbarHeight = (int) (getResources().getDimension(R.dimen.taskbar_height));
+            }
+            int cardScrollMarginBottomPx = (int) (getResources().getDimension(R.dimen.card_container_margin_bottom));
+            int cardScrollHeight = cardScrollView.getHeight();
+            int extraPad = (int) (4 * getResources().getDisplayMetrics().density);
+            int total = taskbarHeight + cardScrollMarginBottomPx + cardScrollHeight + extraPad;
+            desktopMainLayout.setPadding(
+                    desktopMainLayout.getPaddingLeft(),
+                    desktopMainLayout.getPaddingTop(),
+                    desktopMainLayout.getPaddingRight(),
+                    total
+            );
+            android.util.Log.i(TAG, "【布局适配】动态底部安全区 px=" + total +
+                    " (taskbar=" + taskbarHeight +
+                    ", cardScrollMargin=" + cardScrollMarginBottomPx +
+                    ", cardScrollHeight=" + cardScrollHeight + ")");
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "【布局适配】计算底部安全区失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 强制设置中间主区域（左侧导航卡 + 右侧音乐卡）高度 = 屏幕高度的 80%，
+     * 让两张主卡在桌面布局中占绝对主体。
+     * 并把外层 LinearLayout 的 paddingBottom 同步增大，
+     * 保证底部小卡片容器和 taskbar 始终在中间区域下方。
+     */
+    private void applyCenterAreaMinHeight() {
+        if (centerArea == null) {
+            return;
+        }
+        try {
+            float density = getResources().getDisplayMetrics().density;
+            int screenHeightPx = getResources().getDisplayMetrics().heightPixels;
+            int targetHeightPx = (int) (screenHeightPx * 0.80f);
+            // 强制覆盖 wrap_content：直接设 layoutParams.height
+            android.view.ViewGroup.LayoutParams lp = centerArea.getLayoutParams();
+            lp.height = targetHeightPx;
+            centerArea.setLayoutParams(lp);
+            // 同步外层 paddingBottom = statusBar + centerArea + 8dp 缓冲
+            centerArea.post(() -> {
+                int realHeight = centerArea.getHeight();
+                int statusBarHeight = statusBar != null ? statusBar.getHeight() : 0;
+                int desiredSafe = realHeight + statusBarHeight + (int) (8 * density);
+                if (desktopMainLayout != null) {
+                    desktopMainLayout.setPadding(
+                            desktopMainLayout.getPaddingLeft(),
+                            desktopMainLayout.getPaddingTop(),
+                            desktopMainLayout.getPaddingRight(),
+                            desiredSafe
+                    );
+                    android.util.Log.i(TAG, "【布局适配】centerArea 强制高度 px=" + realHeight +
+                            "（屏幕 80%），外层 paddingBottom=" + desiredSafe);
+                }
+            });
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "【布局适配】中间区域高度设置失败: " + e.getMessage());
+        }
     }
 
     /**
@@ -241,6 +326,22 @@ public class MainActivity extends AppCompatActivity {
                 onOverlayPermissionGranted();
             } else {
                 android.util.Log.w(TAG, "【悬浮窗权限】用户未授权");
+            }
+            return;
+        }
+        if (requestCode == cn.youth996.ui.core.PipVirtualDisplayManager.REQUEST_MEDIA_PROJECTION) {
+            // 画中画屏幕捕获授权结果：授权成功后重试内嵌显示
+            if (cn.youth996.ui.core.PipVirtualDisplayManager.onProjectionResult(this, resultCode, data)) {
+                if (pipPreviewFrame != null) {
+                    cn.youth996.ui.core.PipVirtualDisplayManager.showPipMap(this, pipPreviewFrame);
+                    refreshFloatingMapButtonIcon();
+                    Toast.makeText(this, "画中画地图已显示", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                if (pipModeContainer != null) {
+                    pipModeContainer.setVisibility(View.GONE);
+                }
+                Toast.makeText(this, "未获得屏幕捕获授权，无法使用画中画", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -299,6 +400,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViews() {
         desktopContainer = findViewById(R.id.desktop_container);
+        desktopMainLayout = findViewById(R.id.desktop_main_layout);
+        centerArea = findViewById(R.id.center_area);
         statusBar = findViewById(R.id.status_bar);
         taskbar = findViewById(R.id.taskbar);
 
@@ -313,9 +416,6 @@ public class MainActivity extends AppCompatActivity {
         navModeContainer = findViewById(R.id.nav_mode_container);
         drivingModeContainer = findViewById(R.id.driving_mode_container);
         pipModeContainer = findViewById(R.id.pip_mode_container);
-        imgCarIcon = findViewById(R.id.img_car_icon);
-        textSpeed = findViewById(R.id.text_speed);
-        textDrivingStatus = findViewById(R.id.text_driving_status);
         imgPipIcon = findViewById(R.id.img_pip_icon);
         textPipStatus = findViewById(R.id.text_pip_status);
         pipPreviewFrame = findViewById(R.id.pip_preview_frame);
@@ -386,17 +486,20 @@ public class MainActivity extends AppCompatActivity {
         TextView textSongTitle = findViewById(R.id.text_song_title_center);
         TextView textSongArtist = findViewById(R.id.text_song_artist_center);
         
-        TextView textLyric1 = findViewById(R.id.text_lyric_1);
-        TextView textLyric2 = findViewById(R.id.text_lyric_2);
-        TextView textLyricCurrent = findViewById(R.id.text_lyric_current_center);
-        TextView textLyric4 = findViewById(R.id.text_lyric_4);
-        TextView textLyric5 = findViewById(R.id.text_lyric_5);
-        
+        ViewGroup layoutLyrics = findViewById(R.id.layout_lyrics_center);
+
+        // 状态栏灵动岛歌词
+        View islandContainer = findViewById(R.id.island_lyric_container);
+        ImageView imgIslandWave = findViewById(R.id.img_island_wave);
+        TextView textIslandTitle = findViewById(R.id.text_island_title);
+        TextView textIslandLyric = findViewById(R.id.text_island_lyric);
+
         Log.d("MainActivity", "Creating MusicPlayerManager...");
         musicPlayerManager = new MusicPlayerManager(this);
         musicPlayerManager.bindViews(imgAlbumCoverCenter, imgMusicSource, textMusicSource,
                                      textSongTitle, textSongArtist, btnPlayPauseCenter);
-        musicPlayerManager.bindLyricsViews(textLyric1, textLyric2, textLyricCurrent, textLyric4, textLyric5);
+        musicPlayerManager.bindLyricsViews(layoutLyrics);
+        musicPlayerManager.bindIslandViews(islandContainer, imgIslandWave, textIslandTitle, textIslandLyric);
         Log.d("MainActivity", "MusicPlayerManager created, setting listener...");
         
         musicPlayerManager.setOnMusicUpdateListener(new MusicPlayerManager.OnMusicUpdateListener() {
@@ -404,14 +507,26 @@ public class MainActivity extends AppCompatActivity {
             public void onMusicUpdate(String packageName, String title, String artist, Bitmap albumArt, boolean isPlaying) {
 //                Log.d("MainActivity", "=== MUSIC UPDATE: " + title + " - " + artist);
                 updateMusicPlayerUI(title, artist, isPlaying);
+                if (cardManager != null) {
+                    cardManager.updateMusicInfo(title, artist, albumArt);
+                    cardManager.updateMusicPlayState(isPlaying);
+                }
             }
-            
+
             @Override
             public void onPlaybackStateChanged(boolean isPlaying) {
 //                Log.d("MainActivity", "Playback state changed: " + isPlaying);
                 btnPlayPauseCenter.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+                if (cardManager != null) {
+                    cardManager.updateMusicPlayState(isPlaying);
+                }
             }
         });
+
+        // 底部音乐卡片改为展示真实歌曲信息，控制按钮接管真实播放控制
+        if (cardManager != null) {
+            cardManager.bindMusicCardControls(musicPlayerManager);
+        }
         
         Log.d("MainActivity", "Starting music listening...");
         musicPlayerManager.startListening();
@@ -425,10 +540,8 @@ public class MainActivity extends AppCompatActivity {
     private void setupLyricsListener() {
         MediaNotificationListenerService.setLyricsListener(new MediaNotificationListenerService.OnLyricsUpdateListener() {
             @Override
-            public void onLyricsUpdate(String lyric1, String lyric2, String currentLyric, String lyric4, String lyric5, int index) {
-                runOnUiThread(() -> {
-                    musicPlayerManager.updateLyrics(lyric1, lyric2, currentLyric, lyric4, lyric5);
-                });
+            public void onLyricsUpdate(List<String> lyrics, int index) {
+                runOnUiThread(() -> musicPlayerManager.updateLyrics(lyrics, index));
             }
         });
     }
@@ -703,7 +816,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onAppChanged(String packageName, String className) {
                         Log.d(TAG, "检测到应用切换: " + packageName);
                         
-                        if (packageName.equals(AMAP_PACKAGE) || packageName.equals(AMAP_STANDALONE_PACKAGE)) {
+                        if (packageName.equals(getMapPackage()) || packageName.equals(AMAP_STANDALONE_PACKAGE)) {
                             Log.d(TAG, "高德地图已切换到前台");
                             isAutoNaviFloating = true;
                             checkAmapPipMode(className);
@@ -712,7 +825,6 @@ public class MainActivity extends AppCompatActivity {
                                 Log.d(TAG, "高德地图已切换到后台");
                                 isAutoNaviFloating = false;
                                 isAutoNaviPipMode = false;
-                                runOnUiThread(() -> switchToDrivingMode());
                             }
                         }
                     }
@@ -748,8 +860,8 @@ public class MainActivity extends AppCompatActivity {
     private void checkAutoNaviFloating() {
         String topPackage = getTopPackageName();
         
-        boolean isAmapRunning = topPackage != null && 
-            (topPackage.equals(AMAP_PACKAGE) || topPackage.equals(AMAP_STANDALONE_PACKAGE));
+        boolean isAmapRunning = topPackage != null &&
+            (topPackage.equals(getMapPackage()) || topPackage.equals(AMAP_STANDALONE_PACKAGE));
         
         if (isAmapRunning != isAutoNaviFloating || isAmapRunning) {
             isAutoNaviFloating = isAmapRunning;
@@ -757,8 +869,6 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (isAmapRunning) {
                     checkAmapPipMode();
-                } else {
-                    switchToDrivingMode();
                 }
             });
         }
@@ -784,9 +894,9 @@ public class MainActivity extends AppCompatActivity {
                         String packageName = taskInfo.topActivity.getPackageName();
                         String activityName = taskInfo.topActivity.getClassName();
                         
-                        if (packageName.equals(AMAP_PACKAGE) || 
+                        if (packageName.equals(getMapPackage()) ||
                             packageName.equals(AMAP_STANDALONE_PACKAGE)) {
-                            
+
                             foundAmap = true;
                             
                             if (activityName.contains("pip") || 
@@ -872,13 +982,21 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
+     * 获取用户配置的悬浮地图包名（系统设置-地图设置中选择）
+     */
+    private String getMapPackage() {
+        return cn.youth996.ui.core.FloatingWindowManager.getMapPackage(this);
+    }
+
+    /**
      * 获取前台应用的包名
      */
     private String getTopPackageName() {
-        // 直接检查高德地图包名是否在运行
-        if (isPackageRunning(AMAP_PACKAGE)) {
-            Log.d(TAG, "高德地图车机版正在运行: " + AMAP_PACKAGE);
-            return AMAP_PACKAGE;
+        // 直接检查配置的地图包名是否在运行
+        String mapPackage = getMapPackage();
+        if (isPackageRunning(mapPackage)) {
+            Log.d(TAG, "地图应用正在运行: " + mapPackage);
+            return mapPackage;
         }
         
         if (isPackageRunning(AMAP_STANDALONE_PACKAGE)) {
@@ -966,28 +1084,6 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
-     * 切换到驾驶模式（默认模式）
-     */
-    private void switchToDrivingMode() {
-        if (currentNavMode == MODE_DRIVING) {
-            return;
-        }
-        
-        if (navModeContainer != null && drivingModeContainer != null && pipModeContainer != null) {
-            navModeContainer.setVisibility(View.GONE);
-            drivingModeContainer.setVisibility(View.VISIBLE);
-            pipModeContainer.setVisibility(View.GONE);
-            
-            if (textDrivingStatus != null) {
-                textDrivingStatus.setText("驾驶模式");
-            }
-            
-            currentNavMode = MODE_DRIVING;
-            updateSimulatedSpeed();
-        }
-    }
-    
-    /**
      * 切换到导航模式（高德地图悬浮窗模式）
      */
     private void switchToNavigationMode() {
@@ -1028,41 +1124,14 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
-     * 更新模拟的车速（实际应用中应该从车辆CAN总线或OBD读取）
-     */
-    private void updateSimulatedSpeed() {
-        if (textSpeed == null || currentGear != 3) {
-            return;
-        }
-        
-        int speed = 0;
-        switch (currentGear) {
-            case 0:
-                speed = 0;
-                break;
-            case 1:
-                speed = 15 + (int)(Math.random() * 10);
-                break;
-            case 2:
-                speed = 0;
-                break;
-            case 3:
-                speed = 60 + (int)(Math.random() * 40);
-                break;
-        }
-        
-        textSpeed.setText(String.valueOf(speed));
-    }
-    
-    /**
      * 启动高德地图导航
      */
     private void launchAmapNavigation() {
         try {
             PackageManager pm = getPackageManager();
             
-            Intent intent = pm.getLaunchIntentForPackage(AMAP_PACKAGE);
-            
+            Intent intent = pm.getLaunchIntentForPackage(getMapPackage());
+
             if (intent == null) {
                 intent = pm.getLaunchIntentForPackage(AMAP_STANDALONE_PACKAGE);
             }
@@ -1097,9 +1166,9 @@ public class MainActivity extends AppCompatActivity {
                     if (taskInfo.topActivity != null) {
                         String packageName = taskInfo.topActivity.getPackageName();
                         
-                        if (packageName.equals(AMAP_PACKAGE) || 
+                        if (packageName.equals(getMapPackage()) ||
                             packageName.equals(AMAP_STANDALONE_PACKAGE)) {
-                            
+
                             activityManager.moveTaskToFront(
                                 taskInfo.id, 
                                 android.app.ActivityManager.MOVE_TASK_WITH_HOME
@@ -1231,9 +1300,15 @@ public class MainActivity extends AppCompatActivity {
         // 风向图标 - 初始化时设置默认状态
         updateAirDirectionIcon();
         
-        // 设置图标
-        loadImageFromAssets("webui/img/navbar/sys_nav_bar_apps.png", imgSettings);
-        
+        // 设置图标（使用汽车 logo 图标）
+        loadImageFromAssets("webui/img/navbar/sys_nav_bar_car.png", imgSettings);
+
+        // 显示应用图标（九宫格）
+        ImageView imgShowApps = findViewById(R.id.img_show_apps);
+        if (imgShowApps != null) {
+            loadImageFromAssets("webui/img/navbar/sys_nav_bar_apps.png", imgShowApps);
+        }
+
         // 后除霜图标 - 使用前除霜图标作为备用
         loadImageFromAssets("webui/img/navbar/ac_bar_front_defrost0.png", imgDefrostRear);
     }
@@ -1501,7 +1576,6 @@ public class MainActivity extends AppCompatActivity {
                 updateGearDisplay();
                 String[] gears = {"P档", "R档", "N档", "D档"};
                 Toast.makeText(this, gears[currentGear], Toast.LENGTH_SHORT).show();
-                updateSimulatedSpeed();
             });
         }
         
@@ -1663,130 +1737,135 @@ public class MainActivity extends AppCompatActivity {
         if (btnDesktopSettings != null) {
             btnDesktopSettings.setOnClickListener(v -> showSettingsDialog());
         }
-        
-        // ==================== 高德地图悬浮窗控制按钮 ====================
-        View btnAmapFloat = findViewById(R.id.btn_amap_float);
-        if (btnAmapFloat != null) {
-            btnAmapFloat.setOnClickListener(v -> {
-                Log.i(TAG, "【高德悬浮窗】点击了高德悬浮按钮");
-                
-                // 检查高德地图是否安装
-                if (!cn.youth996.ui.core.FloatingWindowManager.isAmapInstalled(this)) {
-                    Log.w(TAG, "【高德悬浮窗】高德地图未安装");
-                    Toast.makeText(this, "请先安装高德地图车机版", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                
-                // 显示高德地图悬浮窗（使用默认位置）
-                cn.youth996.ui.core.FloatingWindowManager.showAmapFloatMap(this);
-                
-                Toast.makeText(this, "高德地图悬浮窗已显示", Toast.LENGTH_SHORT).show();
-                Log.i(TAG, "【高德悬浮窗】高德地图悬浮窗已显示");
-            });
-        }
-        
-        // ==================== 自定义悬浮窗按钮 ====================
-        View btnCustomFloat = findViewById(R.id.btn_custom_float);
-        if (btnCustomFloat != null) {
-            btnCustomFloat.setOnClickListener(v -> {
-                Log.i(TAG, "【自定义悬浮窗】点击了自定义悬浮按钮");
-                
-                // 检查悬浮窗权限
-                if (!cn.youth996.ui.core.FloatingWindowManager.hasOverlayPermission(this)) {
-                    Log.w(TAG, "【自定义悬浮窗】没有悬浮窗权限，正在请求授权");
-                    cn.youth996.ui.core.FloatingWindowManager.requestOverlayPermission(this);
-                    Toast.makeText(this, "请先授权悬浮窗权限", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                
-                // 检查是否正在显示
-                boolean isShowing = cn.youth996.ui.core.FloatingWindowManager.isCustomFloatWindowShowing(this);
-                
-                if (isShowing) {
-                    // 隐藏自定义悬浮窗
-                    cn.youth996.ui.core.FloatingWindowManager.hideCustomFloatWindow(this);
-                    Toast.makeText(this, "自定义悬浮窗已隐藏", Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "【自定义悬浮窗】自定义悬浮窗已隐藏");
-                } else {
-                    // 显示自定义悬浮窗（使用默认位置）
-                    cn.youth996.ui.core.FloatingWindowManager.showCustomFloatWindow(this);
-                    Toast.makeText(this, "自定义悬浮窗已显示", Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "【自定义悬浮窗】自定义悬浮窗已显示");
+
+        // 显示应用弹窗（点击启动 AppDrawerActivity）
+        View btnShowApps = findViewById(R.id.btn_show_apps);
+        if (btnShowApps != null) {
+            btnShowApps.setOnClickListener(v -> {
+                try {
+                    Log.i(TAG, "【应用抽屉】启动 AppDrawerActivity");
+                    Intent drawerIntent = new Intent(this, cn.youth996.ui.ui.AppDrawerActivity.class);
+                    drawerIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(drawerIntent);
+                } catch (Exception e) {
+                    Log.e(TAG, "启动 AppDrawerActivity 失败: " + e.getMessage(), e);
+                    Toast.makeText(this, "无法打开应用列表", Toast.LENGTH_SHORT).show();
                 }
             });
         }
         
-        // ==================== 悬浮窗控制按钮 ====================
-        // 悬浮地图按钮 - 显示高德地图悬浮窗
+        // ==================== 悬浮地图状态切换按钮 ====================
+        // 单个按钮：根据当前是否显示悬浮地图，切换图标和点击行为
+        //   - 未显示（默认） → 显示地图图标，点击 → 开启悬浮地图
+        //   - 已显示         → 显示关闭图标，点击 → 关闭悬浮地图
         View btnFloatingMap = findViewById(R.id.btn_floating_map);
         if (btnFloatingMap != null) {
             btnFloatingMap.setOnClickListener(v -> {
-                Log.i(TAG, "【悬浮窗控制】点击了悬浮地图按钮");
-                
-                // 检查高德地图是否安装
-                if (!cn.youth996.ui.core.FloatingWindowManager.isAmapInstalled(this)) {
-                    Log.w(TAG, "【悬浮窗控制】高德地图未安装");
-                    Toast.makeText(this, "请先安装高德地图车机版", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                
-                // 显示高德地图悬浮窗（使用默认位置）
-                cn.youth996.ui.core.FloatingWindowManager.showAmapFloatMap(this);
-                
-                Toast.makeText(this, "悬浮地图已显示", Toast.LENGTH_SHORT).show();
-                Log.i(TAG, "【悬浮窗控制】高德悬浮地图已显示");
-            });
-        }
-        
-        // 关闭悬浮窗按钮
-        View btnCloseFloating = findViewById(R.id.btn_close_floating);
-        if (btnCloseFloating != null) {
-            btnCloseFloating.setOnClickListener(v -> {
-                Log.i(TAG, "【悬浮窗控制】点击了关闭悬浮窗按钮");
-                
-                // 关闭高德地图悬浮窗
-                cn.youth996.ui.core.FloatingWindowManager.hideAmapFloatMap(this);
-                
-                Toast.makeText(this, "悬浮地图已关闭", Toast.LENGTH_SHORT).show();
-                Log.i(TAG, "【悬浮窗控制】高德悬浮地图已关闭");
-            });
-        }
-        
-        // 切换悬浮窗按钮
-        View btnToggleFloating = findViewById(R.id.btn_toggle_floating);
-        if (btnToggleFloating != null) {
-            btnToggleFloating.setOnClickListener(v -> {
-                Log.i(TAG, "【悬浮窗控制】点击了切换悬浮窗按钮");
-                
-                // 检查高德地图是否安装
-                if (!cn.youth996.ui.core.FloatingWindowManager.isAmapInstalled(this)) {
-                    Log.w(TAG, "【悬浮窗控制】高德地图未安装");
-                    Toast.makeText(this, "请先安装高德地图车机版", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                
-                // 切换高德地图悬浮窗显示状态
-                boolean wasShowing = cn.youth996.ui.core.FloatingWindowManager.isAmapFloatShowing();
-                cn.youth996.ui.core.FloatingWindowManager.toggleAmapFloatMap(this);
-                
-                if (wasShowing) {
+                if (cn.youth996.ui.core.FloatingWindowManager.isMapPipMode(this)) {
+                    toggleEmbeddedPipMap();
+                } else if (cn.youth996.ui.core.FloatingWindowManager.isAmapFloatShowing()) {
+                    // 当前已显示 → 点击关闭
+                    Log.i(TAG, "【悬浮地图】点击关闭悬浮");
+                    cn.youth996.ui.core.FloatingWindowManager.hideAmapFloatMap(this);
                     Toast.makeText(this, "悬浮地图已关闭", Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "【悬浮窗控制】高德悬浮地图已关闭");
                 } else {
+                    // 当前未显示 → 检查安装后开启
+                    Log.i(TAG, "【悬浮地图】点击开启悬浮");
+                    if (!cn.youth996.ui.core.FloatingWindowManager.isAmapInstalled(this)) {
+                        Log.w(TAG, "【悬浮地图】高德地图未安装");
+                        Toast.makeText(this, "请先安装高德地图车机版", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    cn.youth996.ui.core.FloatingWindowManager.showAmapFloatMap(this);
                     Toast.makeText(this, "悬浮地图已显示", Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "【悬浮窗控制】高德悬浮地图已显示");
                 }
+                refreshFloatingMapButtonIcon();
             });
+        }
+
+        // 初始状态刷新按钮图标
+        refreshFloatingMapButtonIcon();
+    }
+
+    /**
+     * 根据当前悬浮地图显示状态，刷新 taskbar 中状态按钮的图标。
+     *   - 未显示 → 地图图标（开启悬浮）
+     *   - 已显示 → 关闭图标（关闭悬浮）
+     */
+    private void refreshFloatingMapButtonIcon() {
+        ImageView img = findViewById(R.id.img_floating_state_icon);
+        if (img == null) return;
+        if (cn.youth996.ui.core.FloatingWindowManager.isAmapFloatShowing()
+                || cn.youth996.ui.core.PipVirtualDisplayManager.isShowing()) {
+            loadImageFromAssets("webui/img/navbar/sys_nav_bar_guanbi.png", img);
+        } else {
+            loadImageFromAssets("webui/img/navbar/sys_nav_bar_xuanfu.png", img);
+        }
+    }
+
+    /**
+     * 切换内嵌画中画地图（画中画模式下 taskbar 地图按钮的行为）
+     *
+     * 将地图 App 启动到 VirtualDisplay，画面直接渲染进左侧 pip 卡片容器。
+     */
+    private void toggleEmbeddedPipMap() {
+        if (cn.youth996.ui.core.PipVirtualDisplayManager.isShowing()) {
+            Log.i(TAG, "【画中画】点击关闭");
+            cn.youth996.ui.core.PipVirtualDisplayManager.hidePipMap(this);
+            if (pipModeContainer != null) {
+                pipModeContainer.setVisibility(View.GONE);
+            }
+            Toast.makeText(this, "画中画地图已关闭", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.i(TAG, "【画中画】点击开启");
+        if (!cn.youth996.ui.core.FloatingWindowManager.isAmapInstalled(this)) {
+            Toast.makeText(this, "请先安装高德地图车机版", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (pipModeContainer == null || pipPreviewFrame == null) {
+            Toast.makeText(this, "画中画容器不可用", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // 显示画中画卡片容器，隐藏占位图标与文字
+        if (navModeContainer != null) navModeContainer.setVisibility(View.GONE);
+        if (drivingModeContainer != null) drivingModeContainer.setVisibility(View.GONE);
+        pipModeContainer.setVisibility(View.VISIBLE);
+        if (imgPipIcon != null) imgPipIcon.setVisibility(View.GONE);
+        if (textPipStatus != null) textPipStatus.setVisibility(View.GONE);
+
+        if (cn.youth996.ui.core.PipVirtualDisplayManager.showPipMap(this, pipPreviewFrame)) {
+            if (cn.youth996.ui.core.PipVirtualDisplayManager.hasProjection()) {
+                Toast.makeText(this, "画中画地图已显示", Toast.LENGTH_SHORT).show();
+            }
+            // 未授权时会弹系统录屏授权框，结果在 onActivityResult 中处理
+        } else {
+            pipModeContainer.setVisibility(View.GONE);
+            Toast.makeText(this, "未找到地图应用", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 供设置页调用：切换地图模式时，若画中画正在显示则关闭
+     */
+    public void hideEmbeddedPipMap() {
+        if (cn.youth996.ui.core.PipVirtualDisplayManager.isShowing()) {
+            cn.youth996.ui.core.PipVirtualDisplayManager.hidePipMap(this);
+            if (pipModeContainer != null) {
+                pipModeContainer.setVisibility(View.GONE);
+            }
+            refreshFloatingMapButtonIcon();
         }
     }
 
     private void updateAcTempDisplay() {
         if (acTempText != null) {
             if (isAcOn) {
-                acTempText.setText(currentTemp + "°C");
-                acTempText.setTextColor(getResources().getColor(R.color.primary, getTheme()));
+                acTempText.setText(currentTemp + "°");
+                acTempText.setTextColor(getResources().getColor(R.color.dark_tech_text, getTheme()));
             } else {
-                acTempText.setText("--°C");
+                acTempText.setText("--°");
                 acTempText.setTextColor(getResources().getColor(R.color.text_hint, getTheme()));
             }
         }

@@ -11,8 +11,10 @@ import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -21,6 +23,7 @@ import androidx.fragment.app.Fragment;
 
 import cn.youth996.ui.R;
 import cn.youth996.ui.adb.AdbProtocolClient;
+import cn.youth996.ui.core.FloatingWindowManager;
 import cn.youth996.ui.receiver.BootReceiver;
 
 public class SettingsSystemFragment extends Fragment {
@@ -45,6 +48,10 @@ public class SettingsSystemFragment extends Fragment {
     private Switch switchVibration;
     private LinearLayout layoutAdbPermission;
     private LinearLayout layoutSetHome;
+    private LinearLayout layoutFloatMapApp;
+    private ImageView imgFloatMapIcon;
+    private TextView textFloatMapPackage;
+    private Switch switchMapPipMode;
 
     private SharedPreferences prefs;
 
@@ -81,6 +88,10 @@ public class SettingsSystemFragment extends Fragment {
         switchVibration = view.findViewById(R.id.switch_vibration);
         layoutAdbPermission = view.findViewById(R.id.layout_adb_permission);
         layoutSetHome = view.findViewById(R.id.layout_set_home);
+        layoutFloatMapApp = view.findViewById(R.id.layout_float_map_app);
+        imgFloatMapIcon = view.findViewById(R.id.img_float_map_icon);
+        textFloatMapPackage = view.findViewById(R.id.text_float_map_package);
+        switchMapPipMode = view.findViewById(R.id.switch_map_pip_mode);
     }
 
     private void loadSettings() {
@@ -103,6 +114,11 @@ public class SettingsSystemFragment extends Fragment {
         if (switchMobileData != null) switchMobileData.setChecked(mobileData);
         if (switchTouchSound != null) switchTouchSound.setChecked(touchSound);
         if (switchVibration != null) switchVibration.setChecked(vibration);
+        if (switchMapPipMode != null && getContext() != null) {
+            switchMapPipMode.setChecked(FloatingWindowManager.isMapPipMode(requireContext()));
+        }
+
+        refreshFloatMapApp();
     }
 
     private void setupListeners() {
@@ -201,6 +217,107 @@ public class SettingsSystemFragment extends Fragment {
         if (layoutSetHome != null) {
             layoutSetHome.setOnClickListener(v -> setAsHomeLauncher());
         }
+
+        if (layoutFloatMapApp != null) {
+            layoutFloatMapApp.setOnClickListener(v -> showMapAppPickerDialog());
+        }
+
+        if (switchMapPipMode != null) {
+            switchMapPipMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (getContext() == null) return;
+                FloatingWindowManager.setMapPipMode(requireContext(), isChecked);
+                // 切换模式时若地图正在显示，先关闭当前形态，由用户重新打开
+                if (FloatingWindowManager.isAmapFloatShowing()) {
+                    FloatingWindowManager.hideAmapFloatMap(requireContext());
+                }
+                if (getActivity() instanceof cn.youth996.ui.core.MainActivity) {
+                    ((cn.youth996.ui.core.MainActivity) getActivity()).hideEmbeddedPipMap();
+                }
+                Toast.makeText(requireContext(),
+                        isChecked ? "已切换为画中画地图模式" : "已切换为悬浮地图模式",
+                        Toast.LENGTH_SHORT).show();
+            });
+        }
+    }
+
+    /**
+     * 回显当前选择的悬浮地图应用（图标 + 包名）
+     */
+    private void refreshFloatMapApp() {
+        if (getContext() == null || textFloatMapPackage == null) return;
+
+        String mapPackage = FloatingWindowManager.getMapPackage(requireContext());
+        textFloatMapPackage.setText(mapPackage);
+
+        if (imgFloatMapIcon != null) {
+            try {
+                PackageManager pm = requireContext().getPackageManager();
+                imgFloatMapIcon.setImageDrawable(pm.getApplicationIcon(mapPackage));
+            } catch (Exception e) {
+                imgFloatMapIcon.setImageDrawable(null);
+            }
+        }
+    }
+
+    /**
+     * 弹出已安装应用列表，选择作为悬浮地图的应用
+     */
+    private void showMapAppPickerDialog() {
+        if (getContext() == null) return;
+
+        PackageManager pm = requireContext().getPackageManager();
+        Intent launcherIntent = new Intent(Intent.ACTION_MAIN);
+        launcherIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        java.util.List<android.content.pm.ResolveInfo> resolveInfos = pm.queryIntentActivities(launcherIntent, 0);
+
+        java.util.List<android.content.pm.ResolveInfo> apps = new java.util.ArrayList<>();
+        for (android.content.pm.ResolveInfo info : resolveInfos) {
+            // 排除自身
+            if (!info.activityInfo.packageName.equals(requireContext().getPackageName())) {
+                apps.add(info);
+            }
+        }
+        apps.sort((a, b) -> a.loadLabel(pm).toString().compareToIgnoreCase(b.loadLabel(pm).toString()));
+
+        String currentPackage = FloatingWindowManager.getMapPackage(requireContext());
+        int checkedIndex = -1;
+        for (int i = 0; i < apps.size(); i++) {
+            if (apps.get(i).activityInfo.packageName.equals(currentPackage)) {
+                checkedIndex = i;
+                break;
+            }
+        }
+
+        android.widget.ArrayAdapter<android.content.pm.ResolveInfo> adapter =
+            new android.widget.ArrayAdapter<android.content.pm.ResolveInfo>(requireContext(), R.layout.item_app_choice, apps) {
+                @NonNull
+                @Override
+                public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                    View itemView = convertView;
+                    if (itemView == null) {
+                        itemView = LayoutInflater.from(getContext()).inflate(R.layout.item_app_choice, parent, false);
+                    }
+                    android.content.pm.ResolveInfo info = getItem(position);
+                    if (info != null) {
+                        ((ImageView) itemView.findViewById(R.id.img_app_icon)).setImageDrawable(info.loadIcon(pm));
+                        ((TextView) itemView.findViewById(R.id.text_app_name)).setText(info.loadLabel(pm));
+                        ((TextView) itemView.findViewById(R.id.text_app_package)).setText(info.activityInfo.packageName);
+                    }
+                    return itemView;
+                }
+            };
+
+        new android.app.AlertDialog.Builder(requireContext())
+            .setTitle("选择悬浮地图应用")
+            .setSingleChoiceItems(adapter, checkedIndex, (dialog, which) -> {
+                String packageName = apps.get(which).activityInfo.packageName;
+                FloatingWindowManager.setMapPackage(requireContext(), packageName);
+                refreshFloatMapApp();
+                Toast.makeText(requireContext(), "已设置悬浮地图: " + packageName, Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            })
+            .setNegativeButton("取消", null)
+            .show();
     }
 
     private void showAdbPermissionDialog() {
