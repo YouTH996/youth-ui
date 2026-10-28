@@ -691,20 +691,64 @@
                     android:layout_width="8dp"
                     android:layout_height="0dp" />
 
-                <!-- 吹风角度调节 -->
+                <!-- 风速调节：左减 | 风向+风速居中 | 右加 -->
                 <LinearLayout
-                    android:id="@+id/btn_air_direction"
-                    android:layout_width="48dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="48dp"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:background="@drawable/icon_background_selector">
+                    android:orientation="horizontal"
+                    android:gravity="center">
 
-                    <ImageView
-                        android:id="@+id/img_air_direction"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:scaleType="fitCenter" />
+                    <LinearLayout
+                        android:id="@+id/btn_wind_minus"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/icon_background_selector">
+
+                        <ImageView
+                            android:id="@+id/img_wind_minus"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:scaleType="fitCenter" />
+                    </LinearLayout>
+
+                    <!-- 风向（上）+ 风速（下）垂直居中紧凑排列 -->
+                    <LinearLayout
+                        android:id="@+id/btn_air_direction"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/icon_background_selector">
+
+                        <ImageView
+                            android:id="@+id/img_air_direction"
+                            android:layout_width="32dp"
+                            android:layout_height="26dp"
+                            android:scaleType="fitCenter" />
+
+                        <ImageView
+                            android:id="@+id/img_wind_level"
+                            android:layout_width="26dp"
+                            android:layout_height="12dp"
+                            android:scaleType="fitCenter" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/btn_wind_plus"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/icon_background_selector">
+
+                        <ImageView
+                            android:id="@+id/img_wind_plus"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:scaleType="fitCenter" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>

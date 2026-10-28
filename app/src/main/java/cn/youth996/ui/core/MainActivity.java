@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imgDefrostFront;
     private ImageView imgDefrostRear;
     private ImageView imgAirDirection;
+    private ImageView imgWindLevel;
     private ImageView imgSettings;
     
     // 状态栏组件声明
@@ -136,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isFrontDefrostOn = false;
     private boolean isRearDefrostOn = false;
     private int airDirection = 0; // 0:面部 1:胸部 2:脚部 3:全部
+    private int windLevel = 0; // 风速档位 0-7，0 为关闭
     
     // 档位状态 (0=P, 1=N, 2=D)
     private int currentGear = 0;
@@ -433,6 +435,7 @@ public class MainActivity extends AppCompatActivity {
         imgDefrostFront = findViewById(R.id.img_defrost_front);
         imgDefrostRear = findViewById(R.id.img_defrost_rear);
         imgAirDirection = findViewById(R.id.img_air_direction);
+        imgWindLevel = findViewById(R.id.img_wind_level);
         imgSettings = findViewById(R.id.img_settings);
         
         // 初始化状态栏组件
@@ -1299,6 +1302,9 @@ public class MainActivity extends AppCompatActivity {
         
         // 风向图标 - 初始化时设置默认状态
         updateAirDirectionIcon();
+
+        // 风速图标 - 初始化时设置默认状态
+        updateWindLevelIcon();
         
         // 设置图标（使用汽车 logo 图标）
         loadImageFromAssets("webui/img/navbar/sys_nav_bar_car.png", imgSettings);
@@ -1309,8 +1315,25 @@ public class MainActivity extends AppCompatActivity {
             loadImageFromAssets("webui/img/navbar/sys_nav_bar_apps.png", imgShowApps);
         }
 
-        // 后除霜图标 - 使用前除霜图标作为备用
-        loadImageFromAssets("webui/img/navbar/ac_bar_front_defrost0.png", imgDefrostRear);
+        // 后除霜图标
+        loadImageFromAssets("webui/img/navbar/ac_bar_back_defrost0.png", imgDefrostRear);
+
+        // 风速加减按钮图标
+        ImageView imgWindMinus = findViewById(R.id.img_wind_minus);
+        ImageView imgWindPlus = findViewById(R.id.img_wind_plus);
+        loadImageFromAssets("webui/img/navbar/air_control_jian.png", imgWindMinus);
+        loadImageFromAssets("webui/img/navbar/air_control_jia.png", imgWindPlus);
+    }
+
+    /**
+     * 更新风速图标，根据当前风速档位显示对应的图片
+     * 0 档为关闭状态，使用 ac_bar_wind_level_0_off_dark.png
+     */
+    private void updateWindLevelIcon() {
+        String assetPath = windLevel == 0
+            ? "webui/img/navbar/ac_bar_wind_level_0_off_dark.png"
+            : String.format("webui/img/navbar/ac_bar_wind_level_%d_on.png", windLevel);
+        loadImageFromAssets(assetPath, imgWindLevel);
     }
     
     /**
@@ -1729,6 +1752,34 @@ public class MainActivity extends AppCompatActivity {
                 updateAirDirectionIcon();
                 String[] directions = {"模式1", "模式2", "模式3", "模式4", "模式5", "模式6", "模式7", "模式8"};
                 Toast.makeText(this, "当前风向: " + directions[airDirection], Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        // 空调风速调节（左减右加）
+        View btnWindMinus = findViewById(R.id.btn_wind_minus);
+        if (btnWindMinus != null) {
+            btnWindMinus.setOnClickListener(v -> {
+                if (windLevel > 0) {
+                    windLevel--;
+                    updateWindLevelIcon();
+                    String message = windLevel == 0 ? "风速已关闭" : "当前风速: " + windLevel + "档";
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "风速已关闭", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        View btnWindPlus = findViewById(R.id.btn_wind_plus);
+        if (btnWindPlus != null) {
+            btnWindPlus.setOnClickListener(v -> {
+                if (windLevel < 7) {
+                    windLevel++;
+                    updateWindLevelIcon();
+                    Toast.makeText(this, "当前风速: " + windLevel + "档", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "已达到最高风速", Toast.LENGTH_SHORT).show();
+                }
             });
         }
 
