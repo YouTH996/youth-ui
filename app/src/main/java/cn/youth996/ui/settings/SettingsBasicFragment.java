@@ -1,13 +1,16 @@
 package cn.youth996.ui.settings;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -34,6 +37,8 @@ public class SettingsBasicFragment extends Fragment {
     private Switch switchShowAppName;
     private Switch switchShowBadge;
     private Switch switchAutoStart;
+    private LinearLayout layoutNotificationPermission;
+    private TextView textNotificationStatus;
 
     private SharedPreferences prefs;
 
@@ -67,6 +72,52 @@ public class SettingsBasicFragment extends Fragment {
         switchShowAppName = view.findViewById(R.id.switch_show_app_name);
         switchShowBadge = view.findViewById(R.id.switch_show_badge);
         switchAutoStart = view.findViewById(R.id.switch_auto_start);
+        layoutNotificationPermission = view.findViewById(R.id.layout_notification_permission);
+        textNotificationStatus = view.findViewById(R.id.text_notification_status);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshNotificationStatus();
+    }
+
+    /**
+     * 刷新通知监听权限的授权状态显示
+     */
+    private void refreshNotificationStatus() {
+        if (textNotificationStatus == null || getContext() == null) return;
+        boolean enabled = isNotificationListenerEnabled(requireContext());
+        textNotificationStatus.setText(enabled ? "已开启" : "未开启，点击去授权");
+    }
+
+    /**
+     * 检查通知监听器是否已启用
+     */
+    private boolean isNotificationListenerEnabled(Context context) {
+        try {
+            String flat = android.provider.Settings.Secure.getString(
+                context.getContentResolver(),
+                "enabled_notification_listeners"
+            );
+            return flat != null && flat.contains(context.getPackageName());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * 打开系统"设备和应用通知"（通知监听权限）设置页面
+     */
+    private void openNotificationListenerSettings() {
+        if (getContext() == null) return;
+        try {
+            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "无法打开设置，请手动开启'通知访问权限'", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void loadSettings() {
@@ -188,6 +239,10 @@ public class SettingsBasicFragment extends Fragment {
                     Toast.makeText(requireContext(), isChecked ? "已开启开机自启" : "已关闭开机自启", Toast.LENGTH_SHORT).show();
                 }
             });
+        }
+
+        if (layoutNotificationPermission != null) {
+            layoutNotificationPermission.setOnClickListener(v -> openNotificationListenerSettings());
         }
     }
 }

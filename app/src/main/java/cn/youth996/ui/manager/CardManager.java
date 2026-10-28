@@ -14,7 +14,6 @@ import android.view.View;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,9 +42,6 @@ public class CardManager {
     private View frequentAppsCard;
     
     private boolean isPlaying = false;
-    private int currentProgress = 35;
-    private Handler progressHandler;
-    private Runnable progressRunnable;
     
     private List<AppInfo> frequentApps;
     private List<AppInfo> installedApps;
@@ -60,7 +56,6 @@ public class CardManager {
         this.cardContainer = cardContainer;
         this.cardScrollView = cardScrollView;
         this.handler = new Handler(Looper.getMainLooper());
-        this.progressHandler = new Handler(Looper.getMainLooper());
         this.frequentApps = new ArrayList<>();
         this.installedApps = new ArrayList<>();
         this.prefs = activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -116,8 +111,6 @@ public class CardManager {
         setupVehicleControlCard();
         setupTirePressureCard();
         setupFrequentAppsCard();
-        
-        startMusicProgressSimulation();
     }
     
     private void setupNavigationCard() {
@@ -244,13 +237,7 @@ public class CardManager {
         
         btnPlayPause.setOnClickListener(v -> {
             isPlaying = !isPlaying;
-            if (isPlaying) {
-                btnPlayPause.setImageResource(R.drawable.ic_pause);
-                startMusicProgressSimulation();
-            } else {
-                btnPlayPause.setImageResource(R.drawable.ic_play);
-                stopMusicProgressSimulation();
-            }
+            btnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
         });
         
         btnNext.setOnClickListener(v -> {
@@ -657,12 +644,10 @@ public class CardManager {
     }
 
     /**
-     * 将音乐卡片的控制按钮绑定到真实的 MusicPlayerManager，
-     * 同时停止本地模拟进度，避免与真实播放状态冲突
+     * 将音乐卡片的控制按钮绑定到真实的 MusicPlayerManager
      */
     public void bindMusicCardControls(MusicPlayerManager manager) {
         if (musicCard == null || manager == null) return;
-        stopMusicProgressSimulation();
 
         // 清除写死的演示数据，等待真实媒体信息填充
         TextView textSongTitle = musicCard.findViewById(R.id.text_song_title);
@@ -703,45 +688,5 @@ public class CardManager {
             updateTirePressureColor(textTireRl, rl);
             updateTirePressureColor(textTireRr, rr);
         }
-    }
-    
-    private void startMusicProgressSimulation() {
-        progressRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (isPlaying) {
-                    currentProgress++;
-                    if (currentProgress > 100) {
-                        currentProgress = 0;
-                    }
-                    
-                    SeekBar seekBar = musicCard.findViewById(R.id.seekbar_progress);
-                    if (seekBar != null) {
-                        seekBar.setProgress(currentProgress);
-                    }
-                    
-                    TextView textCurrentTime = musicCard.findViewById(R.id.text_current_time);
-                    if (textCurrentTime != null) {
-                        int currentSeconds = (int) (currentProgress * 2.25);
-                        int minutes = currentSeconds / 60;
-                        int seconds = currentSeconds % 60;
-                        textCurrentTime.setText(String.format("%d:%02d", minutes, seconds));
-                    }
-                    
-                    progressHandler.postDelayed(this, 1000);
-                }
-            }
-        };
-        progressHandler.post(progressRunnable);
-    }
-    
-    private void stopMusicProgressSimulation() {
-        if (progressRunnable != null) {
-            progressHandler.removeCallbacks(progressRunnable);
-        }
-    }
-    
-    public void onDestroy() {
-        stopMusicProgressSimulation();
     }
 }
