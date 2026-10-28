@@ -3,6 +3,7 @@ package cn.youth996.ui.manager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -26,6 +27,7 @@ import java.util.Set;
 
 import cn.youth996.ui.R;
 import cn.youth996.ui.core.AppInfo;
+import cn.youth996.ui.core.FloatingWindowManager;
 
 public class CardManager {
 
@@ -153,20 +155,67 @@ public class CardManager {
             e.printStackTrace();
         }
         
-        btnNavIcon.setOnClickListener(v -> {
-            Toast.makeText(activity, "打开导航应用", Toast.LENGTH_SHORT).show();
-        });
-        
-        btnNavHome.setOnClickListener(v -> {
-            Toast.makeText(activity, "开始导航回家", Toast.LENGTH_SHORT).show();
-        });
-        
-        btnNavCompany.setOnClickListener(v -> {
-            Toast.makeText(activity, "开始导航去公司", Toast.LENGTH_SHORT).show();
-        });
-        
+        btnNavIcon.setOnClickListener(v -> openMapApp());
+
+        btnNavHome.setOnClickListener(v -> naviGoHome());
+
+        btnNavCompany.setOnClickListener(v -> naviGoCompany());
+
         navigationCard.setOnClickListener(v -> {
         });
+    }
+
+    // 高德车机版遥控协议（均在 com.autonavi.amapauto 上实测验证）：
+    // 回家：标准广播 AUTONAVI_STANDARD_BROADCAST_RECV，KEY_TYPE=10040
+    // 去公司：桌面小部件广播 <包名>.AUTO_WIDGET_GO_COMPANY（标准协议无对应 KEY_TYPE）
+    // 两者在地址已设置时直接发起导航，未设置时打开地址设置页
+    private static final String AMAP_BROADCAST_ACTION = "AUTONAVI_STANDARD_BROADCAST_RECV";
+    private static final int AMAP_KEY_TYPE_GO_HOME = 10040;
+    private static final String AMAP_WIDGET_ACTION_GO_COMPANY = ".AUTO_WIDGET_GO_COMPANY";
+
+    /** 打开设置中配置的默认地图应用 */
+    private void openMapApp() {
+        String pkg = FloatingWindowManager.getMapPackage(activity);
+        try {
+            Intent launchIntent = activity.getPackageManager().getLaunchIntentForPackage(pkg);
+            if (launchIntent == null) {
+                Toast.makeText(activity, "未安装地图应用: " + pkg, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            activity.startActivity(launchIntent);
+        } catch (Exception e) {
+            Toast.makeText(activity, "打开地图失败", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** 导航回家：高德车机版标准广播协议 KEY_TYPE=10040 */
+    private void naviGoHome() {
+        String pkg = FloatingWindowManager.getMapPackage(activity);
+        try {
+            Intent intent = new Intent(AMAP_BROADCAST_ACTION);
+            intent.setPackage(pkg);
+            intent.putExtra("KEY_TYPE", AMAP_KEY_TYPE_GO_HOME);
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            activity.sendBroadcast(intent);
+            Toast.makeText(activity, "开始导航回家", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(activity, "发送导航指令失败", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** 导航去公司：高德车机版小部件广播（实测有效，未设公司地址时会打开设置页） */
+    private void naviGoCompany() {
+        String pkg = FloatingWindowManager.getMapPackage(activity);
+        try {
+            Intent intent = new Intent(pkg + AMAP_WIDGET_ACTION_GO_COMPANY);
+            intent.setPackage(pkg);
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            activity.sendBroadcast(intent);
+            Toast.makeText(activity, "开始导航去公司", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(activity, "发送导航指令失败", Toast.LENGTH_SHORT).show();
+        }
     }
     
     private void setupMusicCard() {
