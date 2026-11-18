@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 音乐卡片模糊背景的过渡遮罩：上下边缘融入卡片底色，中间透出封面模糊色 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="#001A1A2E"
+        android:centerColor="#590D0D1F"
+        android:endColor="#001A1A2E"
+        android:type="linear" />
+</shape>

@@ -1,5 +1,6 @@
 package cn.youth996.ui.core;
 
+import android.animation.ObjectAnimator;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
@@ -19,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.HorizontalScrollView;
@@ -28,6 +31,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -138,6 +143,13 @@ public class MainActivity extends AppCompatActivity {
     private boolean isRearDefrostOn = false;
     private int airDirection = 0; // 0:面部 1:胸部 2:脚部 3:全部
     private int windLevel = 0; // 风速档位 0-7，0 为关闭
+
+    // 音乐大卡片（黑胶唱片风格，参考叁迪UI）
+    private ImageView imgMusicDisc;
+    private ImageView imgAlbumCoverCenter;
+    private ImageView imgDiscPointer;
+    private ImageView imgMusicBlurBg;
+    private ObjectAnimator discRotateAnimator;
     
     // 档位状态 (0=P, 1=N, 2=D)
     private int currentGear = 0;
@@ -477,7 +489,10 @@ public class MainActivity extends AppCompatActivity {
         Log.d("MainActivity", "=== INIT CENTER AREA ===");
         
         ImageView imgNavPreview = findViewById(R.id.img_nav_preview);
-        ImageView imgAlbumCoverCenter = findViewById(R.id.img_album_cover_center);
+        imgAlbumCoverCenter = findViewById(R.id.img_album_cover_center);
+        imgMusicDisc = findViewById(R.id.img_music_disc);
+        imgDiscPointer = findViewById(R.id.img_disc_pointer);
+        imgMusicBlurBg = findViewById(R.id.img_music_blur_bg);
         ImageView btnPreviousCenter = findViewById(R.id.btn_previous_center);
         ImageView btnPlayPauseCenter = findViewById(R.id.btn_play_pause_center);
         ImageView btnNextCenter = findViewById(R.id.btn_next_center);
@@ -503,6 +518,16 @@ public class MainActivity extends AppCompatActivity {
                                      textSongTitle, textSongArtist, btnPlayPauseCenter);
         musicPlayerManager.bindLyricsViews(layoutLyrics);
         musicPlayerManager.bindIslandViews(islandContainer, imgIslandWave, textIslandTitle, textIslandLyric);
+        // 封面模糊氛围背景（参考叁迪UI player_blur）
+        musicPlayerManager.bindBlurBackground(imgMusicBlurBg);
+        // 圆角裁剪卡片内容（模糊背景不溢出圆角）
+        if (musicPlayerCard != null) {
+            musicPlayerCard.setClipToOutline(true);
+        }
+        // 歌名超长时跑马灯滚动
+        if (textSongTitle != null) {
+            textSongTitle.setSelected(true);
+        }
         Log.d("MainActivity", "MusicPlayerManager created, setting listener...");
         
         musicPlayerManager.setOnMusicUpdateListener(new MusicPlayerManager.OnMusicUpdateListener() {
@@ -510,6 +535,7 @@ public class MainActivity extends AppCompatActivity {
             public void onMusicUpdate(String packageName, String title, String artist, Bitmap albumArt, boolean isPlaying) {
 //                Log.d("MainActivity", "=== MUSIC UPDATE: " + title + " - " + artist);
                 updateMusicPlayerUI(title, artist, isPlaying);
+                updateDiscAnimation(isPlaying);
                 if (cardManager != null) {
                     cardManager.updateMusicInfo(title, artist, albumArt);
                     cardManager.updateMusicPlayState(isPlaying);
@@ -519,7 +545,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPlaybackStateChanged(boolean isPlaying) {
 //                Log.d("MainActivity", "Playback state changed: " + isPlaying);
-                btnPlayPauseCenter.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+                musicPlayerManager.updatePlayPauseButton(isPlaying);
+                updateDiscAnimation(isPlaying);
                 if (cardManager != null) {
                     cardManager.updateMusicPlayState(isPlaying);
                 }
@@ -551,13 +578,12 @@ public class MainActivity extends AppCompatActivity {
     
     private void setupMusicControls() {
         ImageView imgNavPreview = findViewById(R.id.img_nav_preview);
-        ImageView imgAlbumCoverCenter = findViewById(R.id.img_album_cover_center);
         View navPreviewContainer = findViewById(R.id.nav_preview_container);
         ImageView btnPreviousCenter = findViewById(R.id.btn_previous_center);
         ImageView btnPlayPauseCenter = findViewById(R.id.btn_play_pause_center);
         ImageView btnNextCenter = findViewById(R.id.btn_next_center);
         View musicPlayerCard = findViewById(R.id.music_player_card);
-        
+
         try {
             InputStream is = getAssets().open("webui/img/widget/automap_logo.png");
             Bitmap bitmap = BitmapFactory.decodeStream(is);
@@ -566,14 +592,47 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
+        // 黑胶唱片底盘（参考叁迪UI）
+        loadImageFromAssets("webui/img/widget/music_disc.png", imgMusicDisc);
+
+        // 唱针：以右上角为轴摆动（暂停 -15°，播放 0°）
+        loadImageFromAssets("webui/img/widget/music_pointer.png", imgDiscPointer);
+        if (imgDiscPointer != null) {
+            imgDiscPointer.post(() -> {
+                imgDiscPointer.setPivotX(imgDiscPointer.getWidth());
+                imgDiscPointer.setPivotY(0f);
+                imgDiscPointer.setRotation(-15f);
+            });
+        }
+
+        // 播放控制按钮使用叁迪UI风格图标
+        loadImageFromAssets("webui/img/widget/music_btn_prev.png", btnPreviousCenter);
+        loadImageFromAssets("webui/img/widget/music_btn_prev.png", btnNextCenter);
+        if (btnNextCenter != null) {
+            btnNextCenter.setScaleX(-1f); // 下一首 = 上一首图标水平翻转
+        }
+        if (musicPlayerManager != null) {
+            musicPlayerManager.updatePlayPauseButton(false);
+        }
+
+        // 初始封面：圆形显示（参考叁迪UI唱片封面）
         try {
             InputStream is = getAssets().open("webui/img/widget/music_cover.jpg");
             Bitmap bitmap = BitmapFactory.decodeStream(is);
-            imgAlbumCoverCenter.setImageBitmap(bitmap);
+            setCircularCover(imgAlbumCoverCenter, bitmap);
             is.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        // 唱片旋转动画：10s 一圈，线性循环（对应叁迪UI disc 动画）
+        if (imgAlbumCoverCenter != null) {
+            discRotateAnimator = ObjectAnimator.ofFloat(imgAlbumCoverCenter, "rotation", 0f, 360f);
+            discRotateAnimator.setDuration(10000);
+            discRotateAnimator.setInterpolator(new LinearInterpolator());
+            discRotateAnimator.setRepeatCount(ObjectAnimator.INFINITE);
+            discRotateAnimator.setRepeatMode(ObjectAnimator.RESTART);
         }
         
         navPreviewContainer.setOnClickListener(v -> {
@@ -637,6 +696,39 @@ public class MainActivity extends AppCompatActivity {
     
     private void updateMusicPlayerUI(String title, String artist, boolean isPlaying) {
         // 不再替换歌词显示
+    }
+
+    /**
+     * 将封面设置为圆形（黑胶唱片中心封面，参考叁迪UI）
+     */
+    private void setCircularCover(ImageView imageView, Bitmap bitmap) {
+        if (imageView == null || bitmap == null) {
+            return;
+        }
+        RoundedBitmapDrawable circular = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
+        circular.setCircular(true);
+        imageView.setImageDrawable(circular);
+    }
+
+    /**
+     * 播放状态驱动唱片旋转与唱针摆动（参考叁迪UI disc / pointer 动画）
+     * 播放：封面 10s/圈线性旋转，唱针落到 0°；暂停：旋转暂停，唱针抬起 -15°
+     */
+    private void updateDiscAnimation(boolean isPlaying) {
+        if (discRotateAnimator != null) {
+            if (isPlaying) {
+                if (!discRotateAnimator.isStarted()) {
+                    discRotateAnimator.start();
+                } else if (discRotateAnimator.isPaused()) {
+                    discRotateAnimator.resume();
+                }
+            } else if (discRotateAnimator.isStarted()) {
+                discRotateAnimator.pause();
+            }
+        }
+        if (imgDiscPointer != null) {
+            imgDiscPointer.animate().rotation(isPlaying ? 0f : -15f).setDuration(300).start();
+        }
     }
     
     /**
@@ -1727,8 +1819,11 @@ public class MainActivity extends AppCompatActivity {
                 isFrontDefrostOn = !isFrontDefrostOn;
                 String message = isFrontDefrostOn ? "前挡风除霜已开启" : "前挡风除霜已关闭";
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-                // 视觉效果反馈
-                btnDefrostFront.setAlpha(isFrontDefrostOn ? 1.0f : 0.5f);
+                // 切换高亮图标 + 青色激活态（参考叁迪UI）
+                loadImageFromAssets(isFrontDefrostOn
+                        ? "webui/img/navbar/ac_bar_front_defrost1.png"
+                        : "webui/img/navbar/ac_bar_front_defrost0.png", imgDefrostFront);
+                setAcIconActive(imgDefrostFront, isFrontDefrostOn);
             });
         }
 
@@ -1739,8 +1834,8 @@ public class MainActivity extends AppCompatActivity {
                 isRearDefrostOn = !isRearDefrostOn;
                 String message = isRearDefrostOn ? "后挡风玻璃除霜已开启" : "后挡风玻璃除霜已关闭";
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-                // 视觉效果反馈
-                btnDefrostRear.setAlpha(isRearDefrostOn ? 1.0f : 0.5f);
+                // 青色激活态（参考叁迪UI）
+                setAcIconActive(imgDefrostRear, isRearDefrostOn);
             });
         }
 
@@ -1762,6 +1857,11 @@ public class MainActivity extends AppCompatActivity {
                 if (windLevel > 0) {
                     windLevel--;
                     updateWindLevelIcon();
+                    // 参考叁迪UI：风量减到 0 时联动关闭空调
+                    if (windLevel == 0 && isAcOn) {
+                        isAcOn = false;
+                        updateAcTempDisplay();
+                    }
                     String message = windLevel == 0 ? "风速已关闭" : "当前风速: " + windLevel + "档";
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
                 } else {
@@ -1782,6 +1882,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+        // 空调区按钮按下缩放反馈（参考叁迪UI :active scale，加减键放大更明显）
+        applyPressScale(findViewById(R.id.btn_ac_power), 1.2f);
+        applyPressScale(findViewById(R.id.btn_ac_minus), 1.5f);
+        applyPressScale(findViewById(R.id.btn_ac_plus), 1.5f);
+        applyPressScale(findViewById(R.id.btn_wind_minus), 1.5f);
+        applyPressScale(findViewById(R.id.btn_wind_plus), 1.5f);
+        applyPressScale(findViewById(R.id.btn_air_direction), 1.2f);
+        applyPressScale(findViewById(R.id.btn_defrost_front), 1.2f);
+        applyPressScale(findViewById(R.id.btn_defrost_rear), 1.2f);
 
         // 桌面设置
         View btnDesktopSettings = findViewById(R.id.btn_desktop_settings);
@@ -1913,13 +2023,57 @@ public class MainActivity extends AppCompatActivity {
     private void updateAcTempDisplay() {
         if (acTempText != null) {
             if (isAcOn) {
-                acTempText.setText(currentTemp + "°");
+                acTempText.setText(String.valueOf(currentTemp));
                 acTempText.setTextColor(getResources().getColor(R.color.dark_tech_text, getTheme()));
             } else {
-                acTempText.setText("--°");
+                acTempText.setText("--");
                 acTempText.setTextColor(getResources().getColor(R.color.text_hint, getTheme()));
             }
         }
+        // 空调开关图标：开启时切换高亮图标并叠加青色（参考叁迪UI的滤镜激活态）
+        if (imgAcPower != null) {
+            loadImageFromAssets(isAcOn
+                    ? "webui/img/navbar/ac_bar_power1.png"
+                    : "webui/img/navbar/ac_bar_power0.png", imgAcPower);
+            setAcIconActive(imgAcPower, isAcOn);
+        }
+    }
+
+    /**
+     * 空调类图标激活态：叠加青色（对应叁迪UI激活时的青色 CSS 滤镜）
+     */
+    private void setAcIconActive(ImageView imageView, boolean active) {
+        if (imageView == null) {
+            return;
+        }
+        if (active) {
+            imageView.setColorFilter(Color.parseColor("#00C8FF"), PorterDuff.Mode.SRC_IN);
+        } else {
+            imageView.clearColorFilter();
+        }
+    }
+
+    /**
+     * 按下缩放反馈（对应叁迪UI :active 时的 scale 效果）
+     */
+    private void applyPressScale(View view, float scale) {
+        if (view == null) {
+            return;
+        }
+        view.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.animate().scaleX(scale).scaleY(scale).setDuration(120).start();
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(120).start();
+                    break;
+                default:
+                    break;
+            }
+            return false;
+        });
     }
 
     private void showSettingsDialog() {

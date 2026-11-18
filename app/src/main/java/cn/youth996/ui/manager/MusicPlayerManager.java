@@ -23,6 +23,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +51,12 @@ public class MusicPlayerManager {
     private int lastRenderedMaxLines = -1;
     private List<String> lastRenderedLyrics = null;
     private ImageView btnPlayPause;
+    private Bitmap btnPlayBitmap;
+    private Bitmap btnPauseBitmap;
+
+    // 封面模糊氛围背景（参考叁迪UI player_blur）
+    private ImageView imgBlurBackground;
+    private Bitmap lastCoverBitmap = null;
 
     // 状态栏灵动岛歌词
     private View islandContainer;
@@ -80,6 +88,51 @@ public class MusicPlayerManager {
     public MusicPlayerManager(Activity activity) {
         this.activity = activity;
         this.handler = new Handler(Looper.getMainLooper());
+        loadControlButtonBitmaps();
+    }
+
+    /**
+     * 加载播放控制按钮素材（叁迪UI风格）
+     */
+    private void loadControlButtonBitmaps() {
+        try {
+            btnPlayBitmap = BitmapFactory.decodeStream(
+                    activity.getAssets().open("webui/img/widget/music_btn_play.png"));
+            btnPauseBitmap = BitmapFactory.decodeStream(
+                    activity.getAssets().open("webui/img/widget/music_btn_pause.png"));
+        } catch (Exception e) {
+            Log.e(TAG, "加载播放按钮图标失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 切换播放/暂停按钮图标（叁迪UI风格素材）
+     * 注意素材命名与直觉相反：music_btn_play.png 是暂停双杠（播放中显示），
+     * music_btn_pause.png 是三角（暂停时显示）
+     */
+    public void updatePlayPauseButton(boolean playing) {
+        if (btnPlayPause != null && btnPlayBitmap != null && btnPauseBitmap != null) {
+            btnPlayPause.setImageBitmap(playing ? btnPlayBitmap : btnPauseBitmap);
+        }
+    }
+
+    /**
+     * 绑定封面模糊氛围背景（参考叁迪UI player_blur）
+     */
+    public void bindBlurBackground(ImageView blurBackground) {
+        this.imgBlurBackground = blurBackground;
+    }
+
+    /**
+     * 生成封面模糊背景：先缩小再交由 ImageView 双线性放大，等效柔化模糊
+     */
+    private void updateBlurBackground(Bitmap cover) {
+        if (imgBlurBackground == null || cover == null) {
+            return;
+        }
+        int w = Math.max(1, cover.getWidth() / 12);
+        int h = Math.max(1, cover.getHeight() / 12);
+        imgBlurBackground.setImageBitmap(Bitmap.createScaledBitmap(cover, w, h, true));
     }
     
     public void setOnMusicUpdateListener(OnMusicUpdateListener listener) {
@@ -238,8 +291,15 @@ public class MusicPlayerManager {
 
         setTextIfChanged(textSongArtist, currentArtist);
         
-        if (imgAlbumCover != null && currentAlbumArt != null) {
-            imgAlbumCover.setImageBitmap(currentAlbumArt);
+        if (imgAlbumCover != null && currentAlbumArt != null && currentAlbumArt != lastCoverBitmap) {
+            lastCoverBitmap = currentAlbumArt;
+            // 圆形封面（黑胶唱片中心，参考叁迪UI）
+            RoundedBitmapDrawable circular = RoundedBitmapDrawableFactory.create(
+                    activity.getResources(), currentAlbumArt);
+            circular.setCircular(true);
+            imgAlbumCover.setImageDrawable(circular);
+            // 同步更新封面模糊氛围背景
+            updateBlurBackground(currentAlbumArt);
         }
         
         if (textMusicSource != null && !currentPackageName.isEmpty()) {
@@ -255,7 +315,7 @@ public class MusicPlayerManager {
         }
         
         if (btnPlayPause != null) {
-            btnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+            updatePlayPauseButton(isPlaying);
         }
         
         if (isPlaying) {
